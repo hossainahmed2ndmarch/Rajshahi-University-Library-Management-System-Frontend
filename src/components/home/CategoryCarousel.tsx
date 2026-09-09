@@ -1,0 +1,234 @@
+"use client";
+
+import React from "react";
+import Link from "next/link";
+import { BookOpen, ArrowRight, Sparkles, Layers } from "lucide-react";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useGetBookCategories } from "@/hooks/useBooks";
+
+// ---------------------------------------------------------------------------
+// Static display metadata keyed by backend category slug
+// ---------------------------------------------------------------------------
+const CATEGORY_META: Record<
+  string,
+  {
+    label: string;
+    description: string;
+  }
+> = {
+  Tafsir: {
+    label: "Tafsir & Quranic Studies",
+    description:
+      "Classical exegesis by Ibn Kathir, Tabari, Qurtubi, and modern analysis.",
+  },
+  Hadith: {
+    label: "Hadith & Prophetic Sunnah",
+    description:
+      "Kutub al-Sittah compilations, Hadith grading commentaries, and riwayah.",
+  },
+  Fiqh: {
+    label: "Islamic Jurisprudence (Fiqh)",
+    description:
+      "Hanafi, Shafi'i, Maliki, and Hanbali comparative legal treatises.",
+  },
+  Seerah: {
+    label: "Seerah & Prophetic Biography",
+    description: "Chronicles of Prophet Muhammad (SAW), Sahabah biographies.",
+  },
+  History: {
+    label: "Islamic History & Civilizations",
+    description:
+      "Caliphates, Andalusian scholarship, Ottoman annals, Bengal Islamic heritage.",
+  },
+  Aqeedah: {
+    label: "Aqeedah & Comparative Theology",
+    description:
+      "Foundational creed, articles of faith, refutations, and epistemology.",
+  },
+  Spirituality: {
+    label: "Spirituality & Tazkiyah",
+    description:
+      "Purification of the soul, dhikr, Sufi literature, and personal development.",
+  },
+  Dawah: {
+    label: "Dawah & Islamic Ethics",
+    description:
+      "Methodology of calling to Islam, comparative religion, and Muslim character.",
+  },
+  Education: {
+    label: "Islamic Education",
+    description:
+      "Pedagogical texts, Islamic curricula, children's books, and Arabic learning.",
+  },
+};
+
+const DEFAULT_META = {
+  label: (slug: string) => slug,
+  description: "Browse books in this category.",
+};
+
+// ---------------------------------------------------------------------------
+// Book Preview Cover Grid (2x2)
+// ---------------------------------------------------------------------------
+interface BookPreview {
+  id: string;
+  title: string;
+  coverImage?: string;
+  author: string;
+}
+
+function CategoryBookPreviewsGrid({
+  books,
+  category,
+}: {
+  books?: BookPreview[];
+  category: string;
+}) {
+  if (!books || books.length === 0) return null;
+  const previews = books.slice(0, 4);
+
+  return (
+    <div className="grid grid-cols-2 gap-x-5 gap-y-6 flex-1 mb-4">
+      {previews.map((book) => (
+        <div key={book.id} className="flex flex-col gap-2">
+          {/* Light grey rounded background for cover */}
+          <div className="bg-muted w-full flex items-center justify-center overflow-hidden">
+            {book.coverImage ? (
+              <img
+                src={book.coverImage}
+                alt={book.title}
+                className="h-full w-auto object-contain"
+              />
+            ) : (
+              <BookOpen className="h-10 w-10 text-muted-foreground/30" />
+            )}
+          </div>
+          {/* Book title */}
+          <p className="text-sm font-semibold text-foreground truncate line-clamp-2 px-1">
+            {book.title}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Skeleton card shown while categories are loading
+// ---------------------------------------------------------------------------
+function CategorySkeleton() {
+  return (
+    <CarouselItem className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
+      <div className="flex flex-col p-6 rounded-3xl border border-border/40 bg-card h-full min-h-[500px]">
+        {/* Category Label Skeleton */}
+        <Skeleton className="h-8 w-3/4 mb-6 rounded-lg" />
+        {/* Book grid skeletons */}
+        <div className="grid grid-cols-2 gap-x-5 gap-y-6 flex-1 mb-8">
+          {[1, 2, 3, 4].map((n) => (
+            <div key={n} className="flex flex-col gap-2">
+              <Skeleton className="h-48 w-full rounded-xl" />
+              <Skeleton className="h-5 w-5/6 mt-1 rounded" />
+              <Skeleton className="h-4 w-2/3 mt-1 rounded" />
+            </div>
+          ))}
+        </div>
+        {/* Red Link Skeleton */}
+        <Skeleton className="h-5 w-28 rounded" />
+      </div>
+    </CarouselItem>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main Component
+// ---------------------------------------------------------------------------
+export function CategoryCarousel() {
+  const { data: liveCategories, isLoading } = useGetBookCategories();
+
+  return (
+    <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+      <Carousel
+        opts={{
+          align: "start",
+          loop: true,
+        }}
+        className="w-full"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-12 gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Academic Classifications</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tighter text-foreground mt-1">
+              Borrowable Knowledge Domains
+            </h2>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1.5 max-w-2xl leading-relaxed">
+              Explore specialized academic subject areas for coursework and
+              research. View the top book previews in each category grid.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2.5 relative">
+            <CarouselPrevious className="static translate-y-0 h-10 w-10 rounded-full border border-border shadow-sm" />
+            <CarouselNext className="static translate-y-0 h-10 w-10 rounded-full border border-border shadow-sm" />
+          </div>
+        </div>
+
+        <CarouselContent className="-ml-4">
+          {isLoading
+            ? Array.from({ length: 4 }).map((_, i) => (
+                <CategorySkeleton key={i} />
+              ))
+            : (liveCategories ?? []).map((item) => {
+                const meta = CATEGORY_META[item.category];
+                const label = meta?.label ?? DEFAULT_META.label(item.category);
+
+                return (
+                  <CarouselItem
+                    key={item.category}
+                    className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4"
+                  >
+                    <div className="flex flex-col p-6 rounded-3xl border border-border bg-card h-full min-h-[500px]  transition-all duration-300 hover:border-[#004F32]/30  dark:hover:border-emerald-600/40 cursor-pointer group">
+                      {/* 1. Category Label at top */}
+                      <h3 className="font-bold text-md text-foreground mb-6 line-clamp-1 group-hover:text-primary transition-colors">
+                        {label}
+                      </h3>
+
+                      {/* 2. 2x2 Grid of 4 Books */}
+                      <CategoryBookPreviewsGrid
+                        books={
+                          (item as typeof item & { books?: BookPreview[] })
+                            .books
+                        }
+                        category={item.category}
+                      />
+
+                      {/* 3. Red Redirection Link at bottom */}
+                      <div className="mt-auto border-t border-border/60">
+                        <Link
+                          href={`/books?category=${encodeURIComponent(item.category)}`}
+                          className="inline-flex items-center gap-1.5 text-sm font-extrabold text-[#C78700] hover:text-amber-600"
+                        >
+                          <span> সব দেখুন</span>
+                          <ArrowRight className="h-4 w-4 group-hover:translate-x-1.5 transition-transform" />
+                        </Link>
+                      </div>
+                    </div>
+                  </CarouselItem>
+                );
+              })}
+        </CarouselContent>
+      </Carousel>
+    </section>
+  );
+}
+
+export default CategoryCarousel;

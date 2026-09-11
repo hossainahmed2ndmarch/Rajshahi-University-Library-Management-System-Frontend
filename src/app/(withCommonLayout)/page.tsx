@@ -9,6 +9,7 @@ import { FeaturedBuyable } from "@/components/home/FeaturedBuyable";
 import { Testimonials } from "@/components/home/Testimonials";
 import { LiveMap } from "@/components/home/LiveMap";
 import { DonationAndServices } from "@/components/home/DonationAndServices";
+import { ShiftScheduleSection } from "@/components/shared/ShiftScheduleSection";
 
 export default function HomePage() {
   return (
@@ -31,10 +32,13 @@ export default function HomePage() {
       {/* 6. Member Reviews & Testimonials Carousel (Shadcn Embla) */}
       <Testimonials />
 
-      {/* 7. Live Map & Real-Time Operational Counter Status */}
+      {/* 7. Today's Duty Shifter & Schedule (compact card) */}
+      <ShiftScheduleSection compact />
+
+      {/* 8. Live Map & Real-Time Operational Counter Status */}
       <LiveMap />
 
-      {/* 8. Donation Banner & Academic Services Grid */}
+      {/* 9. Donation Banner & Academic Services Grid */}
       <DonationAndServices />
     </div>
   );

@@ -16,7 +16,7 @@ export function LanguageSwitcher() {
   const ref = useRef<HTMLDivElement>(null);
   const { language, setLanguage } = useLanguageStore();
 
-  const currentLang = LANGUAGES.find((l) => l.code === language) || LANGUAGES[1];
+  const currentLang = LANGUAGES.find((l) => l.code === language) || LANGUAGES[0];
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -33,7 +33,7 @@ export function LanguageSwitcher() {
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="h-9 flex items-center gap-1.5 px-3 rounded-xl border border-border/80 bg-muted/50 hover:bg-muted text-foreground text-xs font-semibold transition-all duration-200 shadow-xs cursor-pointer"
+        className="h-9 flex items-center gap-1.5 px-3 rounded-xl border border-border bg-card hover:bg-muted text-foreground text-xs font-semibold transition-all duration-200 cursor-pointer"
         aria-expanded={open}
         aria-haspopup="true"
       >

@@ -11,7 +11,7 @@ interface LanguageState {
 export const useLanguageStore = create<LanguageState>()(
   persist(
     (set, get) => ({
-      language: "en",
+      language: "bn", // Default language is Bangla
       setLanguage: (language: Language) => {
         set({ language });
         if (typeof document !== "undefined") {
@@ -22,7 +22,7 @@ export const useLanguageStore = create<LanguageState>()(
       t: (path: string) => {
         const lang = get().language;
         const keys = path.split(".");
-        let current: any = translations[lang] || translations.en;
+        let current: any = translations[lang] || translations.bn;
         for (const k of keys) {
           if (current && typeof current === "object" && k in current) {
             current = current[k];
@@ -35,6 +35,9 @@ export const useLanguageStore = create<LanguageState>()(
     }),
     {
       name: "ruil-language-storage",
+      // Prevent auto-rehydration on mount to avoid SSR/client hydration mismatch.
+      // LanguageStoreHydrator in Providers.tsx manually calls rehydrate() after mount.
+      skipHydration: true,
     }
   )
 );

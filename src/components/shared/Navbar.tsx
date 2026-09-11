@@ -24,6 +24,7 @@ import { useGetMe, useLogout } from "@/hooks/useAuth";
 import { useCartStore, useWishlistStore } from "@/store";
 import { getDefaultDashboardRoute } from "@/proxy";
 import logo from "../../assets/logo/Version 3- Multi transparent.png";
+import logoDark from "../../assets/logo/white-version.png";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -59,13 +60,24 @@ export function Navbar() {
         <div className="border-b border-border/50 px-4 sm:px-6 lg:px-8 py-2.5">
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 sm:gap-6">
             {/* Brand Logo & Title */}
-            <Link href="/" className="flex items-center space-x-2.5 shrink-0 group">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-950/40 p-1 shrink-0 border border-emerald-600/20 group-hover:scale-105 transition-transform">
+            <Link
+              href="/"
+              className="flex items-center space-x-2.5 shrink-0 group"
+            >
+              <div className="flex h-11 w-11 items-center justify-center">
+                {/* Light Mode Logo */}
                 <Image
                   src={logo}
                   alt="RUIL Logo"
                   priority
-                  className="h-9 w-9 object-contain"
+                  className="h-10 w-10 object-contain dark:hidden"
+                />
+                {/* Dark Mode Logo */}
+                <Image
+                  src={logoDark}
+                  alt="RUIL Logo"
+                  priority
+                  className="hidden h-10 w-10 object-contain dark:block"
                 />
               </div>
 
@@ -73,7 +85,7 @@ export function Navbar() {
                 <span className="text-base sm:text-lg font-black tracking-tight text-[#004F32] dark:text-emerald-400 block leading-tight">
                   রাবি ইসলামিক পাঠাগার
                 </span>
-                <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 tracking-wider uppercase block">
+                <span className="text-[10px] font-bold text-[#C78700] dark:text-amber-400 tracking-wider uppercase block">
                   Rajshahi University
                 </span>
               </div>
@@ -95,10 +107,10 @@ export function Navbar() {
               <Link
                 href="/wishlist"
                 aria-label="Wishlist"
-                className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-border/80 bg-muted/50 hover:bg-muted text-foreground transition-colors"
+                className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card hover:bg-muted text-foreground transition-colors"
                 title="Wishlist"
               >
-                <Heart className="h-4.5 w-4.5 text-rose-500" />
+                <Heart className="h-4.5 w-4.5 text-[#004F32] dark:text-emerald-400" />
                 {wishlistCount > 0 && (
                   <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#C78700] text-[9px] font-black text-white leading-none shadow-xs">
                     {wishlistCount > 9 ? "9+" : wishlistCount}
@@ -110,7 +122,7 @@ export function Navbar() {
               <Link
                 href="/cart"
                 aria-label="Shopping Cart"
-                className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-border/80 bg-muted/50 hover:bg-muted text-foreground transition-colors"
+                className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card hover:bg-muted text-foreground transition-colors"
                 title="Cart"
               >
                 <ShoppingCart className="h-4.5 w-4.5 text-[#004F32] dark:text-emerald-400" />
@@ -126,9 +138,9 @@ export function Navbar() {
                 <div className="relative pl-1 sm:pl-2">
                   <button
                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                    className="flex items-center space-x-2 rounded-xl border border-border/80 bg-muted/50 hover:bg-muted px-2.5 py-1.5 text-xs font-semibold text-foreground transition-colors cursor-pointer"
+                    className="flex items-center space-x-2 rounded-xl border border-border bg-card hover:bg-muted px-2.5 py-1.5 text-xs font-semibold text-foreground transition-colors cursor-pointer"
                   >
-                    <div className="h-6 w-6 rounded-full overflow-hidden bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-[12px] font-bold text-[#004F32] dark:text-emerald-400 shrink-0 border border-emerald-600/30">
+                    <div className="h-6 w-6 rounded-full overflow-hidden bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-[12px] font-bold text-[#004F32] dark:text-emerald-400 shrink-0 border border-[#004F32] dark:border-emerald-400">
                       {user.avatarUrl ? (
                         <img
                           src={user.avatarUrl}
@@ -150,7 +162,9 @@ export function Navbar() {
                   {userDropdownOpen && (
                     <div className="absolute right-0 mt-2 w-52 rounded-2xl bg-card border border-border py-2 shadow-2xl z-50 animate-in fade-in-50 text-foreground">
                       <div className="px-4 py-2 border-b border-border text-xs">
-                        <p className="font-bold truncate text-foreground">{user.name}</p>
+                        <p className="font-bold truncate text-foreground">
+                          {user.name}
+                        </p>
                         <p className="text-muted-foreground text-[10px] truncate">
                           {user.email}
                         </p>
@@ -211,9 +225,9 @@ export function Navbar() {
                 aria-label="Toggle navigation menu"
               >
                 {mobileMenuOpen ? (
-                  <X className="h-5 w-5" />
+                  <X className="h-5 w-5 text-[#004F32] dark:text-emerald-400" />
                 ) : (
-                  <Menu className="h-5 w-5" />
+                  <Menu className="h-5 w-5 text-[#004F32] dark:text-emerald-400" />
                 )}
               </button>
             </div>
@@ -238,7 +252,7 @@ export function Navbar() {
                     className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
                       isActive
                         ? "text-[#004F32] dark:text-emerald-400 bg-emerald-100/70 dark:bg-emerald-950/70 font-bold"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                        : "text-muted-foreground hover:text-[#C78700] hover:bg-card"
                     }`}
                   >
                     {link.label}
@@ -253,12 +267,12 @@ export function Navbar() {
                 className="text-[11px] font-bold text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
               >
                 <BookOpen className="h-3.5 w-3.5 text-[#004F32] dark:text-emerald-400" />
-                <span>বই ধার (Borrow Catalog)</span>
+                <span className="text-[#004F32] dark:text-emerald-400">বই ধার (Borrow Catalog)</span>
               </Link>
 
               <Link
                 href="/donate"
-                className="flex items-center space-x-1.5 rounded-full bg-[#004F32] hover:bg-[#003d27] dark:bg-emerald-600 dark:hover:bg-emerald-700 px-3.5 py-1 text-xs font-bold text-white shadow-xs transition-colors"
+                className="flex items-center space-x-1.5 rounded-full bg-[#004F32] dark:bg-emerald-600 dark:hover:bg-emerald-700 px-3.5 py-1 text-xs font-bold text-white shadow-xs transition-colors"
               >
                 <HeartHandshake className="h-3.5 w-3.5 text-amber-300" />
                 <span>{t("nav.donate")}</span>
@@ -271,7 +285,9 @@ export function Navbar() {
         {mobileMenuOpen && (
           <div className="lg:hidden border-t border-border/70 bg-card px-4 py-3 space-y-1 animate-in fade-in-50 text-foreground">
             <div className="pb-2 mb-2 border-b border-border/60 flex items-center justify-between">
-              <span className="text-xs font-bold text-muted-foreground">নেভিগেশন মেন্যু</span>
+              <span className="text-xs font-bold text-muted-foreground">
+                নেভিগেশন মেন্যু
+              </span>
               <LanguageSwitcher />
             </div>
 

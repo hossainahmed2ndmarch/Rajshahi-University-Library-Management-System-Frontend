@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import React, { useState } from "react";
 import Link from "next/link";
 import {
@@ -16,6 +17,7 @@ import {
 import { toast } from "sonner";
 import { useGetMe } from "@/hooks/useAuth";
 import { getDefaultDashboardRoute } from "@/proxy";
+import logo from "../../assets/logo/white-version.png";
 
 export function Footer() {
   const { data: user } = useGetMe();
@@ -30,7 +32,9 @@ export function Footer() {
       return;
     }
     setSubscribed(true);
-    toast.success("Subscribed to RU Islamic Library updates & manuscript digests!");
+    toast.success(
+      "Subscribed to RU Islamic Library updates & manuscript digests!",
+    );
     setNewsletterEmail("");
   };
 
@@ -40,18 +44,34 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-8">
           {/* Column 1: Library Summary */}
           <div className="space-y-4">
-            <div className="flex items-center space-x-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#C78700] text-white shadow-xs">
-                <BookOpen className="h-5 w-5" />
+            <Link
+              href="/"
+              className="flex items-center space-x-2.5 shrink-0 group"
+            >
+              <div className="flex h-11 w-11 items-center justify-center">
+                {/* Light Mode Logo */}
+                <Image
+                  src={logo}
+                  alt="RUIL Logo"
+                  priority
+                  className="h-10 w-10 object-contain"
+                />
               </div>
-              <span className="font-black text-lg tracking-tight text-white">
-                RU Islamic Library
-              </span>
-            </div>
+
+              <div className="hidden sm:block">
+                <span className="text-base sm:text-lg font-black tracking-tight text-white dark:text-emerald-400 block leading-tight">
+                  রাবি ইসলামিক পাঠাগার
+                </span>
+                <span className="text-[10px] font-bold text-[#C78700] dark:text-amber-400 tracking-wider uppercase block">
+                  Rajshahi University
+                </span>
+              </div>
+            </Link>
             <p className="text-xs text-emerald-100/80 leading-relaxed">
-              Institutional digital repository and lending resource serving Rajshahi University
-              students, research scholars, and faculty with authentic classic treatises, Tafsir,
-              Hadith compilations, and Islamic jurisprudence references.
+              Institutional digital repository and lending resource serving
+              Rajshahi University students, research scholars, and faculty with
+              authentic classic treatises, Tafsir, Hadith compilations, and
+              Islamic jurisprudence references.
             </p>
             <div className="pt-1 flex items-center gap-2 text-xs text-emerald-200/80">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -66,17 +86,26 @@ export function Footer() {
             </h4>
             <ul className="space-y-2 text-xs text-emerald-100/80">
               <li>
-                <Link href="/books?type=BORROW_ONLY" className="hover:text-amber-300 transition-colors">
+                <Link
+                  href="/books?type=BORROW_ONLY"
+                  className="hover:text-amber-300 transition-colors"
+                >
                   Academic Book Borrowing
                 </Link>
               </li>
               <li>
-                <Link href="/books?type=SELL_ONLY" className="hover:text-amber-300 transition-colors">
+                <Link
+                  href="/books?type=SELL_ONLY"
+                  className="hover:text-amber-300 transition-colors"
+                >
                   Direct Book Purchasing
                 </Link>
               </li>
               <li>
-                <Link href="/donate" className="hover:text-amber-300 transition-colors">
+                <Link
+                  href="/donate"
+                  className="hover:text-amber-300 transition-colors"
+                >
                   Book Donation Programme
                 </Link>
               </li>
@@ -93,19 +122,30 @@ export function Footer() {
                     My Book Purchases
                   </Link>
                 ) : (
-                  <Link href="/track-order" className="hover:text-amber-300 transition-colors font-medium text-amber-300/90">
+                  <Link
+                    href="/track-order"
+                    className="hover:text-amber-300 transition-colors font-medium text-amber-300/90"
+                  >
                     Track Order &amp; Guest Status
                   </Link>
                 )}
               </li>
               <li>
-                <Link href="/checkout" className="hover:text-amber-300 transition-colors">
+                <Link
+                  href="/checkout"
+                  className="hover:text-amber-300 transition-colors"
+                >
                   Express Counter Checkout
                 </Link>
               </li>
               <li>
-                <Link href={user ? dashboardRoute : "/login"} className="hover:text-amber-300 transition-colors">
-                  {user ? "Academic Member Portal" : "Faculty & Student Card Issuance"}
+                <Link
+                  href={user ? dashboardRoute : "/login"}
+                  className="hover:text-amber-300 transition-colors"
+                >
+                  {user
+                    ? "Academic Member Portal"
+                    : "Faculty & Student Card Issuance"}
                 </Link>
               </li>
             </ul>
@@ -119,37 +159,58 @@ export function Footer() {
             <ul className="space-y-2 text-xs text-emerald-100/80">
               <li>
                 {user ? (
-                  <Link href={dashboardRoute} className="hover:text-amber-300 transition-colors">
+                  <Link
+                    href={dashboardRoute}
+                    className="hover:text-amber-300 transition-colors"
+                  >
                     Control Dashboard
                   </Link>
                 ) : (
-                  <Link href="/guest/dashboard" className="hover:text-amber-300 transition-colors">
+                  <Link
+                    href="/guest/dashboard"
+                    className="hover:text-amber-300 transition-colors"
+                  >
                     Guest Buyer Portal
                   </Link>
                 )}
               </li>
               <li>
-                <Link href="/books" className="hover:text-amber-300 transition-colors">
+                <Link
+                  href="/books"
+                  className="hover:text-amber-300 transition-colors"
+                >
                   Complete Catalog
                 </Link>
               </li>
               <li>
-                <Link href="/cart" className="hover:text-amber-300 transition-colors">
+                <Link
+                  href="/cart"
+                  className="hover:text-amber-300 transition-colors"
+                >
                   My Shopping Cart
                 </Link>
               </li>
               <li>
-                <Link href="/wishlist" className="hover:text-amber-300 transition-colors">
+                <Link
+                  href="/wishlist"
+                  className="hover:text-amber-300 transition-colors"
+                >
                   Saved Wishlist
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="hover:text-amber-300 transition-colors">
+                <Link
+                  href="/about"
+                  className="hover:text-amber-300 transition-colors"
+                >
                   About the Library
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="hover:text-amber-300 transition-colors">
+                <Link
+                  href="/contact"
+                  className="hover:text-amber-300 transition-colors"
+                >
                   Contact & Directions
                 </Link>
               </li>
@@ -162,7 +223,8 @@ export function Footer() {
               Newsletter Subscription
             </h4>
             <p className="text-xs text-emerald-100/80 leading-snug">
-              Subscribe to receive updates on new catalog acquisitions, rare manuscript additions, and research notices.
+              Subscribe to receive updates on new catalog acquisitions, rare
+              manuscript additions, and research notices.
             </p>
 
             {subscribed ? (
@@ -214,9 +276,13 @@ export function Footer() {
 
         {/* Bottom Copyright */}
         <div className="mt-6 pt-4 border-t border-emerald-900/40 text-center text-xs text-emerald-200/60 flex flex-col sm:flex-row justify-between items-center gap-2">
-          <p>© {new Date().getFullYear()} Rajshahi University Islamic Library System. All rights reserved.</p>
+          <p>
+            © {new Date().getFullYear()} Rajshahi University Islamic Library
+            System. All rights reserved.
+          </p>
           <p className="flex items-center gap-1">
-            Built with <Heart className="h-3 w-3 text-red-400 fill-current" /> for RU Academic Community
+            Built with <Heart className="h-3 w-3 text-red-400 fill-current" />{" "}
+            for RU Academic Community
           </p>
         </div>
       </div>

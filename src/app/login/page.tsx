@@ -1,12 +1,24 @@
 "use client";
 
+import Image from "next/image";
 import React, { Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { BookOpen, LogIn, Mail, Lock, ArrowRight, Sparkles, ShieldCheck, UserCheck } from "lucide-react";
+import {
+  BookOpen,
+  LogIn,
+  Mail,
+  Lock,
+  ArrowRight,
+  Sparkles,
+  ShieldCheck,
+  UserCheck,
+} from "lucide-react";
 import { RUForm, RUInput } from "@/components/forms";
 import { useLogin } from "@/hooks/useAuth";
 import { loginSchema, type LoginFormValues } from "@/schemas";
+import logo from "../../assets/logo/Version 3- Multi transparent.png";
+import logoDark from "../../assets/logo/white-version.png";
 
 function LoginForm() {
   const router = useRouter();
@@ -36,7 +48,7 @@ function LoginForm() {
             router.push("/dashboard/member");
           }
         },
-      }
+      },
     );
   };
 
@@ -47,15 +59,32 @@ function LoginForm() {
       <div className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-[#C78700]/15 blur-3xl pointer-events-none" />
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-3 z-10">
-        <Link href="/" className="inline-flex items-center space-x-3 group">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#004F32] text-white shadow-lg group-hover:scale-105 transition-transform">
-            <BookOpen className="h-7 w-7 text-amber-400" />
+        <Link
+          href="/"
+          className="inline-flex items-center space-x-2.5 shrink-0 group"
+        >
+          <div className="flex h-11 w-11 items-center justify-center">
+            {/* Light Mode Logo */}
+            <Image
+              src={logo}
+              alt="RUIL Logo"
+              priority
+              className="h-10 w-10 object-contain dark:hidden"
+            />
+            {/* Dark Mode Logo */}
+            <Image
+              src={logoDark}
+              alt="RUIL Logo"
+              priority
+              className="hidden h-10 w-10 object-contain dark:block"
+            />
           </div>
-          <div className="text-left">
-            <span className="text-xl font-extrabold tracking-tight text-foreground block">
-              RU Islamic Library
+
+          <div className="text-left hidden sm:block">
+            <span className="text-base sm:text-lg font-black tracking-tight text-[#004F32] dark:text-emerald-400 block leading-tight">
+              রাবি ইসলামিক পাঠাগার
             </span>
-            <span className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400 tracking-wider uppercase block">
+            <span className="text-[10px] font-bold text-[#C78700] dark:text-amber-400 tracking-wider uppercase block">
               Rajshahi University
             </span>
           </div>
@@ -65,12 +94,13 @@ function LoginForm() {
           Sign In to Library Portal
         </h2>
         <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-          Enter your registered email address and password to access your member or administrative dashboard.
+          Enter your registered email address and password to access your member
+          or administrative dashboard.
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md z-10">
-        <div className="rounded-3xl border border-border bg-card/95 backdrop-blur-md p-8 shadow-2xl text-card-foreground">
+        <div className="rounded-3xl border border-border bg-card/95 backdrop-blur-md p-8 text-card-foreground">
           <RUForm<LoginFormValues>
             schema={loginSchema}
             defaultValues={{ email: "", password: "" }}
@@ -82,7 +112,9 @@ function LoginForm() {
                 label="Email Address"
                 type="email"
                 placeholder="e.g. member@ru.ac.bd"
-                prependIcon={<Mail className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />}
+                prependIcon={
+                  <Mail className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                }
                 required
               />
 
@@ -102,9 +134,14 @@ function LoginForm() {
                     defaultChecked
                     className="rounded border-input text-[#004F32] focus:ring-[#004F32] h-4 w-4"
                   />
-                  <span className="text-muted-foreground font-medium">Remember session</span>
+                  <span className="text-muted-foreground font-medium">
+                    Remember session
+                  </span>
                 </label>
-                <Link href="/forgot-password" className="font-semibold text-primary hover:underline">
+                <Link
+                  href="/forgot-password"
+                  className="font-semibold text-primary hover:underline"
+                >
                   Forgot password?
                 </Link>
               </div>
@@ -132,21 +169,28 @@ function LoginForm() {
                 <div className="flex items-center gap-1 font-bold text-[#004F32] dark:text-emerald-400">
                   <UserCheck className="h-3 w-3" /> Member Account
                 </div>
-                <div className="font-mono text-[10px] text-muted-foreground">member@ru.ac.bd</div>
+                <div className="font-mono text-[10px] text-muted-foreground">
+                  member@ru.ac.bd
+                </div>
               </div>
 
               <div className="rounded-xl border border-amber-500/20 bg-amber-50/50 dark:bg-amber-950/20 p-2.5 space-y-0.5">
                 <div className="flex items-center gap-1 font-bold text-amber-700 dark:text-amber-400">
                   <ShieldCheck className="h-3 w-3" /> Shifter Account
                 </div>
-                <div className="font-mono text-[10px] text-muted-foreground">shifter.hasan@ru.ac.bd</div>
+                <div className="font-mono text-[10px] text-muted-foreground">
+                  shifter.hasan@ru.ac.bd
+                </div>
               </div>
             </div>
           </div>
 
           <div className="mt-6 text-center text-xs text-muted-foreground">
             Don't have a library account yet?{" "}
-            <Link href="/register" className="font-bold text-primary hover:underline">
+            <Link
+              href="/register"
+              className="font-bold text-primary hover:underline"
+            >
               Register as New Member
             </Link>
           </div>

@@ -76,7 +76,7 @@ export function UniversalSearchBar() {
             if (results.length > 0) setIsOpen(true);
           }}
           placeholder="বইয়ের নাম, লেখক, বা বিষয় দিয়ে খুঁজুন... (Search books, authors)"
-          className="w-full h-10 sm:h-11 pl-4 pr-24 rounded-full border-2 border-emerald-600/30 dark:border-emerald-500/30 bg-gray-50/90 dark:bg-card text-foreground placeholder:text-muted-foreground text-xs sm:text-sm focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-500 focus:bg-background transition-all shadow-inner"
+          className="w-full h-10 sm:h-11 pl-4 pr-24 rounded-full border-2 border-emerald-600/30 dark:border-emerald-500/30 bg-card text-foreground placeholder:text-muted-foreground text-xs sm:text-sm focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-500  transition-all shadow-inner"
         />
 
         {query && (

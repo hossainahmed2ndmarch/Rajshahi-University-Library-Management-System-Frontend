@@ -59,7 +59,7 @@
   --secondary: hsl(41 100% 39%);        /* Gold #C78700 */
   --secondary-foreground: hsl(0 0% 100%);
 
-  --muted: hsl(158 15% 95%);
+  --muted: hsl(156, 24%, 88%);
   --muted-foreground: hsl(158 15% 40%);
 
   --accent: hsl(41 80% 95%);
@@ -88,13 +88,13 @@
   --popover: hsl(158 64% 8%);
   --popover-foreground: hsl(158 15% 96%);
 
-  --primary: hsl(158 75% 28%);         /* Luminous Forest Green */
+  --primary: hsl(158, 64%, 52%);         /* Luminous Forest Green */
   --primary-foreground: hsl(0 0% 100%);
 
   --secondary: hsl(40 86% 48%);        /* Luminous Gold #E59D0E */
   --secondary-foreground: hsl(158 60% 4%);
 
-  --muted: hsl(158 40% 12%);
+  --muted: hsl(159, 65%, 12%);
   --muted-foreground: hsl(158 15% 65%);
 
   --accent: hsl(158 40% 15%);

@@ -7,9 +7,8 @@ import { CategoryCarousel } from "@/components/home/CategoryCarousel";
 import { TrendingBooks } from "@/components/home/TrendingBooks";
 import { FeaturedBuyable } from "@/components/home/FeaturedBuyable";
 import { Testimonials } from "@/components/home/Testimonials";
-import { LiveMap } from "@/components/home/LiveMap";
+import { LiveMapAndScheduleSection } from "@/components/home/LiveMapAndScheduleSection";
 import { DonationAndServices } from "@/components/home/DonationAndServices";
-import { ShiftScheduleSection } from "@/components/shared/ShiftScheduleSection";
 
 export default function HomePage() {
   return (
@@ -32,13 +31,10 @@ export default function HomePage() {
       {/* 6. Member Reviews & Testimonials Carousel (Shadcn Embla) */}
       <Testimonials />
 
-      {/* 7. Today's Duty Shifter & Schedule (compact card) */}
-      <ShiftScheduleSection compact />
+      {/* 7. Live Desk Operations, Duty Shifter Schedule & Campus Location */}
+      <LiveMapAndScheduleSection />
 
-      {/* 8. Live Map & Real-Time Operational Counter Status */}
-      <LiveMap />
-
-      {/* 9. Donation Banner & Academic Services Grid */}
+      {/* 8. Donation Banner & Academic Services Grid */}
       <DonationAndServices />
     </div>
   );

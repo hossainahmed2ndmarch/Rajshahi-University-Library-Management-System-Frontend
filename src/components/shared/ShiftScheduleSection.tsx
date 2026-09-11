@@ -19,6 +19,7 @@ import {
   ShifterContact,
 } from "@/lib/shifterContacts";
 import { useActiveShift } from "@/hooks/useShifts";
+import { SectionHeader } from "./SectionHeader";
 
 /* ------------------------------------------------------------------ */
 /* ContactChip sub-component (compact mode)                            */
@@ -150,7 +151,7 @@ export function ShiftScheduleSection({
   if (compact) {
     /* ---- Compact card for home page ---- */
     return (
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
         <div className="relative overflow-hidden bg-card rounded-3xl border border-border p-6 sm:p-10 shadow-sm">
           {/* Subtle decorative background */}
           <div className="absolute inset-0 pointer-events-none">
@@ -160,40 +161,29 @@ export function ShiftScheduleSection({
 
           <div className="relative z-10">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
-              <div>
-                <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary mb-2">
-                  <Calendar className="h-4 w-4" />
-                  <span>শিফটার ডিউটি রোস্টার</span>
+            <SectionHeader
+              icon={Calendar}
+              subtitleKey="home.scheduleSubtitle"
+              titleKey="home.scheduleTitle"
+              descriptionKey="home.scheduleDesc"
+              className="mb-8"
+              action={
+                <div
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold border shrink-0 ${
+                    activeShift
+                      ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300"
+                      : "bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300"
+                  }`}
+                >
+                  <Radio className="h-3.5 w-3.5 animate-pulse" />
+                  <span>
+                    {activeShift
+                      ? `${activeShift.shifterName || "ডিউটি শিফটার"} এখন চালু`
+                      : "এখন বন্ধ"}
+                  </span>
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-black text-foreground">
-                  আজকের ডিউটি ও যোগাযোগ
-                </h2>
-                <p className="text-xs text-muted-foreground mt-1.5">
-                  আজ{" "}
-                  <span className="font-bold text-foreground">
-                    {todaySchedule.day}
-                  </span>{" "}
-                  — নিচের শিফটারদের সাথে সরাসরি যোগাযোগ করুন
-                </p>
-              </div>
-
-              {/* Live Status Badge */}
-              <div
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold border shrink-0 ${
-                  activeShift
-                    ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300"
-                    : "bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300"
-                }`}
-              >
-                <Radio className="h-3.5 w-3.5 animate-pulse" />
-                <span>
-                  {activeShift
-                    ? `${activeShift.shifterName || "ডিউটি শিফটার"} এখন চালু`
-                    : "এখন বন্ধ"}
-                </span>
-              </div>
-            </div>
+              }
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Asr – Maghrib slot */}
@@ -369,31 +359,23 @@ export function ShiftScheduleSection({
       {/* Full Weekly Schedule — beautiful table layout */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section header */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6">
-          <div>
-            <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary mb-2">
-              <Calendar className="h-4 w-4" />
-              <span>সাপ্তাহিক ডিউটি রোস্টার</span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-foreground">
-              শিফটার সূচি ও যোগাযোগ
-            </h2>
-            <p className="text-xs text-muted-foreground mt-1">
-              প্রতিটি দিনের শিফটারের সাথে সরাসরি কল বা WhatsApp-এ যোগাযোগ
-              করুন।
-            </p>
-          </div>
-
-          {/* Live status badge */}
-          {activeShift && (
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-bold shrink-0">
-              <Radio className="h-3.5 w-3.5 animate-pulse" />
-              <span>
-                {activeShift.shifterName || "ডিউটি শিফটার"} — কাউন্টার খোলা
-              </span>
-            </div>
-          )}
-        </div>
+        <SectionHeader
+          icon={Calendar}
+          subtitleKey="home.weeklyScheduleSubtitle"
+          titleKey="home.weeklyScheduleTitle"
+          descriptionKey="home.weeklyScheduleDesc"
+          className="mb-6"
+          action={
+            activeShift && (
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-bold shrink-0">
+                <Radio className="h-3.5 w-3.5 animate-pulse" />
+                <span>
+                  {activeShift.shifterName || "ডিউটি শিফটার"} — কাউন্টার খোলা
+                </span>
+              </div>
+            )
+          }
+        />
 
         {/* Roster Table */}
         <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-sm">

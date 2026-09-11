@@ -18,8 +18,11 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { SectionHeader } from "@/components/shared/SectionHeader";
+import { useLanguageStore } from "@/store/useLanguageStore";
 
 export function FeaturedBuyable() {
+  const { t } = useLanguageStore();
   const [filterType, setFilterType] = useState<"NEW" | "BEST_SELLING">("BEST_SELLING");
 
   const { data: booksData, isLoading } = useGetBooks({
@@ -30,7 +33,7 @@ export function FeaturedBuyable() {
   const books = booksData?.data || [];
 
   return (
-    <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+    <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
       <Carousel
         opts={{
           align: "start",
@@ -38,53 +41,47 @@ export function FeaturedBuyable() {
         }}
         className="w-full"
       >
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#C78700]">
-              <ShoppingBag className="h-3.5 w-3.5" />
-              <span>Islamic Bookstore & Editions</span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground mt-1">
-              Buy Classical & Scholarly Treatises
-            </h2>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-              Authentic prints, verified translations, and student editions available with Gold pricing.
-            </p>
-          </div>
+        <SectionHeader
+          icon={ShoppingBag}
+          subtitleKey="home.bookstoreSubtitle"
+          badgeVariant="gold"
+          titleKey="home.bookstoreTitle"
+          descriptionKey="home.bookstoreDesc"
+          className="mb-8"
+          action={
+            <div className="flex items-center gap-3">
+              <div className="flex p-1 rounded-xl bg-muted border border-border text-xs font-bold">
+                <button
+                  onClick={() => setFilterType("BEST_SELLING")}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                    filterType === "BEST_SELLING"
+                      ? "bg-[#C78700] text-white shadow-xs"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Flame className="h-3.5 w-3.5" />
+                  <span>{t("common.bestSellers")}</span>
+                </button>
+                <button
+                  onClick={() => setFilterType("NEW")}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                    filterType === "NEW"
+                      ? "bg-[#C78700] text-white shadow-xs"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Clock className="h-3.5 w-3.5" />
+                  <span>{t("common.newArrivals")}</span>
+                </button>
+              </div>
 
-          {/* Filter Toggle & Carousel Controls */}
-          <div className="flex items-center gap-3">
-            <div className="flex p-1 rounded-xl bg-muted border border-border text-xs font-bold">
-              <button
-                onClick={() => setFilterType("BEST_SELLING")}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer ${
-                  filterType === "BEST_SELLING"
-                    ? "bg-[#C78700] text-white shadow-xs"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Flame className="h-3.5 w-3.5" />
-                <span>Best Sellers</span>
-              </button>
-              <button
-                onClick={() => setFilterType("NEW")}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer ${
-                  filterType === "NEW"
-                    ? "bg-[#C78700] text-white shadow-xs"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Clock className="h-3.5 w-3.5" />
-                <span>New Arrivals</span>
-              </button>
+              <div className="hidden sm:flex items-center gap-1.5 relative">
+                <CarouselPrevious className="static translate-y-0 h-9 w-9 rounded-xl bg-card border border-border transition-all duration-300 hover:border-[#004F32]/30 dark:hover:border-emerald-600/40" />
+                <CarouselNext className="static translate-y-0 h-9 w-9 rounded-xl bg-card border border-border transition-all duration-300 hover:border-[#004F32]/30 dark:hover:border-emerald-600/40" />
+              </div>
             </div>
-
-            <div className="hidden sm:flex items-center gap-1.5 relative">
-              <CarouselPrevious className="static translate-y-0 h-9 w-9 rounded-xl border border-border" />
-              <CarouselNext className="static translate-y-0 h-9 w-9 rounded-xl border border-border" />
-            </div>
-          </div>
-        </div>
+          }
+        />
 
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/carousel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGetBookCategories } from "@/hooks/useBooks";
+import { SectionHeader } from "@/components/shared/SectionHeader";
 
 // ---------------------------------------------------------------------------
 // Static display metadata keyed by backend category slug
@@ -153,7 +154,7 @@ export function CategoryCarousel() {
   const { data: liveCategories, isLoading } = useGetBookCategories();
 
   return (
-    <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+    <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
       <Carousel
         opts={{
           align: "start",
@@ -161,26 +162,20 @@ export function CategoryCarousel() {
         }}
         className="w-full"
       >
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-12 gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>Academic Classifications</span>
+        <SectionHeader
+          icon={Sparkles}
+          subtitleKey="home.categorySubtitle"
+          titleKey="home.categoryTitle"
+          titleClassName="text-3xl sm:text-4xl tracking-tighter"
+          descriptionKey="home.categoryDesc"
+          className="mb-12"
+          action={
+            <div className="flex items-center gap-2.5 relative">
+              <CarouselPrevious className="static translate-y-0 transition-all duration-300 h-10 w-10 rounded-full bg-card border border-border hover:border-[#004F32]/30 dark:hover:border-emerald-600/40" />
+              <CarouselNext className="static translate-y-0 transition-all duration-300 h-10 w-10 rounded-full bg-card border border-border hover:border-[#004F32]/30 dark:hover:border-emerald-600/40" />
             </div>
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tighter text-foreground mt-1">
-              Borrowable Knowledge Domains
-            </h2>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1.5 max-w-2xl leading-relaxed">
-              Explore specialized academic subject areas for coursework and
-              research. View the top book previews in each category grid.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2.5 relative">
-            <CarouselPrevious className="static translate-y-0 h-10 w-10 rounded-full border border-border shadow-sm" />
-            <CarouselNext className="static translate-y-0 h-10 w-10 rounded-full border border-border shadow-sm" />
-          </div>
-        </div>
+          }
+        />
 
         <CarouselContent className="-ml-4">
           {isLoading
@@ -196,7 +191,7 @@ export function CategoryCarousel() {
                     key={item.category}
                     className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4"
                   >
-                    <div className="flex flex-col p-6 rounded-3xl border border-border bg-card h-full min-h-[500px]  transition-all duration-300 hover:border-[#004F32]/30  dark:hover:border-emerald-600/40 cursor-pointer group">
+                    <div className="flex flex-col p-6 rounded-3xl border border-border bg-card h-full min-h-[500px] transition-all duration-300 hover:border-[#004F32]/30  dark:hover:border-emerald-600/40 cursor-pointer group">
                       {/* 1. Category Label at top */}
                       <h3 className="font-bold text-md text-foreground mb-6 line-clamp-1 group-hover:text-primary transition-colors">
                         {label}

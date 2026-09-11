@@ -15,6 +15,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { ShiftScheduleSection } from "@/components/shared/ShiftScheduleSection";
 import { DonationBanner } from "@/components/shared/DonationBanner";
+import { SectionHeader } from "@/components/shared/SectionHeader";
 
 /* ------------------------------------------------------------------ */
 /* Types                                                                */
@@ -97,19 +98,13 @@ export default function ContactPage() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Left info panel */}
           <div className="lg:col-span-2 flex flex-col gap-5">
-            <div>
-              <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary mb-2">
-                <Mail className="h-4 w-4" />
-                <span>ইমেইলে বার্তা পাঠান</span>
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-black text-foreground">
-                আমাদের লিখুন
-              </h2>
-              <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-                সরাসরি ইমেইলে আপনার প্রশ্ন, মতামত বা অভিযোগ পাঠান। আমরা
-                সাধারণত ২৪ ঘণ্টার মধ্যে উত্তর দিই।
-              </p>
-            </div>
+            <SectionHeader
+              icon={Mail}
+              subtitleKey="contact.emailSubtitle"
+              titleKey="contact.emailTitle"
+              descriptionKey="contact.emailDesc"
+              className="mb-0"
+            />
 
             {/* Info chips */}
             <div className="space-y-3">

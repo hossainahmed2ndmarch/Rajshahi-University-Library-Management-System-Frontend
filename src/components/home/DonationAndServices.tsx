@@ -6,7 +6,7 @@ import { HeartHandshake, ArrowRight, GraduationCap, ShieldCheck } from "lucide-r
 
 export function DonationAndServices() {
   return (
-    <div className="space-y-16 py-8">
+    <div className="space-y-16 py-5">
       {/* 1. SADAQAH JARIYAH DONATION BANNER */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#004F32] via-[#003824] to-[#040D09] p-8 sm:p-12 text-white border border-emerald-800/60 shadow-xl">

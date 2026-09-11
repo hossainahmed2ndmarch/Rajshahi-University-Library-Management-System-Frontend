@@ -100,7 +100,7 @@ export function BookCard({ book }: BookCardProps) {
     <>
       {/* Card */}
       <div
-        className="group relative flex flex-col rounded-2xl border border-border bg-card shadow-xs overflow-hidden transition-all duration-300 hover:border-[#004F32] dark:hover:border-emerald-600/40 cursor-pointer"
+        className="group relative flex flex-col rounded-2xl border border-border bg-card overflow-hidden transition-all duration-300 hover:border-[#004F32] dark:hover:border-emerald-600/40 cursor-pointer"
         onClick={() => setModalOpen(true)}
       >
         {/* ── Cover Image ──────────────────────────────────────────────────── */}

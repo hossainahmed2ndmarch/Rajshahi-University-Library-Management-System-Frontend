@@ -1,12 +1,25 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BookOpen, UserPlus, Mail, Lock, Phone, User, Hash, Building, ArrowRight } from "lucide-react";
+import {
+  BookOpen,
+  UserPlus,
+  Mail,
+  Lock,
+  Phone,
+  User,
+  Hash,
+  Building,
+  ArrowRight,
+} from "lucide-react";
 import { RUForm, RUInput, RUSelect } from "@/components/forms";
 import { useRegister } from "@/hooks/useAuth";
 import { registerSchema, type RegisterFormValues } from "@/schemas";
+import logo from "../../assets/logo/Version 3- Multi transparent.png";
+import logoDark from "../../assets/logo/white-version.png";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -29,7 +42,7 @@ export default function RegisterPage() {
         onSuccess: () => {
           router.push("/login");
         },
-      }
+      },
     );
   };
 
@@ -40,15 +53,32 @@ export default function RegisterPage() {
       <div className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-[#C78700]/10 blur-3xl pointer-events-none" />
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-3 z-10">
-        <Link href="/" className="inline-flex items-center space-x-3 group">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#004F32] text-white shadow-lg group-hover:scale-105 transition-transform">
-            <BookOpen className="h-7 w-7 text-amber-400" />
+        <Link
+          href="/"
+          className="inline-flex items-center space-x-2.5 shrink-0 group"
+        >
+          <div className="flex h-11 w-11 items-center justify-center">
+            {/* Light Mode Logo */}
+            <Image
+              src={logo}
+              alt="RUIL Logo"
+              priority
+              className="h-10 w-10 object-contain dark:hidden"
+            />
+            {/* Dark Mode Logo */}
+            <Image
+              src={logoDark}
+              alt="RUIL Logo"
+              priority
+              className="hidden h-10 w-10 object-contain dark:block"
+            />
           </div>
-          <div className="text-left">
-            <span className="text-xl font-extrabold tracking-tight text-foreground block">
-              RU Islamic Library
+
+          <div className="text-left hidden sm:block">
+            <span className="text-base sm:text-lg font-black tracking-tight text-[#004F32] dark:text-emerald-400 block leading-tight">
+              রাবি ইসলামিক পাঠাগার
             </span>
-            <span className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400 tracking-wider uppercase block">
+            <span className="text-[10px] font-bold text-[#C78700] dark:text-amber-400 tracking-wider uppercase block">
               Rajshahi University
             </span>
           </div>
@@ -63,7 +93,7 @@ export default function RegisterPage() {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-lg z-10">
-        <div className="rounded-3xl border border-border bg-card p-8 shadow-xl text-card-foreground">
+        <div className="rounded-3xl border border-border bg-card p-8 text-card-foreground">
           <RUForm<RegisterFormValues>
             schema={registerSchema}
             defaultValues={{
@@ -156,7 +186,11 @@ export default function RegisterPage() {
                 className="mt-2 w-full flex items-center justify-center space-x-2 rounded-xl bg-[#004F32] hover:bg-emerald-900 py-3 px-4 text-xs font-bold text-white shadow-md focus:ring-2 focus:ring-emerald-400 disabled:opacity-50 transition-all cursor-pointer"
               >
                 <UserPlus className="h-4 w-4 text-amber-300" />
-                <span>{isPending ? "Creating Account..." : "Submit Registration Application"}</span>
+                <span>
+                  {isPending
+                    ? "Creating Account..."
+                    : "Submit Registration Application"}
+                </span>
                 <ArrowRight className="h-4 w-4 ml-1" />
               </button>
             </div>
@@ -164,7 +198,10 @@ export default function RegisterPage() {
 
           <div className="mt-6 text-center text-xs text-muted-foreground">
             Already registered as a member?{" "}
-            <Link href="/login" className="font-bold text-primary hover:underline">
+            <Link
+              href="/login"
+              className="font-bold text-primary hover:underline"
+            >
               Sign In Here
             </Link>
           </div>

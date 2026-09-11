@@ -10,6 +10,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { useActiveShift } from "@/hooks/useShifts";
+import { SectionHeader } from "@/components/shared/SectionHeader";
 
 export function LiveMap() {
   const { data: activeShift, isLoading } = useActiveShift();
@@ -17,23 +18,19 @@ export function LiveMap() {
   const isCounterOpen = Boolean(activeShift);
 
   return (
-    <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+    <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
       <div className="bg-card rounded-3xl border border-border p-6 sm:p-10 shadow-sm">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           {/* Left Info Panel */}
           <div className="lg:col-span-5 space-y-6">
-            <div>
-              <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary mb-1">
-                <Building className="h-4 w-4" />
-                <span>Physical Stacks & Circulation Counter</span>
-              </div>
-              <h3 className="text-2xl sm:text-3xl font-black text-foreground">
-                Visit RU Islamic Central Library
-              </h3>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1 leading-relaxed">
-                Located on the 2nd Floor of the Central Library Bhaban at Rajshahi University main campus.
-              </p>
-            </div>
+            <SectionHeader
+              icon={Building}
+              subtitleKey="home.liveMapSubtitle"
+              titleKey="home.liveMapTitle"
+              headingAs="h3"
+              descriptionKey="home.liveMapDesc"
+              className="mb-0"
+            />
 
             {/* Real-Time Operational Status Badge driven by useShifts() */}
             <div

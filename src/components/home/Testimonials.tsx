@@ -24,6 +24,7 @@ import Autoplay from "embla-carousel-autoplay";
 import { useGetMe } from "@/hooks/useAuth";
 import { useGetServiceReviews, useCreateServiceReview } from "@/hooks/useReviews";
 import { IServiceReview } from "@/types/review";
+import { SectionHeader } from "@/components/shared/SectionHeader";
 
 // Hardcoded fallback testimonials shown when no real reviews exist
 const FALLBACK_TESTIMONIALS = [
@@ -118,7 +119,7 @@ function ReviewCard({ review }: { review: IServiceReview }) {
   const timeAgo = review.createdAt ? formatTimeAgo(review.createdAt) : "";
 
   return (
-    <div className="h-full bg-card rounded-3xl border border-border p-6 sm:p-8 flex flex-col justify-between shadow-xs hover:shadow-md transition-shadow">
+    <div className="h-full bg-card rounded-3xl border border-border p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:border-[#004F32] dark:hover:border-emerald-600/40">
       <div>
         {/* Star Rating */}
         <div className="flex items-center gap-1 text-amber-400 mb-4">
@@ -133,7 +134,7 @@ function ReviewCard({ review }: { review: IServiceReview }) {
           ))}
         </div>
         {/* Comment */}
-        <Quote className="h-6 w-6 text-primary/30 mb-2" />
+        <Quote className="h-6 w-6 text-primary mb-2" />
         <p className="text-xs sm:text-sm text-foreground/90 leading-relaxed italic">
           &ldquo;{review.comment || "Great library service!"}&rdquo;
         </p>
@@ -180,14 +181,14 @@ function FallbackCard({
   testimonial: (typeof FALLBACK_TESTIMONIALS)[number];
 }) {
   return (
-    <div className="h-full bg-card rounded-3xl border border-border p-6 sm:p-8 flex flex-col justify-between shadow-xs hover:shadow-md transition-shadow">
+    <div className="h-full bg-card rounded-3xl border border-border p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:border-[#004F32] dark:hover:border-emerald-600/40">
       <div>
         <div className="flex items-center gap-1 text-amber-400 mb-4">
           {[...Array(testimonial.rating)].map((_, i) => (
             <Star key={i} className="h-4 w-4 fill-amber-400" />
           ))}
         </div>
-        <Quote className="h-6 w-6 text-primary/30 mb-2" />
+        <Quote className="h-6 w-6 text-primary mb-2" />
         <p className="text-xs sm:text-sm text-foreground/90 leading-relaxed italic">
           &ldquo;{testimonial.comment}&rdquo;
         </p>
@@ -251,7 +252,7 @@ function ReviewFormDialog() {
           <Button
             variant="default"
             size="lg"
-            className="gap-2 rounded-full px-5 shadow-md hover:shadow-lg transition-shadow"
+            className="gap-2 rounded-full px-5 shadow-md hover:shadow-lg transition-shadow dark:bg-primary/60"
           />
         }
       >
@@ -295,7 +296,7 @@ function ReviewFormDialog() {
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="Tell us about your experience with our library..."
-              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring resize-none"
+              className="w-full rounded-xl border-2 border-emerald-600/30 dark:border-emerald-500/30 bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-500 dark:bg-background resize-none"
               rows={4}
               maxLength={500}
             />
@@ -414,20 +415,16 @@ export function Testimonials() {
   }, [serviceReviewsData]);
 
   return (
-    <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+    <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
       {/* Header */}
-      <div className="text-center max-w-xl mx-auto mb-6">
-        <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-primary">
-          <Sparkles className="h-3.5 w-3.5" />
-          <span>Community Voice</span>
-        </div>
-        <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground mt-1">
-          Member Reviews & Testimonials
-        </h2>
-        <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-          Real experiences from Rajshahi University scholars, students, and library members.
-        </p>
-
+      <SectionHeader
+        icon={Sparkles}
+        subtitleKey="home.testimonialsSubtitle"
+        titleKey="home.testimonialsTitle"
+        descriptionKey="home.testimonialsDesc"
+        align="center"
+        className="mb-6 max-w-xl"
+      >
         {/* Aggregate Stats */}
         {stats && (
           <div className="mt-3 inline-flex items-center gap-2 bg-muted/60 rounded-full px-4 py-1.5">
@@ -451,7 +448,7 @@ export function Testimonials() {
             </span>
           </div>
         )}
-      </div>
+      </SectionHeader>
 
       {/* Share Button + Carousel Controls */}
       <Carousel
@@ -465,8 +462,8 @@ export function Testimonials() {
         <div className="flex items-center justify-between gap-3 mb-4">
           <ReviewFormDialog />
           <div className="flex gap-2">
-            <CarouselPrevious className="static translate-y-0 h-9 w-9 rounded-xl border border-border" />
-            <CarouselNext className="static translate-y-0 h-9 w-9 rounded-xl border border-border" />
+            <CarouselPrevious className="static translate-y-0 h-9 w-9 rounded-xl bg-card border border-border transition-all duration-300 hover:border-[#004F32]/30 dark:hover:border-emerald-600/40" />
+            <CarouselNext className="static translate-y-0 h-9 w-9 rounded-xl bg-card border border-border transition-all duration-300 hover:border-[#004F32]/30 dark:hover:border-emerald-600/40" />
           </div>
         </div>
 

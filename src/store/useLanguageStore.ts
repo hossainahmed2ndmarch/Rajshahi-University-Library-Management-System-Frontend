@@ -8,8 +8,8 @@ interface LanguageState {
   t: (key: string) => string;
 }
 
-export const useLanguageStore = create<LanguageState>()(
-  persist(
+export const useLanguageStore = create(
+  persist<LanguageState>(
     (set, get) => ({
       language: "bn", // Default language is Bangla
       setLanguage: (language: Language) => {
@@ -22,10 +22,11 @@ export const useLanguageStore = create<LanguageState>()(
       t: (path: string) => {
         const lang = get().language;
         const keys = path.split(".");
-        let current: any = translations[lang] || translations.bn;
+        let current: unknown = translations[lang as keyof typeof translations] || translations.bn;
+
         for (const k of keys) {
-          if (current && typeof current === "object" && k in current) {
-            current = current[k];
+          if (typeof current === "object" && current !== null && k in current) {
+            current = (current as Record<string, unknown>)[k];
           } else {
             return path;
           }
@@ -36,7 +37,6 @@ export const useLanguageStore = create<LanguageState>()(
     {
       name: "ruil-language-storage",
       // Prevent auto-rehydration on mount to avoid SSR/client hydration mismatch.
-      // LanguageStoreHydrator in Providers.tsx manually calls rehydrate() after mount.
       skipHydration: true,
     }
   )

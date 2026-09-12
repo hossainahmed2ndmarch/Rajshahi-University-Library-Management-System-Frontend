@@ -41,6 +41,9 @@ export function Navbar() {
 
   const dashboardRoute = getDefaultDashboardRoute(user?.role);
   const { t } = useLanguageStore();
+  const logoTitle = t("nav.logoTitle");
+  const logoSubTitle = t("nav.logoSubTitle");
+  const borrowTitle = t("common.borrow");
 
   const navLinks = [
     { label: t("nav.home"), href: "/" },
@@ -83,10 +86,10 @@ export function Navbar() {
 
               <div className="hidden sm:block">
                 <span className="text-base sm:text-lg font-black tracking-tight text-[#004F32] dark:text-emerald-400 block leading-tight">
-                  রাবি ইসলামিক পাঠাগার
+                  {logoTitle}
                 </span>
                 <span className="text-[10px] font-bold text-[#C78700] dark:text-amber-400 tracking-wider uppercase block">
-                  Rajshahi University
+                  {logoSubTitle}
                 </span>
               </div>
             </Link>
@@ -267,7 +270,9 @@ export function Navbar() {
                 className="text-[11px] font-bold text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
               >
                 <BookOpen className="h-3.5 w-3.5 text-[#004F32] dark:text-emerald-400" />
-                <span className="text-[#004F32] dark:text-emerald-400">বই ধার (Borrow Catalog)</span>
+                <span className="text-[#004F32] dark:text-emerald-400">
+                  {borrowTitle}
+                </span>
               </Link>
 
               <Link
@@ -312,7 +317,7 @@ export function Navbar() {
               className="flex items-center space-x-2 px-3 py-2 text-xs font-bold text-[#004F32] dark:text-emerald-400 hover:bg-muted rounded-xl"
             >
               <HeartHandshake className="h-4 w-4 text-amber-500" />
-              <span>Donate Books (দান করুন)</span>
+              <span>{t("nav.donate")}</span>
             </Link>
 
             {user ? (

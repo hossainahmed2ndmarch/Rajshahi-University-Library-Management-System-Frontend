@@ -8,7 +8,8 @@ import { TrendingBooks } from "@/components/home/TrendingBooks";
 import { FeaturedBuyable } from "@/components/home/FeaturedBuyable";
 import { Testimonials } from "@/components/home/Testimonials";
 import { LiveMapAndScheduleSection } from "@/components/home/LiveMapAndScheduleSection";
-import { DonationAndServices } from "@/components/home/DonationAndServices";
+import { ServicesGrid } from "@/components/home/ServicesGrid";
+import { DonationBanner } from "@/components/shared/DonationBanner";
 
 export default function HomePage() {
   return (
@@ -34,8 +35,10 @@ export default function HomePage() {
       {/* 7. Live Desk Operations, Duty Shifter Schedule & Campus Location */}
       <LiveMapAndScheduleSection />
 
-      {/* 8. Donation Banner & Academic Services Grid */}
-      <DonationAndServices />
+      {/* 8. Sadaqah Jariyah & Book Endowment Portal */}
+      <DonationBanner />
+      {/* 9. Academic & Institutional Library Services */}
+      <ServicesGrid />
     </div>
   );
 }

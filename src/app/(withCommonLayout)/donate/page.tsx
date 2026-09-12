@@ -10,13 +10,12 @@ import {
   Building2,
   Truck,
   Package,
-  Calendar,
   MapPin,
-  Clock,
   Info,
-  PhoneCall,
-  Sparkles,
+  Quote,
+  ArrowRight,
 } from "lucide-react";
+import Link from "next/link";
 import { RUForm, RUInput, RUSelect } from "@/components/forms";
 import { useCreateDonation } from "@/hooks/useDonations";
 import { useGetMe } from "@/hooks/useAuth";
@@ -111,20 +110,34 @@ export default function DonateBookPage() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10">
-      {/* Banner */}
-      <div className="mb-8 rounded-2xl bg-gradient-to-r from-[#004F32] via-[#003824] to-[#C78700] p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
-        <div className="relative z-10 max-w-xl">
-          <div className="flex items-center space-x-2 text-amber-300 text-xs font-semibold uppercase tracking-wider mb-2">
-            <Gift className="h-4 w-4" />
-            <span>Sadaqah Jariyah Project</span>
+    <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+      {/* Aesthetic Hero Banner */}
+      <div className="relative mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-[#004F32] via-[#003824] to-[#040D09] p-6 sm:p-10 text-white shadow-2xl border border-emerald-800/80 dark:border-emerald-700/60">
+        <div className="pointer-events-none absolute -left-16 -top-16 h-64 w-64 rounded-full bg-emerald-500/15 blur-3xl" />
+        <div className="pointer-events-none absolute -right-16 -bottom-16 h-64 w-64 rounded-full bg-[#C78700]/15 blur-3xl" />
+
+        <div className="relative z-10 max-w-2xl space-y-3">
+          <div className="inline-flex items-center gap-2 rounded-full bg-[#C78700]/20 px-3.5 py-1 text-xs font-bold text-amber-300 border border-[#C78700]/35 shadow-2xs">
+            <HeartHandshake className="h-4 w-4 text-amber-400" />
+            <span>সদকায়ে জারিয়া ও কিতাব ওয়াকফ প্রকল্প</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+          <h1 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight text-white">
             Donate Books to RU Islamic Library
           </h1>
-          <p className="mt-2 text-sm text-emerald-100/90 leading-relaxed">
-            Contribute Islamic literature, academic texts, commentary, or research journals. Upon receipt and approval by our staff, your donated books are automatically cataloged as borrowable for university members.
+          <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed font-light">
+            Contribute Islamic literature, academic texts, commentary, or research journals. Upon receipt and verification by our staff, your donated books are barcoded and made freely accessible to university members.
           </p>
+
+          <div className="pt-1">
+            <div className="inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-3.5 py-2 text-[11px] text-emerald-50 italic">
+              <Quote className="h-3.5 w-3.5 text-amber-400/80 shrink-0" />
+              <span>«মানুষ যখন মারা যায়, তার সমস্ত আমল বন্ধ হয়ে যায়—কেবল তিনটি ছাড়া: সদকায়ে জারিয়া, উপকারী জ্ঞান, অথবা নেক সন্তান...» (সহিহ মুসলিম: ১৬৩১)</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="absolute right-0 bottom-0 top-0 hidden lg:flex items-center justify-center p-8 opacity-10 pointer-events-none">
+          <HeartHandshake className="h-60 w-60 text-amber-300" />
         </div>
       </div>
 
@@ -429,33 +442,52 @@ export default function DonateBookPage() {
           </RUForm>
         </div>
 
-        {/* Sidebar Info Card */}
+        {/* Sidebar Info Cards */}
         <div className="space-y-6">
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-2xs space-y-4">
+          <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-2xs space-y-4">
             <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-amber-500" />
+              <ShieldCheck className="h-4.5 w-4.5 text-[#C78700]" />
               <span>Donation Lifecycle &amp; Rules</span>
             </h3>
-            <ul className="space-y-3 text-xs text-muted-foreground">
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+            <ul className="space-y-3.5 text-xs text-muted-foreground">
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                 <span>
-                  <strong>Automatic Cataloging:</strong> Once received or approved by any shifter or admin, the book is automatically added to the library collection as a borrowable item.
+                  <strong className="text-foreground">Automatic Cataloging:</strong> Once received and verified by our staff, the book is automatically added to the digital catalog as a borrowable item.
                 </span>
               </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                 <span>
-                  <strong>Continuous Sadaqah:</strong> Earn endless reward as students and researchers read and borrow your contributed literature.
+                  <strong className="text-foreground">Continuous Sadaqah:</strong> Earn ongoing reward as students, faculty, and scholars borrow and read your contributed literature.
                 </span>
               </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                 <span>
-                  <strong>Multiple Handover Options:</strong> Drop off in person, schedule a campus pickup, or courier from anywhere in Bangladesh.
+                  <strong className="text-foreground">Multiple Handover Options:</strong> Drop off at Central Library desk, request free campus pickup, or courier from anywhere in Bangladesh.
                 </span>
               </li>
             </ul>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-card p-5 space-y-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-foreground">
+              <Building2 className="h-4 w-4 text-primary" />
+              <span>Central Collection Desk</span>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              2nd Floor, Counter 3, Central Library Bhaban, Rajshahi University Campus.
+            </p>
+            <div className="pt-2 border-t border-border/60">
+              <Link
+                href="/guest/dashboard"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-[#C78700] transition-colors"
+              >
+                <span>Track your previous donations</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
           </div>
         </div>
       </div>

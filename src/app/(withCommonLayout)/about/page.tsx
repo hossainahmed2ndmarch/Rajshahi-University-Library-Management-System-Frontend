@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
-import { BookOpen, ShieldCheck, HeartHandshake, Users, Sparkles, Building, ArrowRight } from "lucide-react";
+import { ShieldCheck, Sparkles, Building } from "lucide-react";
 import { ServicesGrid } from "@/components/home/ServicesGrid";
 import { DonationBanner } from "@/components/shared/DonationBanner";
 

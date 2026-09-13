@@ -47,6 +47,7 @@ const PUBLIC_ROUTES = [
   "/donate",
   "/gallery",
   "/blogs",
+  "/publications",
   "/about",
   "/contact",
 ];

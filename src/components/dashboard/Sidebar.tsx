@@ -21,6 +21,7 @@ import {
   Sparkles,
   Barcode,
   User,
+  Newspaper,
 } from "lucide-react";
 import { useGetMe, useLogout } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
@@ -59,6 +60,11 @@ const ROLE_NAV_ITEMS: Record<UserRole, NavItem[]> = {
       label: "Member Directory & Roles",
       href: "/dashboard/admin/members",
       icon: Users,
+    },
+    {
+      label: "Publications & Articles",
+      href: "/dashboard/admin/publications",
+      icon: Newspaper,
     },
     {
       label: "User Role Provisioning",
@@ -123,6 +129,11 @@ const ROLE_NAV_ITEMS: Record<UserRole, NavItem[]> = {
       label: "Member Directory & Roles",
       href: "/dashboard/admin/members",
       icon: Users,
+    },
+    {
+      label: "Publications & Articles",
+      href: "/dashboard/admin/publications",
+      icon: Newspaper,
     },
     {
       label: "Purchases & Orders",

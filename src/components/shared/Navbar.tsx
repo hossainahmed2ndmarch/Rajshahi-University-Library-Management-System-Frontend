@@ -52,7 +52,7 @@ export function Navbar() {
     { label: t("nav.about"), href: "/about" },
     { label: t("nav.contact"), href: "/contact" },
     { label: t("nav.gallery"), href: "/gallery" },
-    { label: t("nav.blogs"), href: "/blogs" },
+    { label: t("nav.publications"), href: "/publications" },
   ];
 
   return (

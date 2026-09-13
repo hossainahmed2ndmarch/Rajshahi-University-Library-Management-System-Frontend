@@ -46,9 +46,32 @@ export function BookViewModal({ book, onClose }: BookViewModalProps) {
           </div>
           <div className="min-w-0 flex-1">
             <h3 className="font-bold text-base text-foreground truncate">{book.title}</h3>
-            <p className="text-xs text-muted-foreground">by {book.author}</p>
+            
+            {/* Authors with roles */}
+            {book.authors && book.authors.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                {book.authors.map((a, i) => (
+                  <span
+                    key={i}
+                    className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md border ${
+                      a.role === "TRANSLATOR"
+                        ? "bg-blue-500/10 border-blue-500/30 text-blue-700 dark:text-blue-300"
+                        : "bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300"
+                    }`}
+                  >
+                    <span>{a.name}</span>
+                    <span className="text-[9px] font-bold opacity-75">
+                      ({a.role === "TRANSLATOR" ? "Translator" : "Writer"})
+                    </span>
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground mt-0.5">by {book.author}</p>
+            )}
+
             {book.publisher && (
-              <p className="text-[10px] text-muted-foreground mt-1">Publisher: {book.publisher}</p>
+              <p className="text-[10px] text-muted-foreground mt-1.5">Publisher: {book.publisher}</p>
             )}
             {Array.isArray(book.images) && book.images.length > 0 && (
               <span className="inline-block mt-2 text-[10px] bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded">
@@ -83,9 +106,22 @@ export function BookViewModal({ book, onClose }: BookViewModalProps) {
 
         {/* ── Information Grid ── */}
         <div className="grid grid-cols-2 gap-3 text-xs">
-          <div className="p-3 rounded-xl bg-muted/40 border border-border space-y-1">
-            <span className="text-[10px] text-muted-foreground uppercase font-bold">Category</span>
-            <p className="font-semibold text-foreground">{book.category}</p>
+          <div className="p-3 rounded-xl bg-muted/40 border border-border space-y-1 col-span-2 sm:col-span-1">
+            <span className="text-[10px] text-muted-foreground uppercase font-bold">Categories</span>
+            {book.categories && book.categories.length > 0 ? (
+              <div className="flex flex-wrap gap-1 mt-0.5">
+                {book.categories.map((cat, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center rounded-md bg-[#004F32]/10 dark:bg-emerald-950/60 border border-[#004F32]/20 px-2 py-0.5 text-[10px] font-semibold text-[#004F32] dark:text-emerald-300"
+                  >
+                    {cat}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="font-semibold text-foreground">{book.category}</p>
+            )}
           </div>
 
           <div className="p-3 rounded-xl bg-muted/40 border border-border space-y-1">

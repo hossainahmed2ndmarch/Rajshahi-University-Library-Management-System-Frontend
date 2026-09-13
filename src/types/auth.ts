@@ -9,6 +9,12 @@ export type UserStatus =
 
 export type PaymentMethod = "CASH" | "ONLINE";
 
+export interface IUserOptions {
+  departments: string[];
+  sessions: string[];
+  institutions: string[];
+}
+
 export interface IUser {
   id: string | number;
   email: string;

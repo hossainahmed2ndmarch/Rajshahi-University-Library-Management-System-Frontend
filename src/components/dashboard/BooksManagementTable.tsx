@@ -9,6 +9,7 @@ import {
   useDeleteBook,
   useUploadBookCover,
   useUploadBookImages,
+  useGetBookOptions,
 } from "@/hooks/useBooks";
 import { IBook, ICreateBookPayload, IUpdateBookPayload } from "@/types/book";
 import {
@@ -33,6 +34,7 @@ export function BooksManagementTable({
 }: BooksManagementTableProps) {
   // ── Data & Mutations ──────────────────────────────────────────────────────
   const { data, isLoading } = useGetBooks();
+  const { data: bookOptions } = useGetBookOptions();
   const { mutate: createBook, isPending: isCreating } = useCreateBook();
   const { mutate: updateBook, isPending: isUpdating } = useUpdateBook();
   const { mutate: deleteBook, isPending: isDeleting } = useDeleteBook();
@@ -61,18 +63,26 @@ export function BooksManagementTable({
 
   // Extract unique category options for filtering
   const categories = useMemo(() => {
-    const set = new Set<string>();
+    const set = new Set<string>(bookOptions?.categories || []);
     booksList.forEach((b) => {
-      if (b.category?.trim()) set.add(b.category.trim());
+      if (b.categories && Array.isArray(b.categories)) {
+        b.categories.forEach((c) => c && set.add(c.trim()));
+      } else if (b.category?.trim()) {
+        b.category.split(',').forEach((c) => c && set.add(c.trim()));
+      }
     });
-    return Array.from(set).sort();
-  }, [booksList]);
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [booksList, bookOptions?.categories]);
 
   // Filtered dataset for TanStack Table
   const filteredBooks = useMemo(() => {
     return booksList.filter((b) => {
       const matchesType = typeFilter === "ALL" || b.type === typeFilter;
-      const matchesCat = categoryFilter === "ALL" || b.category === categoryFilter;
+      const matchesCat =
+        categoryFilter === "ALL" ||
+        b.category === categoryFilter ||
+        (Array.isArray(b.categories) && b.categories.includes(categoryFilter)) ||
+        b.category.toLowerCase().includes(categoryFilter.toLowerCase());
       return matchesType && matchesCat;
     });
   }, [booksList, typeFilter, categoryFilter]);
@@ -182,6 +192,7 @@ export function BooksManagementTable({
         onClose={() => setIsFormModalOpen(false)}
         selectedBook={selectedBookForEdit}
         categories={categories}
+        bookOptions={bookOptions}
         onSubmitCreate={handleCreateSubmit}
         onSubmitUpdate={handleUpdateSubmit}
         onUploadCover={handleUploadCover}

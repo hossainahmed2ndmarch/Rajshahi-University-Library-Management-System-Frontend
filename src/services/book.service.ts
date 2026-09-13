@@ -1,6 +1,14 @@
 import { axiosInstance } from "@/lib/axios";
 import { ApiResponse } from "@/types/api.types";
-import { IBook, IBookQueryParams, ICreateBookPayload, IUpdateBookPayload } from "@/types/book";
+import {
+  IBook,
+  IBookQueryParams,
+  ICreateBookPayload,
+  IUpdateBookPayload,
+  IAuthorItem,
+  AuthorRole,
+  IBookOptions,
+} from "@/types/book";
 
 type RawBook = Record<string, unknown>;
 
@@ -22,13 +30,62 @@ export const normalizeBook = (raw: RawBook): IBook => {
     rawType === "HYBRID" ||
     Boolean(raw.isSellable);
 
+  // Parse structured authors
+  let authors: IAuthorItem[] = [];
+  if (Array.isArray(raw.authors) && raw.authors.length > 0) {
+    authors = (raw.authors as any[])
+      .map((a) => ({
+        name: String(a.name || "").trim(),
+        role: (a.role === "TRANSLATOR" ? "TRANSLATOR" : "WRITER") as AuthorRole,
+      }))
+      .filter((a) => Boolean(a.name));
+  } else if (typeof raw.author === "string" && raw.author.trim()) {
+    authors = raw.author
+      .split(",")
+      .map((part) => {
+        const trimmed = part.trim();
+        const isTrans = trimmed.toLowerCase().includes("(translator)");
+        const clean = trimmed.replace(/\(translator\)/i, "").trim();
+        return {
+          name: clean,
+          role: (isTrans ? "TRANSLATOR" : "WRITER") as AuthorRole,
+        };
+      })
+      .filter((a) => Boolean(a.name));
+  }
+
+  // Parse structured categories
+  let categories: string[] = [];
+  if (Array.isArray(raw.categories) && raw.categories.length > 0) {
+    categories = (raw.categories as string[])
+      .map((c) => String(c).trim())
+      .filter(Boolean);
+  } else if (typeof raw.category === "string" && raw.category.trim()) {
+    categories = raw.category
+      .split(",")
+      .map((c) => c.trim())
+      .filter(Boolean);
+  }
+
+  const authorDisplay =
+    (raw.author as string) ||
+    authors
+      .map((a) => (a.role === "TRANSLATOR" ? `${a.name} (Translator)` : a.name))
+      .join(", ") ||
+    "Unknown Author";
+
+  const categoryDisplay =
+    (raw.category as string) || categories.join(", ") || "General";
+
   return {
     id: String(raw.id),
     title: (raw.title as string) || "Untitled Book",
-    author: (raw.author as string) || "Unknown Author",
+    author: authorDisplay,
+    authors,
     isbn: (raw.isbn as string) || "N/A",
     locationCell: (raw.locationCell as string) || "Cell-Unassigned",
-    category: (raw.category as string) || "General",
+    category: categoryDisplay,
+    categories,
     publisher: (raw.publisher as string) || "N/A",
     pages: (raw.pages as number) || 0,
     type: rawType as IBook["type"],
@@ -118,9 +175,11 @@ export const BookService = {
     const response = await axiosInstance.post<ApiResponse<RawBook>>("/books", {
       title: payload.title,
       author: payload.author,
+      authors: payload.authors,
       isbn: payload.isbn,
       locationCell: payload.locationCell,
       category: payload.category,
+      categories: payload.categories,
       publisher: payload.publisher,
       pages: Number(payload.pages || 0),
       type: payload.type,
@@ -158,6 +217,11 @@ export const BookService = {
   getCategories: async (): Promise<{ category: string; count: number }[]> => {
     const response = await axiosInstance.get<{ success: boolean; data: { category: string; count: number }[] }>("/books/categories");
     return response.data?.data ?? [];
+  },
+
+  getBookOptions: async (): Promise<IBookOptions> => {
+    const response = await axiosInstance.get<{ success: boolean; data: IBookOptions }>("/books/options");
+    return response.data?.data ?? { categories: [], locationCells: [], publishers: [], authors: [] };
   },
 
   /**

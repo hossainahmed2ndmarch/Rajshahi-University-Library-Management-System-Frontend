@@ -9,6 +9,7 @@ import {
   IBookQueryParams,
   ICreateBookPayload,
   IUpdateBookPayload,
+  IBookOptions,
 } from "@/types/book";
 
 // ---------------------------------------------------------------------------
@@ -135,5 +136,13 @@ export const useGetBookCategories = () => {
     queryKey: ["book-categories"],
     queryFn: () => BookService.getCategories(),
     staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useGetBookOptions = () => {
+  return useQuery<IBookOptions>({
+    queryKey: ["book-options"],
+    queryFn: () => BookService.getBookOptions(),
+    staleTime: 2 * 60 * 1000,
   });
 };

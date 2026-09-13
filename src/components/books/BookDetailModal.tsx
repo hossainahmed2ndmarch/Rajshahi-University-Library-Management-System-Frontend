@@ -304,9 +304,20 @@ export function BookDetailModal({ book, onClose }: BookDetailModalProps) {
           {/* Top Header Bar */}
           <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-border bg-muted/20">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center rounded-full bg-emerald-100 dark:bg-emerald-950 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
-                {book.category || "Islamic Treatise"}
-              </span>
+              {book.categories && book.categories.length > 0 ? (
+                book.categories.map((c, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center rounded-full bg-emerald-100 dark:bg-emerald-950 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300"
+                  >
+                    {c}
+                  </span>
+                ))
+              ) : (
+                <span className="inline-flex items-center rounded-full bg-emerald-100 dark:bg-emerald-950 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+                  {book.category || "Islamic Treatise"}
+                </span>
+              )}
               <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                 {book.type || "General"}
               </span>
@@ -433,9 +444,26 @@ export function BookDetailModal({ book, onClose }: BookDetailModalProps) {
                 <h2 className="text-lg sm:text-xl font-bold leading-snug text-foreground">
                   {book.title}
                 </h2>
-                <p className="text-xs sm:text-sm font-medium text-muted-foreground">
-                  By <span className="font-semibold text-foreground">{book.author}</span>
-                </p>
+                {book.authors && book.authors.length > 0 ? (
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 text-xs sm:text-sm font-medium text-muted-foreground">
+                    <span>By</span>
+                    {book.authors.map((a, i) => (
+                      <span key={i} className="inline-flex items-center gap-1 font-semibold text-foreground">
+                        <span>{a.name}</span>
+                        {a.role === "TRANSLATOR" && (
+                          <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.2 rounded">
+                            Translator
+                          </span>
+                        )}
+                        {i < book.authors!.length - 1 ? ", " : ""}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">
+                    By <span className="font-semibold text-foreground">{book.author}</span>
+                  </p>
+                )}
 
                 {/* Price & Fee Badges */}
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">

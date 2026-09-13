@@ -1,12 +1,28 @@
 export type BookType = "BORROW_ONLY" | "SELL_ONLY" | "HYBRID";
 
+export type AuthorRole = "WRITER" | "TRANSLATOR";
+
+export interface IAuthorItem {
+  name: string;
+  role: AuthorRole;
+}
+
+export interface IBookOptions {
+  categories: string[];
+  locationCells: string[];
+  publishers: string[];
+  authors: IAuthorItem[];
+}
+
 export interface IBook {
   id: string;
   title: string;
   author: string;
+  authors?: IAuthorItem[];
   isbn?: string;
   locationCell?: string;
   category: string;
+  categories?: string[];
   publisher?: string;
   pages?: number;
   type: BookType;
@@ -32,10 +48,12 @@ export interface IBook {
 
 export interface ICreateBookPayload {
   title: string;
-  author: string;
+  author?: string;
+  authors?: IAuthorItem[];
   isbn: string;
   locationCell: string;
-  category: string;
+  category?: string;
+  categories?: string[];
   publisher?: string;
   pages: number;
   type: BookType;

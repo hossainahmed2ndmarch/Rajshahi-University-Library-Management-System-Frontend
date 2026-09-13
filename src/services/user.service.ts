@@ -1,6 +1,6 @@
 import { axiosInstance } from "@/lib/axios";
 import { ApiResponse } from "@/types/api.types";
-import { IUser, PaymentMethod, UserRole, UserStatus } from "@/types/auth";
+import { IUser, PaymentMethod, UserRole, UserStatus, IUserOptions } from "@/types/auth";
 
 type RawUser = Record<string, unknown>;
 
@@ -33,6 +33,13 @@ export const UserService = {
   updateUser: async (
     id: string | number,
     payload: {
+      name?: string;
+      phone?: string;
+      email?: string;
+      studentOrVoterId?: string;
+      institution?: string;
+      department?: string;
+      session?: string;
       role?: UserRole;
       status?: UserStatus;
       isPaid?: boolean;
@@ -94,6 +101,8 @@ export const UserService = {
       session?: string;
       institution?: string;
       phone?: string;
+      email?: string;
+      studentOrVoterId?: string;
     }
   ): Promise<IUser> => {
     const response = await axiosInstance.patch<ApiResponse<RawUser>>("/users/profile", payload);
@@ -115,6 +124,7 @@ export const UserService = {
     payload: {
       paymentMethod?: PaymentMethod;
       amount?: number;
+      months?: number;
     }
   ): Promise<{ user: IUser; payment: Record<string, unknown> }> => {
     const response = await axiosInstance.post<ApiResponse<{ user: RawUser; payment: Record<string, unknown> }>>(
@@ -138,6 +148,15 @@ export const UserService = {
   deleteUser: async (userId: string | number): Promise<boolean> => {
     await axiosInstance.delete(`/users/${userId}`);
     return true;
+  },
+
+  getUserOptions: async (): Promise<IUserOptions> => {
+    try {
+      const response = await axiosInstance.get<{ success: boolean; data: IUserOptions }>("/users/options");
+      return response.data?.data ?? { departments: [], sessions: [], institutions: [] };
+    } catch {
+      return { departments: [], sessions: [], institutions: [] };
+    }
   },
 };
 

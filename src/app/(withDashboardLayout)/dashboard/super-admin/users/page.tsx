@@ -18,12 +18,14 @@ import {
   Filter,
   Shield,
   Sparkles,
+  Edit2,
 } from "lucide-react";
 import { RUTable } from "@/components/ui/RUTable";
 import { useGetUsers, useUpdateUserRole, useToggleUserStatus } from "@/hooks/useUsers";
 import { IUser, UserRole, UserStatus } from "@/types/auth";
 import { SendNoticeModal } from "@/components/dashboard/SendNoticeModal";
 import { DeleteMemberModal } from "@/components/dashboard/DeleteMemberModal";
+import { EditMemberModal } from "@/components/dashboard/EditMemberModal";
 
 export default function SuperAdminUsersPage() {
   const { data: usersList = [], isLoading } = useGetUsers();
@@ -32,6 +34,7 @@ export default function SuperAdminUsersPage() {
 
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [editingUser, setEditingUser] = useState<IUser | null>(null);
   const [noticeUser, setNoticeUser] = useState<IUser | null>(null);
   const [deletingUser, setDeletingUser] = useState<IUser | null>(null);
 
@@ -167,14 +170,36 @@ export default function SuperAdminUsersPage() {
       header: "Account Status",
       cell: ({ row }) => {
         const u = row.original;
-        const isActive = u.status === "ACTIVE" || (u.isActive ?? true);
-        return isActive ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-950 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300">
-            <CheckCircle2 className="h-3 w-3" /> Active
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 dark:bg-red-950 px-2.5 py-0.5 text-[10px] font-bold text-red-800 dark:text-red-300">
-            <UserX className="h-3 w-3" /> Blocked / Pending
+        const expired = isUserExpired(u);
+        const isBlocked = u.status === "BLOCKED";
+
+        if (isBlocked) {
+          return (
+            <span className="inline-flex items-center gap-1 rounded-full bg-red-100 dark:bg-red-950 px-2.5 py-0.5 text-[10px] font-bold text-red-800 dark:text-red-300">
+              <UserX className="h-3 w-3" /> Blocked
+            </span>
+          );
+        }
+
+        if (expired || u.status === "INACTIVE") {
+          return (
+            <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-[10px] font-bold text-muted-foreground">
+              <Clock className="h-3 w-3" /> Inactive
+            </span>
+          );
+        }
+
+        if (u.status === "ACTIVE" || (u.isActive ?? true)) {
+          return (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-950 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300">
+              <CheckCircle2 className="h-3 w-3" /> Active
+            </span>
+          );
+        }
+
+        return (
+          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-950 px-2.5 py-0.5 text-[10px] font-bold text-amber-800 dark:text-amber-300">
+            <Clock className="h-3 w-3" /> {u.status ?? "Pending"}
           </span>
         );
       },
@@ -184,22 +209,32 @@ export default function SuperAdminUsersPage() {
       header: "Actions & Deletion",
       cell: ({ row }) => {
         const u = row.original;
-        const isActive = u.status === "ACTIVE" || (u.isActive ?? true);
+        const isBlocked = u.status === "BLOCKED";
 
         return (
           <div className="flex items-center justify-end gap-1.5">
-            {/* Status Toggle */}
+            {/* Edit Member Details */}
             <button
-              onClick={() => handleToggleStatus(u.id, isActive)}
+              onClick={() => setEditingUser(u)}
+              title="Edit Member Details"
+              className="inline-flex items-center gap-1 p-1.5 rounded-lg border border-input bg-card hover:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-semibold transition-colors cursor-pointer"
+            >
+              <Edit2 className="h-3.5 w-3.5" />
+              <span className="hidden xl:inline text-[11px]">Edit</span>
+            </button>
+
+            {/* Status Toggle (Blocked / Unblocked) */}
+            <button
+              onClick={() => handleToggleStatus(u.id, !isBlocked)}
               disabled={isTogglingStatus}
-              title={isActive ? "Block User Account" : "Activate User Account"}
+              title={isBlocked ? "Unblock User Account" : "Block User Account"}
               className={`inline-flex items-center p-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs cursor-pointer ${
-                isActive
-                  ? "border border-red-300/40 bg-red-500/10 text-red-700 dark:text-red-300 hover:bg-red-500/20"
-                  : "border border-emerald-300/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20"
+                isBlocked
+                  ? "border border-emerald-300/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20"
+                  : "border border-red-300/40 bg-red-500/10 text-red-700 dark:text-red-300 hover:bg-red-500/20"
               }`}
             >
-              {isActive ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
+              {isBlocked ? <Unlock className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
             </button>
 
             {/* Send Notice */}
@@ -213,13 +248,15 @@ export default function SuperAdminUsersPage() {
             </button>
 
             {/* Delete Account */}
-            <button
-              onClick={() => setDeletingUser(u)}
-              title="Permanently Delete User (Super Admin Full Power)"
-              className="p-1.5 rounded-lg border border-input bg-card hover:bg-red-500/10 text-destructive transition-colors cursor-pointer"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
+            {u.role !== "SUPER_ADMIN" && (
+              <button
+                onClick={() => setDeletingUser(u)}
+                title="Permanently Delete User (Super Admin Full Power)"
+                className="p-1.5 rounded-lg border border-input bg-card hover:bg-red-500/10 text-destructive transition-colors cursor-pointer"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
         );
       },
@@ -295,6 +332,13 @@ export default function SuperAdminUsersPage() {
         data={filteredUsers}
         isLoading={isLoading}
         searchPlaceholder="Search users by name, email, phone, or ID..."
+      />
+
+      {/* Edit Member Modal */}
+      <EditMemberModal
+        user={editingUser}
+        isOpen={Boolean(editingUser)}
+        onClose={() => setEditingUser(null)}
       />
 
       {/* Send Notice Modal */}

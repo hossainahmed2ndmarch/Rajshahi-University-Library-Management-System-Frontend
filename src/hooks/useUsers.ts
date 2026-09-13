@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/errorUtils";
 import { UserService } from "@/services/user.service";
 import { IUser, UserRole, UserStatus } from "@/types/auth";
+import { RU_DEPARTMENTS, ACADEMIC_SESSIONS } from "@/lib/member-data";
 
 // ---------------------------------------------------------------------------
 // Fallback seed data (development / API offline)
@@ -266,6 +267,8 @@ export const useUpdateMemberDetails = () => {
       payload: {
         name?: string;
         phone?: string;
+        email?: string;
+        studentOrVoterId?: string;
         department?: string;
         session?: string;
         institution?: string;
@@ -305,6 +308,8 @@ export const useUpdateMyProfile = () => {
       session?: string;
       institution?: string;
       phone?: string;
+      email?: string;
+      studentOrVoterId?: string;
     }) => {
       return await UserService.updateProfile(payload);
     },
@@ -344,13 +349,14 @@ export const useRenewMembership = () => {
     mutationFn: async (payload: {
       paymentMethod?: "CASH" | "ONLINE";
       amount?: number;
+      months?: number;
     }) => {
       return await UserService.renewMembership(payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["me"] });
       queryClient.invalidateQueries({ queryKey: ["users"] });
-      toast.success("Membership renewed successfully for 6 months!");
+      toast.success("Membership renewed successfully!");
     },
     onError: (error: unknown) => {
       toast.error(getErrorMessage(error, "Failed to renew membership."));
@@ -397,3 +403,40 @@ export const useDeleteUser = () => {
   });
 };
 
+// ---------------------------------------------------------------------------
+// User Options (departments, sessions, institutions from DB)
+// ---------------------------------------------------------------------------
+
+export const useGetUserOptions = () => {
+  return useQuery({
+    queryKey: ["user-options"],
+    queryFn: async () => {
+      try {
+        const options = await UserService.getUserOptions();
+        const staticDepts = Array.from(RU_DEPARTMENTS) as string[];
+        const staticSessions = Array.from(ACADEMIC_SESSIONS) as string[];
+
+        const mergedDepts = Array.from(
+          new Set([...options.departments, ...staticDepts])
+        ).sort((a, b) => a.localeCompare(b));
+
+        const mergedSessions = Array.from(
+          new Set([...options.sessions, ...staticSessions])
+        ).sort((a, b) => a.localeCompare(b));
+
+        return {
+          departments: mergedDepts,
+          sessions: mergedSessions,
+          institutions: options.institutions,
+        };
+      } catch {
+        return {
+          departments: Array.from(RU_DEPARTMENTS) as string[],
+          sessions: Array.from(ACADEMIC_SESSIONS) as string[],
+          institutions: [] as string[],
+        };
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+};

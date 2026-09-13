@@ -41,8 +41,25 @@ export function createBookTableColumns({
               <div className="font-bold text-foreground text-xs leading-tight truncate">
                 {book.title}
               </div>
-              <div className="text-[11px] text-muted-foreground mt-0.5 truncate">
-                by <span className="font-medium text-foreground">{book.author}</span>
+              <div className="text-[11px] text-muted-foreground mt-0.5 truncate flex items-center gap-1">
+                <span>by</span>
+                {book.authors && book.authors.length > 0 ? (
+                  <span className="font-medium text-foreground truncate">
+                    {book.authors.map((a, i) => (
+                      <React.Fragment key={i}>
+                        {a.name}
+                        {a.role === "TRANSLATOR" && (
+                          <span className="text-[9px] text-blue-600 dark:text-blue-400 font-mono ml-0.5">
+                            (Tr.)
+                          </span>
+                        )}
+                        {i < book.authors!.length - 1 ? ", " : ""}
+                      </React.Fragment>
+                    ))}
+                  </span>
+                ) : (
+                  <span className="font-medium text-foreground truncate">{book.author}</span>
+                )}
               </div>
             </div>
           </div>
@@ -67,12 +84,34 @@ export function createBookTableColumns({
     },
     {
       accessorKey: "category",
-      header: "Category",
-      cell: ({ row }) => (
-        <span className="inline-flex items-center rounded-md bg-muted px-2 py-1 text-[11px] font-semibold text-foreground">
-          {row.original.category}
-        </span>
-      ),
+      header: "Categories",
+      cell: ({ row }) => {
+        const book = row.original;
+        const cats =
+          book.categories && book.categories.length > 0
+            ? book.categories
+            : book.category
+            ? book.category.split(",").map((s) => s.trim())
+            : [];
+        if (cats.length === 0) return <span className="text-muted-foreground text-[11px]">—</span>;
+        return (
+          <div className="flex flex-wrap gap-1 max-w-[180px]">
+            {cats.slice(0, 2).map((c, i) => (
+              <span
+                key={i}
+                className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[10px] font-semibold text-foreground truncate max-w-[120px]"
+              >
+                {c}
+              </span>
+            ))}
+            {cats.length > 2 && (
+              <span className="inline-flex items-center rounded-md bg-primary/10 text-primary px-1.5 py-0.5 text-[10px] font-bold">
+                +{cats.length - 2}
+              </span>
+            )}
+          </div>
+        );
+      },
     },
     {
       accessorKey: "type",

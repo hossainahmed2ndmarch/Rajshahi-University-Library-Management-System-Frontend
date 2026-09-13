@@ -9,6 +9,11 @@ export const profileSchema = z.object({
   session: z.string().optional(),
 });
 
+export const credentialsSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  studentOrVoterId: z.string().min(1, "Student/Voter ID is required"),
+});
+
 export const passwordSchema = z
   .object({
     currentPassword: z.string().min(6, "Current password is required"),
@@ -21,4 +26,5 @@ export const passwordSchema = z
   });
 
 export type ProfileFormValues = z.infer<typeof profileSchema>;
+export type CredentialsFormValues = z.infer<typeof credentialsSchema>;
 export type PasswordFormValues = z.infer<typeof passwordSchema>;

@@ -22,12 +22,20 @@ interface MembershipRenewalModalProps {
   user: IUser | null | undefined;
 }
 
+// Membership plans: 3 months = 100tk, 6 months = 200tk, 12 months = 400tk
+const MEMBERSHIP_PLANS = [
+  { months: 3, amount: 100, label: "3 Months", sub: "Short-term plan" },
+  { months: 6, amount: 200, label: "6 Months", sub: "Popular choice", popular: true },
+  { months: 12, amount: 400, label: "12 Months", sub: "Best value" },
+];
+
 export function MembershipRenewalModal({
   isOpen,
   onClose,
   user,
 }: MembershipRenewalModalProps) {
   const [paymentMethod, setPaymentMethod] = useState<"CASH" | "ONLINE">("CASH");
+  const [selectedPlan, setSelectedPlan] = useState(MEMBERSHIP_PLANS[1]); // default 6 months
   const { mutate: renew, isPending } = useRenewMembership();
 
   if (!isOpen) return null;
@@ -37,11 +45,11 @@ export function MembershipRenewalModal({
   if (user?.membershipExpiresAt && new Date(user.membershipExpiresAt) > now) {
     baseDate = new Date(user.membershipExpiresAt);
   }
-  const projectedExpiry = addMonths(baseDate, 6);
+  const projectedExpiry = addMonths(baseDate, selectedPlan.months);
 
   const handleRenew = () => {
     renew(
-      { paymentMethod, amount: 100 },
+      { paymentMethod, amount: selectedPlan.amount, months: selectedPlan.months },
       {
         onSuccess: () => {
           onClose();
@@ -51,8 +59,8 @@ export function MembershipRenewalModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in-50">
-      <div className="relative w-full max-w-lg rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-2xl text-card-foreground">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in-50 overflow-y-auto">
+      <div className="relative w-full max-w-lg rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-2xl text-card-foreground my-8">
         <button
           onClick={onClose}
           className="absolute right-4 top-4 rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
@@ -75,20 +83,48 @@ export function MembershipRenewalModal({
           </div>
         </div>
 
-        {/* Membership Offer Card */}
-        <div className="rounded-2xl border border-amber-300/40 bg-gradient-to-br from-amber-500/10 via-emerald-500/5 to-transparent p-5 space-y-3">
+        {/* Plan Selector */}
+        <div className="space-y-3 mb-5">
+          <h4 className="text-xs font-bold text-foreground">Choose a Membership Plan:</h4>
+          <div className="grid grid-cols-3 gap-2">
+            {MEMBERSHIP_PLANS.map((plan) => (
+              <button
+                key={plan.months}
+                type="button"
+                onClick={() => setSelectedPlan(plan)}
+                className={`relative flex flex-col items-center justify-center gap-1 rounded-2xl border p-3 text-center text-xs font-bold transition-all cursor-pointer ${
+                  selectedPlan.months === plan.months
+                    ? "border-[#004F32] bg-[#004F32]/10 text-[#004F32] dark:text-emerald-300 dark:border-emerald-400 shadow-sm"
+                    : "border-border bg-card text-muted-foreground hover:border-input hover:text-foreground"
+                }`}
+              >
+                {plan.popular && (
+                  <span className="absolute -top-2 left-1/2 -translate-x-1/2 rounded-full bg-amber-500 text-white text-[9px] font-bold px-2 py-0.5">
+                    Popular
+                  </span>
+                )}
+                <span className="text-base font-extrabold">৳{plan.amount}</span>
+                <span className="font-semibold">{plan.label}</span>
+                <span className="text-[10px] font-normal opacity-70">{plan.sub}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Validity Preview Card */}
+        <div className="rounded-2xl border border-amber-300/40 bg-gradient-to-br from-amber-500/10 via-emerald-500/5 to-transparent p-4 space-y-3 mb-5">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-[#C78700] dark:text-amber-400">
-              Semi-Annual Plan
+              {selectedPlan.label} Plan
             </span>
             <div className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-mono font-extrabold text-emerald-700 dark:text-emerald-300">
-              100 BDT / 6 Months
+              ৳{selectedPlan.amount} BDT
             </div>
           </div>
 
           <div className="flex items-baseline space-x-2">
-            <span className="text-3xl font-extrabold text-foreground font-mono">৳100</span>
-            <span className="text-xs text-muted-foreground font-medium">for 6 full months</span>
+            <span className="text-3xl font-extrabold text-foreground font-mono">৳{selectedPlan.amount}</span>
+            <span className="text-xs text-muted-foreground font-medium">for {selectedPlan.months} months</span>
           </div>
 
           <div className="grid grid-cols-2 gap-3 pt-2 text-xs border-t border-border/60">
@@ -115,7 +151,7 @@ export function MembershipRenewalModal({
         </div>
 
         {/* Membership Privileges */}
-        <div className="py-4 space-y-2">
+        <div className="pb-4 space-y-2">
           <h4 className="text-xs font-bold text-foreground">Included Privileges:</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-muted-foreground">
             <div className="flex items-center gap-1.5">
@@ -171,8 +207,8 @@ export function MembershipRenewalModal({
           </div>
           <p className="text-[11px] text-muted-foreground pt-1">
             {paymentMethod === "CASH"
-              ? "Confirm your request and pay ৳100 at the library reception desk."
-              : "Pay instantly via digital gateway (bKash / Nagad / Card) to activate immediately."}
+              ? `Confirm your request and pay ৳${selectedPlan.amount} at the library reception desk.`
+              : `Pay instantly via digital gateway (bKash / Nagad / Card) to activate immediately.`}
           </p>
         </div>
 
@@ -200,7 +236,7 @@ export function MembershipRenewalModal({
             ) : (
               <>
                 <ShieldCheck className="h-4 w-4 text-amber-300" />
-                <span>Confirm & Renew (৳100)</span>
+                <span>Confirm & Renew (৳{selectedPlan.amount})</span>
               </>
             )}
           </button>

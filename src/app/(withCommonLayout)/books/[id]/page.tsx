@@ -255,11 +255,22 @@ export default function BookDetailPage({ params }: BookDetailPageProps) {
               )}
 
               {/* Category Pill Overlay */}
-              {book.category && (
+              {book.categories && book.categories.length > 0 ? (
+                <div className="absolute top-4 left-4 flex flex-wrap gap-1 max-w-[80%]">
+                  {book.categories.map((cat, idx) => (
+                    <span
+                      key={idx}
+                      className="bg-background/90 backdrop-blur-xs text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-lg border border-border shadow-xs"
+                    >
+                      {cat}
+                    </span>
+                  ))}
+                </div>
+              ) : book.category ? (
                 <span className="absolute top-4 left-4 bg-background/90 backdrop-blur-xs text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-lg border border-border shadow-xs">
                   {book.category}
                 </span>
-              )}
+              ) : null}
 
               {hasDiscount && (
                 <span className="absolute top-4 right-4 bg-rose-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-sm">
@@ -341,10 +352,24 @@ export default function BookDetailPage({ params }: BookDetailPageProps) {
                 <h1 className="text-2xl sm:text-4xl font-black text-foreground tracking-tight leading-tight">
                   {book.title}
                 </h1>
-                <p className="text-sm sm:text-base text-muted-foreground mt-1.5">
-                  Authored / Compiled by{" "}
-                  <strong className="text-foreground">{book.author}</strong>
-                </p>
+                <div className="text-sm sm:text-base text-muted-foreground mt-1.5 flex items-center gap-1.5 flex-wrap">
+                  <span>Authored / Compiled by</span>
+                  {book.authors && book.authors.length > 0 ? (
+                    book.authors.map((a, idx) => (
+                      <span key={idx} className="inline-flex items-center gap-1">
+                        <strong className="text-foreground">{a.name}</strong>
+                        {a.role === "TRANSLATOR" && (
+                          <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded border border-blue-500/20">
+                            Translator
+                          </span>
+                        )}
+                        {idx < book.authors!.length - 1 ? "," : ""}
+                      </span>
+                    ))
+                  ) : (
+                    <strong className="text-foreground">{book.author}</strong>
+                  )}
+                </div>
               </div>
 
               {/* Price & Reading Pace Banner */}

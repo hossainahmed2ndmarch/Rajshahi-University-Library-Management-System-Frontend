@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { BookOpen, X } from "lucide-react";
 import { RUForm } from "@/components/forms";
-import { IBook, ICreateBookPayload, IUpdateBookPayload } from "@/types/book";
+import { IBook, ICreateBookPayload, IUpdateBookPayload, IAuthorItem, IBookOptions } from "@/types/book";
 import { bookFormSchema, BookFormValues } from "./bookFormSchema";
 import { BookFormFields } from "./BookFormFields";
 
@@ -12,6 +12,7 @@ export interface BookFormModalProps {
   onClose: () => void;
   selectedBook: IBook | null;
   categories?: string[];
+  bookOptions?: IBookOptions;
   onSubmitCreate: (data: ICreateBookPayload) => void;
   onSubmitUpdate: (data: IUpdateBookPayload) => void;
   onUploadCover: (file: File) => Promise<string>;
@@ -25,6 +26,7 @@ interface BookFormModalContentProps {
   onClose: () => void;
   selectedBook: IBook | null;
   categories?: string[];
+  bookOptions?: IBookOptions;
   onSubmitCreate: (data: ICreateBookPayload) => void;
   onSubmitUpdate: (data: IUpdateBookPayload) => void;
   onUploadCover: (file: File) => Promise<string>;
@@ -34,10 +36,35 @@ interface BookFormModalContentProps {
   isUploadingGallery: boolean;
 }
 
+function parseAuthorsFromString(str?: string): IAuthorItem[] {
+  if (!str || !str.trim()) return [{ name: "", role: "WRITER" }];
+  const parts = str.split(",");
+  const result: IAuthorItem[] = [];
+  for (const part of parts) {
+    const trimmed = part.trim();
+    if (!trimmed) continue;
+    const isTrans = trimmed.toLowerCase().includes("(translator)");
+    const clean = trimmed.replace(/\(translator\)/i, "").trim();
+    if (clean) {
+      result.push({
+        name: clean,
+        role: isTrans ? "TRANSLATOR" : "WRITER",
+      });
+    }
+  }
+  return result.length > 0 ? result : [{ name: "", role: "WRITER" }];
+}
+
+function parseCategoriesFromString(str?: string): string[] {
+  if (!str || !str.trim()) return [];
+  return str.split(",").map((s) => s.trim()).filter(Boolean);
+}
+
 function BookFormModalContent({
   onClose,
   selectedBook,
   categories = [],
+  bookOptions,
   onSubmitCreate,
   onSubmitUpdate,
   onUploadCover,
@@ -46,7 +73,7 @@ function BookFormModalContent({
   isUploadingCover,
   isUploadingGallery,
 }: BookFormModalContentProps) {
-  // Initialize state directly from selectedBook props — no synchronous setState inside useEffect needed!
+  // Initialize state directly from selectedBook props
   const [coverImageUrl, setCoverImageUrl] = useState<string>(
     () => selectedBook?.coverImage || ""
   );
@@ -108,14 +135,42 @@ function BookFormModalContent({
 
     const pages = values.pages !== undefined && values.pages !== "" ? Number(values.pages) : 0;
 
+    // Sanitize and structure authors
+    const validAuthors = (values.authors || [])
+      .map((a) => ({ name: a.name.trim(), role: a.role }))
+      .filter((a) => Boolean(a.name));
+
+    const authorString =
+      validAuthors.length > 0
+        ? validAuthors
+            .map((a) => (a.role === "TRANSLATOR" ? `${a.name} (Translator)` : a.name))
+            .join(", ")
+        : values.author?.trim() || "";
+
+    // Sanitize and structure categories
+    const validCategories = Array.from(
+      new Set(
+        (values.categories || [])
+          .map((c) => c.trim())
+          .filter(Boolean)
+      )
+    );
+
+    const categoryString =
+      validCategories.length > 0
+        ? validCategories.join(", ")
+        : values.category?.trim() || "General";
+
     if (selectedBook) {
       onSubmitUpdate({
         id: selectedBook.id,
         title: values.title.trim(),
-        author: values.author.trim(),
+        author: authorString,
+        authors: validAuthors,
         isbn: values.isbn?.trim() || selectedBook.isbn || "",
-        locationCell: values.locationCell?.trim() || selectedBook.locationCell || "Rack-Unassigned",
-        category: values.category.trim(),
+        locationCell: values.locationCell.trim() || selectedBook.locationCell || "Rack-Unassigned",
+        category: categoryString,
+        categories: validCategories,
         publisher: values.publisher?.trim() || undefined,
         pages,
         type: values.type,
@@ -131,10 +186,12 @@ function BookFormModalContent({
     } else {
       onSubmitCreate({
         title: values.title.trim(),
-        author: values.author.trim(),
+        author: authorString,
+        authors: validAuthors,
         isbn: values.isbn?.trim() || `RUIL-${Date.now().toString().slice(-6)}`,
-        locationCell: values.locationCell?.trim() || "Rack-Unassigned",
-        category: values.category.trim(),
+        locationCell: values.locationCell.trim() || "Rack-Unassigned",
+        category: categoryString,
+        categories: validCategories,
         publisher: values.publisher?.trim() || undefined,
         pages,
         type: values.type,
@@ -150,11 +207,33 @@ function BookFormModalContent({
     }
   };
 
+  const parsedAuthors: IAuthorItem[] = useMemo(() => {
+    if (selectedBook?.authors && Array.isArray(selectedBook.authors) && selectedBook.authors.length > 0) {
+      return selectedBook.authors;
+    }
+    if (selectedBook?.author) {
+      return parseAuthorsFromString(selectedBook.author);
+    }
+    return [{ name: "", role: "WRITER" }];
+  }, [selectedBook]);
+
+  const parsedCategories: string[] = useMemo(() => {
+    if (selectedBook?.categories && Array.isArray(selectedBook.categories) && selectedBook.categories.length > 0) {
+      return selectedBook.categories;
+    }
+    if (selectedBook?.category) {
+      return parseCategoriesFromString(selectedBook.category);
+    }
+    return [];
+  }, [selectedBook]);
+
   const defaultValues: BookFormValues = {
     title: selectedBook?.title || "",
+    authors: parsedAuthors,
     author: selectedBook?.author || "",
     isbn: selectedBook?.isbn || "",
     locationCell: selectedBook?.locationCell || "",
+    categories: parsedCategories,
     category: selectedBook?.category || "",
     publisher: selectedBook?.publisher || "",
     pages: selectedBook?.pages || 350,
@@ -187,7 +266,7 @@ function BookFormModalContent({
               {selectedBook ? "Edit Book Inventory Record" : "Add New Book to Inventory"}
             </h3>
             <p className="text-xs text-muted-foreground">
-              Fill in catalog details, shelf placement, stock parameters, and cover photos.
+              Configure multiple authors &amp; translators, categories, shelf cell, publisher, and stock pricing.
             </p>
           </div>
         </div>
@@ -200,6 +279,7 @@ function BookFormModalContent({
           <BookFormFields
             selectedBook={selectedBook}
             categories={categories}
+            bookOptions={bookOptions}
             isSubmitting={isSubmitting}
             onCancel={onClose}
             coverImageUrl={coverImageUrl}
@@ -225,3 +305,5 @@ export function BookFormModal(props: BookFormModalProps) {
 
   return <BookFormModalContent key={contentKey} {...props} />;
 }
+
+export default BookFormModal;

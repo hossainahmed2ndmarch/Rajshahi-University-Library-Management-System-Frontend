@@ -7,3 +7,6 @@ export * from "./BookDeleteConfirmModal";
 export * from "./BookTableFilters";
 export * from "./BookCatalogBanner";
 export * from "./bookTableColumns";
+export * from "./CreatableCombobox";
+export * from "./MultiCategorySelector";
+export * from "./MultiAuthorManager";

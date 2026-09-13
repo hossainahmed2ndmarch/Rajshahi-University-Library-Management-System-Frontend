@@ -1,17 +1,21 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useFormContext, Controller } from "react-hook-form";
-import { BookOpen, Tag, Barcode, MapPin, DollarSign, Plus, Check } from "lucide-react";
+import { BookOpen, Barcode, MapPin, Building, DollarSign } from "lucide-react";
 import { RUInput, RUSelect } from "@/components/forms";
-import { IBook } from "@/types/book";
+import { IBook, IBookOptions } from "@/types/book";
 import { BookFormValues } from "./bookFormSchema";
 import { BookImagesUploader } from "./BookImagesUploader";
-import { cn } from "@/lib/utils";
+import { MultiCategorySelector } from "./MultiCategorySelector";
+import { MultiAuthorManager } from "./MultiAuthorManager";
+import { CreatableCombobox } from "./CreatableCombobox";
+import { useGetBookOptions } from "@/hooks/useBooks";
 
 interface BookFormFieldsProps {
   selectedBook: IBook | null;
   categories?: string[];
+  bookOptions?: IBookOptions;
   isSubmitting: boolean;
   onCancel: () => void;
   coverImageUrl: string;
@@ -27,6 +31,7 @@ interface BookFormFieldsProps {
 export function BookFormFields({
   selectedBook,
   categories = [],
+  bookOptions: passedOptions,
   isSubmitting,
   onCancel,
   coverImageUrl,
@@ -40,14 +45,12 @@ export function BookFormFields({
 }: BookFormFieldsProps) {
   const { watch, setValue, control } = useFormContext<BookFormValues>();
   const accessType = watch("type");
-  const currentCategory = watch("category");
 
-  // Determine if user is in custom category input mode
-  const [isCustomCategory, setIsCustomCategory] = useState<boolean>(() => {
-    if (!currentCategory) return false;
-    return !categories.includes(currentCategory);
-  });
+  // Fetch preexisting database options (categories, location cells, publishers, authors)
+  const { data: fetchedOptions } = useGetBookOptions();
+  const effectiveOptions = passedOptions || fetchedOptions;
 
+  // Sync zero values according to access type
   useEffect(() => {
     if (accessType === "BORROW_ONLY") {
       setValue("sellStock", 0);
@@ -58,14 +61,27 @@ export function BookFormFields({
     }
   }, [accessType, setValue]);
 
-  // Unique sorted list of categories
-  const sortedCategories = useMemo(() => {
+  // Merge and sort categories
+  const dbCategories = useMemo(() => {
+    const combined = [...(effectiveOptions?.categories || []), ...(categories || [])];
     const set = new Set<string>();
-    categories.forEach((c) => {
+    combined.forEach((c) => {
       if (c && c.trim()) set.add(c.trim());
     });
     return Array.from(set).sort((a, b) => a.localeCompare(b));
-  }, [categories]);
+  }, [effectiveOptions?.categories, categories]);
+
+  const dbLocationCells = useMemo(() => {
+    return effectiveOptions?.locationCells || [];
+  }, [effectiveOptions?.locationCells]);
+
+  const dbPublishers = useMemo(() => {
+    return effectiveOptions?.publishers || [];
+  }, [effectiveOptions?.publishers]);
+
+  const dbAuthors = useMemo(() => {
+    return effectiveOptions?.authors || [];
+  }, [effectiveOptions?.authors]);
 
   const isBorrowOnly = accessType === "BORROW_ONLY";
   const isSellOnly = accessType === "SELL_ONLY";
@@ -84,133 +100,97 @@ export function BookFormFields({
         isUploadingGallery={isUploadingGallery}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+      {/* ── Book Title ── */}
+      <div className="grid grid-cols-1 gap-3">
         <RUInput
           name="title"
           label="Book Title"
-          placeholder="e.g. Tafsir Ibn Kathir Vol 1"
+          placeholder="e.g. Tafsir Ibn Kathir Vol 1 (Authentic Darussalam Print)"
           prependIcon={<BookOpen className="h-4 w-4" />}
-          required
-        />
-
-        <RUInput
-          name="author"
-          label="Author / Scholar"
-          placeholder="e.g. Hafiz Ibn Kathir"
-          prependIcon={<Tag className="h-4 w-4" />}
           required
         />
       </div>
 
+      {/* ── Author / Scholar (Multiple + Roles [Writer / Translator]) ── */}
+      <div className="p-3.5 sm:p-4 rounded-xl border border-border/80 bg-muted/20 space-y-3">
+        <Controller
+          name="authors"
+          control={control}
+          render={({ field, fieldState: { error } }) => (
+            <MultiAuthorManager
+              authors={field.value || [{ name: "", role: "WRITER" }]}
+              onChange={field.onChange}
+              preexistingAuthors={dbAuthors}
+              error={error?.message}
+            />
+          )}
+        />
+      </div>
+
+      {/* ── Category / Genre (Multiple) ── */}
+      <div className="p-3.5 sm:p-4 rounded-xl border border-border/80 bg-muted/20">
+        <Controller
+          name="categories"
+          control={control}
+          render={({ field, fieldState: { error } }) => (
+            <MultiCategorySelector
+              categories={field.value || []}
+              onChange={field.onChange}
+              preexistingCategories={dbCategories}
+              error={error?.message}
+            />
+          )}
+        />
+      </div>
+
+      {/* ── Shelf Location Cell, Publisher & ISBN ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+        {/* Shelf Location Cell (Creatable Combobox with DB suggestions) */}
+        <Controller
+          name="locationCell"
+          control={control}
+          render={({ field, fieldState: { error } }) => (
+            <CreatableCombobox
+              label="Shelf Location Cell"
+              value={field.value ?? ""}
+              onChange={field.onChange}
+              options={dbLocationCells}
+              placeholder="e.g. Rack-A2-04"
+              prependIcon={<MapPin className="h-4 w-4" />}
+              error={error?.message}
+              required
+            />
+          )}
+        />
+
+        {/* Publisher (Creatable Combobox with DB suggestions) */}
+        <Controller
+          name="publisher"
+          control={control}
+          render={({ field, fieldState: { error } }) => (
+            <CreatableCombobox
+              label="Publisher"
+              value={field.value ?? ""}
+              onChange={field.onChange}
+              options={dbPublishers}
+              placeholder="e.g. Darussalam"
+              prependIcon={<Building className="h-4 w-4" />}
+              error={error?.message}
+            />
+          )}
+        />
+
+        {/* ISBN / Barcode */}
         <RUInput
           name="isbn"
           label="ISBN / Barcode"
           placeholder="e.g. 978-6035000147"
           prependIcon={<Barcode className="h-4 w-4" />}
         />
-
-        <RUInput
-          name="locationCell"
-          label="Shelf Location Cell"
-          placeholder="e.g. Rack-A2-04"
-          prependIcon={<MapPin className="h-4 w-4" />}
-        />
-
-        {/* ── Category / Genre Selection or Custom Input ── */}
-        <div className="flex flex-col space-y-1.5">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-foreground flex items-center gap-1">
-              <span>Category / Genre</span>
-              <span className="text-destructive text-xs">*</span>
-            </label>
-            <button
-              type="button"
-              onClick={() => {
-                setIsCustomCategory((prev) => !prev);
-              }}
-              className="text-[11px] font-semibold text-primary hover:underline flex items-center gap-0.5 cursor-pointer"
-            >
-              {isCustomCategory ? (
-                <>
-                  <Check className="h-3 w-3" /> Select Existing
-                </>
-              ) : (
-                <>
-                  <Plus className="h-3 w-3" /> Write New
-                </>
-              )}
-            </button>
-          </div>
-
-          <Controller
-            name="category"
-            control={control}
-            render={({ field, fieldState: { error } }) => (
-              <div>
-                {isCustomCategory ? (
-                  <div className="relative flex items-center">
-                    <div className="absolute left-3 text-muted-foreground pointer-events-none z-10 flex items-center justify-center">
-                      <Tag className="h-4 w-4" />
-                    </div>
-                    <input
-                      id="category"
-                      type="text"
-                      value={field.value ?? ""}
-                      onChange={(e) => field.onChange(e.target.value)}
-                      placeholder="Type new category (e.g. Islamic Finance)..."
-                      className={cn(
-                        "flex h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 transition-colors",
-                        error && "border-destructive focus-visible:ring-destructive"
-                      )}
-                    />
-                  </div>
-                ) : (
-                  <div className="relative flex items-center">
-                    <div className="absolute left-3 text-muted-foreground pointer-events-none z-10 flex items-center justify-center">
-                      <Tag className="h-4 w-4" />
-                    </div>
-                    <select
-                      id="category"
-                      value={field.value ?? ""}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        if (val === "__NEW_CATEGORY__") {
-                          setIsCustomCategory(true);
-                          field.onChange("");
-                        } else {
-                          field.onChange(val);
-                        }
-                      }}
-                      className={cn(
-                        "flex h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 transition-colors cursor-pointer",
-                        error && "border-destructive focus-visible:ring-destructive"
-                      )}
-                    >
-                      <option value="">Select a category...</option>
-                      {sortedCategories.map((c) => (
-                        <option key={c} value={c}>
-                          {c}
-                        </option>
-                      ))}
-                      <option value="__NEW_CATEGORY__">+ Write New Category...</option>
-                    </select>
-                  </div>
-                )}
-                {error && <p className="text-xs text-destructive mt-1">{error.message}</p>}
-              </div>
-            )}
-          />
-        </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-        <RUInput
-          name="publisher"
-          label="Publisher"
-          placeholder="e.g. Darussalam"
-        />
-
+      {/* ── Pages, Access Type ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <RUInput
           name="pages"
           label="Total Pages"
@@ -230,7 +210,7 @@ export function BookFormFields({
         />
       </div>
 
-      {/* ── Inventory Stock & Pricing Section (NO Borrow Fee as per Prisma schema) ── */}
+      {/* ── Inventory Stock & Pricing Section ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3 p-3.5 sm:p-4 rounded-xl border border-border/80 bg-muted/30">
         <RUInput
           name="borrowStock"
@@ -279,12 +259,14 @@ export function BookFormFields({
         />
       </div>
 
+      {/* ── Synopsis / Description ── */}
       <RUInput
         name="description"
         label="Description / Synopsis"
-        placeholder="Summary of book contents..."
+        placeholder="Summary of book contents, volume index, research subject..."
       />
 
+      {/* ── Action Buttons ── */}
       <div className="pt-3 flex justify-end space-x-2 border-t border-border">
         <button
           type="button"
@@ -312,3 +294,5 @@ export function BookFormFields({
     </div>
   );
 }
+
+export default BookFormFields;

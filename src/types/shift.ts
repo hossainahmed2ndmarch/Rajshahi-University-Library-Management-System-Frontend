@@ -46,6 +46,11 @@ export interface IShift {
   cashVariance?: number;
   totalTransactions?: number;
 
+  shiftSlotName?: string;
+  actionToken?: string;
+  isOfflineRecord?: boolean;
+  rescheduledTo?: string;
+
   createdAt?: string;
   updatedAt?: string;
 }
@@ -63,6 +68,7 @@ export interface IEndShiftPayload {
 }
 
 export interface IScheduleShiftPayload {
+  shifterId?: number;
   startTime: string;
   endTime?: string;
   shiftSlotName?: string;
@@ -85,3 +91,63 @@ export interface IShiftResponse {
   message?: string;
   data: IShift | null;
 }
+
+export interface IShifterSchedule {
+  id: number;
+  shifterId: number;
+  shifter?: {
+    id: number;
+    name: string;
+    email: string;
+    phone?: string;
+  };
+  dayOfWeek: number; // 0=Sun … 6=Sat
+  dayName: string;   // Bengali (e.g. শনিবার)
+  dayEn: string;     // English (e.g. Saturday)
+  slot: string;      // 'asr_maghrib' | 'maghrib_isha' | 'custom'
+  slotName: string;  // 'আসর – মাগরিব'
+  startTime: string; // '15:30'
+  endTime: string;   // '18:15'
+  isActive: boolean;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IRescheduleShiftPayload {
+  newStartTime: string;
+  newEndTime?: string;
+  reason?: string;
+  notifyRecipients?: 'ALL' | 'SHIFTER' | 'ADMIN' | 'SUPER_ADMIN';
+  notificationMethod?: 'EMAIL' | 'SMS' | 'ALL';
+}
+
+export interface ICompleteOfflinePayload {
+  openingCash: number;
+  closingCash: number;
+  cashCollected: number;
+  tasksCompleted?: string;
+  handoverNotes?: string;
+  isOfflineRecord?: boolean;
+}
+
+export interface ICreateSchedulePayload {
+  shifterId: number;
+  dayOfWeek: number;
+  dayName: string;
+  dayEn: string;
+  slot: string;
+  slotName: string;
+  startTime: string;
+  endTime: string;
+  isActive?: boolean;
+  notes?: string;
+}
+
+export interface IEmailActionPayload {
+  token: string;
+  action: 'START' | 'CANCEL';
+  cancelReason?: string;
+  openingCash?: number;
+}
+

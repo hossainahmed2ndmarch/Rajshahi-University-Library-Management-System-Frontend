@@ -12,8 +12,15 @@ export const ArticleService = {
   getAllArticles: async (
     params?: IArticleQueryParams
   ): Promise<{ data: IArticle[]; total: number }> => {
+    const queryParams: Record<string, unknown> = { ...params };
+    if (queryParams.isPublished === "ALL" || queryParams.isPublished === "all") {
+      delete queryParams.isPublished;
+    }
+    if (queryParams.category === "ALL" || queryParams.category === "all") {
+      delete queryParams.category;
+    }
     const response = await axiosInstance.get<ApiResponse<IArticle[]>>("/articles", {
-      params,
+      params: queryParams,
     });
     const rawData = response.data?.data;
     const list = Array.isArray(rawData) ? rawData : [];

@@ -10,6 +10,10 @@ import {
   IStartShiftPayload,
   IScheduleShiftPayload,
   ICancelShiftPayload,
+  IShifterSchedule,
+  IRescheduleShiftPayload,
+  ICompleteOfflinePayload,
+  ICreateSchedulePayload,
 } from "@/types/shift";
 
 const LOCAL_SHIFT_KEY = "ruil_active_shift";
@@ -218,3 +222,157 @@ export const useDeleteShiftLog = () => {
     },
   });
 };
+
+// Public active shift hook — unauthenticated, real-time polling every 15s
+export const usePublicActiveShift = () => {
+  return useQuery<IShift | null>({
+    queryKey: ["publicActiveShift"],
+    queryFn: async (): Promise<IShift | null> => {
+      try {
+        return await ShiftService.getPublicActiveShift();
+      } catch {
+        return null;
+      }
+    },
+    staleTime: 10 * 1000,
+    refetchInterval: 15 * 1000,
+  });
+};
+
+// Weekly full schedule from DB
+export const useWeeklyRoster = () => {
+  return useQuery<IShifterSchedule[]>({
+    queryKey: ["weeklyRoster"],
+    queryFn: async (): Promise<IShifterSchedule[]> => {
+      try {
+        return await ShiftService.getWeeklyRoster();
+      } catch {
+        return [];
+      }
+    },
+    staleTime: 30 * 1000,
+    refetchInterval: 30 * 1000,
+  });
+};
+
+// Today's schedule from DB
+export const useTodayRoster = () => {
+  return useQuery<IShifterSchedule[]>({
+    queryKey: ["todayRoster"],
+    queryFn: async (): Promise<IShifterSchedule[]> => {
+      try {
+        return await ShiftService.getTodayRoster();
+      } catch {
+        return [];
+      }
+    },
+    staleTime: 20 * 1000,
+    refetchInterval: 30 * 1000,
+  });
+};
+
+// Current logged in shifter's schedule
+export const useMySchedule = () => {
+  return useQuery<IShifterSchedule[]>({
+    queryKey: ["mySchedule"],
+    queryFn: async (): Promise<IShifterSchedule[]> => {
+      try {
+        return await ShiftService.getMySchedule();
+      } catch {
+        return [];
+      }
+    },
+    staleTime: 30 * 1000,
+  });
+};
+
+export const useCreateSchedule = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: ICreateSchedulePayload) => ShiftService.createSchedule(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["weeklyRoster"] });
+      queryClient.invalidateQueries({ queryKey: ["todayRoster"] });
+      toast.success("Shifter schedule created successfully!");
+    },
+    onError: (error: unknown) => toast.error(getErrorMessage(error, "Failed to create schedule.")),
+  });
+};
+
+export const useUpdateSchedule = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: number; payload: Partial<ICreateSchedulePayload> }) =>
+      ShiftService.updateSchedule(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["weeklyRoster"] });
+      queryClient.invalidateQueries({ queryKey: ["todayRoster"] });
+      queryClient.invalidateQueries({ queryKey: ["mySchedule"] });
+      toast.success("Schedule updated successfully!");
+    },
+    onError: (error: unknown) => toast.error(getErrorMessage(error, "Failed to update schedule.")),
+  });
+};
+
+export const useDeleteSchedule = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => ShiftService.deleteSchedule(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["weeklyRoster"] });
+      queryClient.invalidateQueries({ queryKey: ["todayRoster"] });
+      toast.success("Schedule entry deleted.");
+    },
+    onError: (error: unknown) => toast.error(getErrorMessage(error, "Failed to delete schedule.")),
+  });
+};
+
+export const useRescheduleShift = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: number | string; payload: IRescheduleShiftPayload }) =>
+      ShiftService.rescheduleShift(id, payload),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["shiftLogs"] });
+      queryClient.invalidateQueries({ queryKey: ["activeShift"] });
+      queryClient.invalidateQueries({ queryKey: ["publicActiveShift"] });
+      toast.success(`Shift rescheduled! ${data?.notifiedCount ?? 0} staff notified.`);
+    },
+    onError: (error: unknown) => toast.error(getErrorMessage(error, "Failed to reschedule shift.")),
+  });
+};
+
+export const useCompleteOfflineShift = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: number | string; payload: ICompleteOfflinePayload }) =>
+      ShiftService.completeOfflineShift(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["shiftLogs"] });
+      queryClient.invalidateQueries({ queryKey: ["activeShift"] });
+      queryClient.invalidateQueries({ queryKey: ["publicActiveShift"] });
+      toast.success("Offline shift completion recorded successfully!");
+    },
+    onError: (error: unknown) => toast.error(getErrorMessage(error, "Failed to complete offline shift.")),
+  });
+};
+
+export const useEmailActionShift = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: { token: string; action: 'START' | 'CANCEL'; cancelReason?: string; openingCash?: number }) =>
+      ShiftService.emailActionShift(payload),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["shiftLogs"] });
+      queryClient.invalidateQueries({ queryKey: ["activeShift"] });
+      queryClient.invalidateQueries({ queryKey: ["publicActiveShift"] });
+      toast.success(
+        variables.action === 'START'
+          ? "Shift started successfully via email authorization!"
+          : "Shift cancelled successfully via email authorization!"
+      );
+    },
+    onError: (error: unknown) => toast.error(getErrorMessage(error, "Failed to execute email action.")),
+  });
+};
+

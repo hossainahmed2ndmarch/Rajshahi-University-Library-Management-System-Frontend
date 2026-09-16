@@ -15,11 +15,10 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { IArticle, ICreateArticlePayload } from "@/types/article";
-import { useUploadArticleCover } from "@/hooks/useArticles";
+import { useUploadArticleCover, useGetArticleCategories } from "@/hooks/useArticles";
 import { useGetBooks } from "@/hooks/useBooks";
 import { useGetMe } from "@/hooks/useAuth";
 import { toast } from "sonner";
-
 interface PublicationFormModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -27,15 +26,6 @@ interface PublicationFormModalProps {
   onSubmit: (data: ICreateArticlePayload) => void;
   isSubmitting: boolean;
 }
-
-const COMMON_CATEGORIES = [
-  "Monthly Newspaper",
-  "Scholarly Article",
-  "Library Notice",
-  "Manuscript Review",
-  "Islamic Research",
-  "Book Excerpt",
-];
 
 const slugify = (text: string) => {
   return text
@@ -56,6 +46,17 @@ export function PublicationFormModal({
   const { data: currentUser } = useGetMe();
   const { mutateAsync: uploadCover, isPending: isUploadingCover } = useUploadArticleCover();
   const { data: booksData } = useGetBooks();
+  const { data: categoryCounts } = useGetArticleCategories();
+
+  const availableCategories = React.useMemo(() => {
+    const set = new Set<string>();
+    if (categoryCounts && Array.isArray(categoryCounts)) {
+      categoryCounts.forEach((c) => {
+        if (c.category && c.category.trim()) set.add(c.category.trim());
+      });
+    }
+    return Array.from(set);
+  }, [categoryCounts]);
 
   const books = React.useMemo(() => {
     if (!booksData) return [];
@@ -69,7 +70,7 @@ export function PublicationFormModal({
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [isCustomSlug, setIsCustomSlug] = useState(false);
-  const [category, setCategory] = useState("Monthly Newspaper");
+  const [category, setCategory] = useState("");
   const [authorName, setAuthorName] = useState("");
   const [authorDesignation, setAuthorDesignation] = useState("");
   const [content, setContent] = useState("");
@@ -84,7 +85,7 @@ export function PublicationFormModal({
       setTitle(selectedArticle.title || "");
       setSlug(selectedArticle.slug || "");
       setIsCustomSlug(true);
-      setCategory(selectedArticle.category || "Monthly Newspaper");
+      setCategory(selectedArticle.category || "");
       setAuthorName(selectedArticle.authorName || "");
       setAuthorDesignation(selectedArticle.authorDesignation || "");
       setContent(selectedArticle.content || "");
@@ -96,7 +97,7 @@ export function PublicationFormModal({
       setTitle("");
       setSlug("");
       setIsCustomSlug(false);
-      setCategory("Monthly Newspaper");
+      setCategory(availableCategories[0] || "");
       setAuthorName(currentUser?.name || "Library Editorial Board");
       setAuthorDesignation(currentUser?.role === "SUPER_ADMIN" ? "Super Admin" : "Library Administration");
       setContent("");
@@ -105,7 +106,7 @@ export function PublicationFormModal({
       setTotalReadTime(3);
       setIsPublished(true);
     }
-  }, [selectedArticle, isOpen, currentUser]);
+  }, [selectedArticle, isOpen, currentUser, availableCategories]);
 
   // Auto-generate slug while typing title unless manually customized
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -161,9 +162,9 @@ export function PublicationFormModal({
       slug: slug.trim() ? slugify(slug) : slugify(title),
       category: category.trim() || "General",
       authorName: authorName.trim(),
-      authorDesignation: authorDesignation.trim() || undefined,
+      authorDesignation: authorDesignation.trim() ? authorDesignation.trim() : null,
       content: content.trim(),
-      coverImage: coverImage.trim() || undefined,
+      coverImage: coverImage.trim() ? coverImage.trim() : null,
       relatedBookId: relatedBookId ? Number(relatedBookId) : null,
       totalReadTime: Number(totalReadTime) || 3,
       isPublished,
@@ -257,7 +258,7 @@ export function PublicationFormModal({
                     className="w-full px-3.5 py-2 text-xs rounded-xl border border-input bg-background text-foreground focus:ring-2 focus:ring-[#004F32] focus:outline-none"
                   />
                   <datalist id="category-suggestions">
-                    {COMMON_CATEGORIES.map((cat) => (
+                    {availableCategories.map((cat) => (
                       <option key={cat} value={cat} />
                     ))}
                   </datalist>

@@ -18,15 +18,20 @@ import {
   ListChecks,
   ArrowRightLeft,
   Share2,
+  CalendarClock,
 } from "lucide-react";
 import { useActiveShift, useGetAllShiftLogs } from "@/hooks/useShifts";
 import { ScheduleShiftModal } from "@/components/shifter/ScheduleShiftModal";
 import { CancelShiftModal } from "@/components/shifter/CancelShiftModal";
+import { RescheduleShiftModal } from "@/components/shifter/RescheduleShiftModal";
+import { CompleteOfflineShiftModal } from "@/components/shift/CompleteOfflineShiftModal";
 import { IShift } from "@/types/shift";
 import { format } from "date-fns";
 
-function formatDuration(start: string, end?: string): string {
+function formatDuration(start?: string, end?: string): string {
+  if (!start) return "—";
   const s = new Date(start).getTime();
+  if (isNaN(s)) return "—";
   const e = end ? new Date(end).getTime() : Date.now();
   const diff = Math.max(0, e - s);
   const h = Math.floor(diff / 3600000);
@@ -34,19 +39,21 @@ function formatDuration(start: string, end?: string): string {
   return `${h}h ${m}m`;
 }
 
-function formatTime(iso: string): string {
+function formatTime(iso?: string): string {
+  if (!iso) return "—";
   try {
     return format(new Date(iso), "hh:mm a");
   } catch {
-    return iso;
+    return String(iso);
   }
 }
 
-function formatDate(iso: string): string {
+function formatDate(iso?: string): string {
+  if (!iso) return "—";
   try {
     return format(new Date(iso), "EEE, dd MMM yyyy");
   } catch {
-    return iso;
+    return String(iso);
   }
 }
 
@@ -56,6 +63,8 @@ export default function ShifterShiftLogsPage() {
 
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [cancelModalShift, setCancelModalShift] = useState<IShift | null>(null);
+  const [rescheduleModalShift, setRescheduleModalShift] = useState<IShift | null>(null);
+  const [offlineModalShift, setOfflineModalShift] = useState<IShift | null>(null);
   const [detailModal, setDetailModal] = useState<IShift | null>(null);
 
   const shiftLogs = rawLogs;
@@ -187,13 +196,30 @@ export default function ShifterShiftLogsPage() {
                 </div>
 
                 <div className="pt-2 border-t border-border/60 flex items-center justify-between gap-2">
-                  <button
-                    onClick={() => setCancelModalShift(shift)}
-                    className="inline-flex items-center gap-1 px-3 py-1 rounded-lg border border-red-200 dark:border-red-900 bg-red-500/10 hover:bg-red-500/20 text-red-700 dark:text-red-300 text-[11px] font-bold transition-colors cursor-pointer"
-                  >
-                    <XCircle className="h-3 w-3" />
-                    <span>Cancel &amp; Notify</span>
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setRescheduleModalShift(shift)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 text-[11px] font-bold transition-colors cursor-pointer"
+                    >
+                      <CalendarClock className="h-3 w-3" />
+                      <span>Reschedule</span>
+                    </button>
+                    <button
+                      onClick={() => setCancelModalShift(shift)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-red-200 dark:border-red-900 bg-red-500/10 hover:bg-red-500/20 text-red-700 dark:text-red-300 text-[11px] font-bold transition-colors cursor-pointer"
+                    >
+                      <XCircle className="h-3 w-3" />
+                      <span>Cancel</span>
+                    </button>
+                    <button
+                      onClick={() => setOfflineModalShift(shift)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold transition-colors cursor-pointer"
+                      title="Complete offline shift with cash reconciliation"
+                    >
+                      <CheckCircle2 className="h-3 w-3" />
+                      <span>Complete Offline</span>
+                    </button>
+                  </div>
                   <span className="text-[10px] text-muted-foreground">Staff Notified</span>
                 </div>
               </div>
@@ -386,6 +412,23 @@ export default function ShifterShiftLogsPage() {
         onClose={() => setCancelModalShift(null)}
         shift={cancelModalShift}
       />
+
+      {/* Reschedule Duty Modal */}
+      <RescheduleShiftModal
+        isOpen={Boolean(rescheduleModalShift)}
+        onClose={() => setRescheduleModalShift(null)}
+        shift={rescheduleModalShift}
+      />
+
+      {/* Complete Offline Shift Modal */}
+      {offlineModalShift && (
+        <CompleteOfflineShiftModal
+          open={Boolean(offlineModalShift)}
+          onOpenChange={(open) => !open && setOfflineModalShift(null)}
+          shiftId={offlineModalShift.id}
+          shifterName={offlineModalShift.shifter?.name || offlineModalShift.shifterName}
+        />
+      )}
     </div>
   );
 }

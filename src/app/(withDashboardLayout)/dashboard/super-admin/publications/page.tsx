@@ -3,11 +3,11 @@
 import React from "react";
 import { PublicationsManagement } from "@/components/dashboard/publications/PublicationsManagement";
 
-export default function AdminPublicationsPage() {
+export default function SuperAdminPublicationsPage() {
   return (
     <PublicationsManagement
-      roleTitle="Publications & Articles Management"
-      roleBadge="ADMIN DESK"
+      roleTitle="Super Admin Publications & Editorial Oversight"
+      roleBadge="SUPER ADMIN FULL ACCESS"
     />
   );
 }

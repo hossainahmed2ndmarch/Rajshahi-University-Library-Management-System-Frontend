@@ -28,7 +28,7 @@ import {
   HeartHandshake,
   TrendingUp,
 } from "lucide-react";
-import { useActiveShift } from "@/hooks/useShifts";
+import { useActiveShift, useMySchedule, useGetAllShiftLogs } from "@/hooks/useShifts";
 import { useGetBooks } from "@/hooks/useBooks";
 import { useGetUsers } from "@/hooks/useUsers";
 import { useGetAllBorrows, useIssueBook, useReturnBook } from "@/hooks/useBorrows";
@@ -43,7 +43,8 @@ import { IPurchase } from "@/types/purchase";
 import { IDonation } from "@/types/donation";
 import { StatisticalDiagramsSection } from "@/components/dashboard/analytics/StatisticalDiagramsSection";
 import { LeaderboardsSection } from "@/components/dashboard/analytics/LeaderboardsSection";
-import { useGetAllShiftLogs } from "@/hooks/useShifts";
+import { CompleteOfflineShiftModal } from "@/components/shift/CompleteOfflineShiftModal";
+import { IShift, IShifterSchedule } from "@/types/shift";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
@@ -361,6 +362,11 @@ export default function ShifterCounterDeskPage() {
   const [latestSale, setLatestSale] = useState<IPurchase | null>(null);
   const [donationSlipOpen, setDonationSlipOpen] = useState(false);
   const [latestDonation, setLatestDonation] = useState<IDonation | null>(null);
+
+  const { data: mySchedules = [] } = useMySchedule();
+  const [offlineModalOpen, setOfflineModalOpen] = useState(false);
+  const [offlineShiftId, setOfflineShiftId] = useState<number | string | null>(null);
+  const [offlineShifterName, setOfflineShifterName] = useState<string>("");
 
   const [elapsedTime, setElapsedTime] = useState("00:00:00");
 
@@ -799,6 +805,66 @@ export default function ShifterCounterDeskPage() {
           </div>
         </div>
       </div>
+
+      {/* ─── My Recurring Duty Schedule & Offline Action ───────────────────── */}
+      {mySchedules.length > 0 && (
+        <div className="rounded-2xl border border-border bg-card p-4 shadow-xs space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-border/60">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-primary" />
+              <h3 className="text-xs font-bold text-foreground">
+                আমার নির্ধারিত নামাজ ভিত্তিক সময়সূচি (My Fixed Prayer-time Duty Roster)
+              </h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const targetShift = shiftLogs.find(
+                    (s: IShift) => s.status === "ACTIVE" || s.status === "SCHEDULED"
+                  );
+                  setOfflineShiftId(targetShift?.id || activeShift?.id || 1);
+                  setOfflineShifterName(activeShift?.shifterName || "Self");
+                  setOfflineModalOpen(true);
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 text-[11px] font-bold hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors cursor-pointer"
+              >
+                <span>অফলাইন / বিলম্বিত শিফট এন্ট্রি (Complete Offline)</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+            {mySchedules.map((schedule) => (
+              <div
+                key={schedule.id}
+                className="flex items-center justify-between p-2.5 rounded-xl bg-muted/40 border border-border/60 text-xs"
+              >
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-bold text-foreground">{schedule.dayName}</span>
+                    <span className="text-[10px] text-muted-foreground font-mono">({schedule.dayEn})</span>
+                  </div>
+                  <p className="text-[11px] text-primary font-bold mt-0.5">
+                    {schedule.slotName} · {schedule.startTime} – {schedule.endTime}
+                  </p>
+                </div>
+                {!isShiftActive && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStartModalOpen(true);
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white text-[11px] font-bold transition-colors cursor-pointer shrink-0"
+                  >
+                    শুরু করুন
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ─── Responsive Mode Tabs (Borrow vs Sell vs Donate) ─────────────────── */}
       <div className="space-y-2">
@@ -2030,6 +2096,15 @@ export default function ShifterCounterDeskPage() {
         isOpen={donationSlipOpen}
         onClose={() => setDonationSlipOpen(false)}
       />
+      {/* Offline / Delayed Shift Completion Modal */}
+      {offlineShiftId !== null && (
+        <CompleteOfflineShiftModal
+          open={offlineModalOpen}
+          onOpenChange={setOfflineModalOpen}
+          shiftId={offlineShiftId}
+          shifterName={offlineShifterName}
+        />
+      )}
     </div>
   );
 }

@@ -12,10 +12,11 @@ import {
 } from "@/types/article";
 
 export const useGetArticles = (params?: IArticleQueryParams) => {
+  const queryParams = { limit: 100, ...params };
   return useQuery({
-    queryKey: ["articles", params],
-    queryFn: () => ArticleService.getAllArticles(params),
-    staleTime: 60 * 1000,
+    queryKey: ["articles", queryParams],
+    queryFn: () => ArticleService.getAllArticles(queryParams),
+    staleTime: 30 * 1000,
   });
 };
 

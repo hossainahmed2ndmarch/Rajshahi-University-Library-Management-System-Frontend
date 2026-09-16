@@ -41,24 +41,24 @@ export default function PublicationsPage() {
   }, [articlesData]);
 
   const categories = useMemo(() => {
-    const list = ["ALL"];
     const unique = new Set<string>();
 
     if (categoryCounts && Array.isArray(categoryCounts)) {
-      categoryCounts.forEach((c) => unique.add(c.category));
+      categoryCounts.forEach((c) => {
+        if (c.category && c.count > 0) {
+          unique.add(c.category.trim());
+        }
+      });
     }
+
     articles.forEach((a) => {
-      if (a.category) unique.add(a.category);
+      if (a.category && a.category.trim()) {
+        unique.add(a.category.trim());
+      }
     });
 
-    // Default Islamic library categories if empty
-    if (unique.size === 0) {
-      ["Monthly Newspaper", "Scholarly Article", "Library Notice", "Manuscript Review"].forEach((c) =>
-        unique.add(c)
-      );
-    }
-
-    return [...list, ...Array.from(unique)];
+    const sorted = Array.from(unique).sort((a, b) => a.localeCompare(b));
+    return ["ALL", ...sorted];
   }, [categoryCounts, articles]);
 
   const filteredArticles = useMemo(() => {

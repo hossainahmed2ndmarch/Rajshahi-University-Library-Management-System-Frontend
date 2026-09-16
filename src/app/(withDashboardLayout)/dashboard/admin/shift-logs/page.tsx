@@ -15,95 +15,25 @@ import {
   User,
   ShieldCheck,
   Trash2,
+  CalendarClock,
+  XCircle,
+  Radio,
 } from "lucide-react";
 import { RUTable } from "@/components/ui/RUTable";
 import { useGetAllShiftLogs, useActiveShift, useDeleteShiftLog } from "@/hooks/useShifts";
 import { StartShiftModal } from "@/components/shifter/StartShiftModal";
 import { ScheduleShiftModal } from "@/components/shifter/ScheduleShiftModal";
 import { EndShiftModal } from "@/components/shifter/EndShiftModal";
+import { CancelShiftModal } from "@/components/shifter/CancelShiftModal";
+import { RescheduleShiftModal } from "@/components/shifter/RescheduleShiftModal";
+import { CompleteOfflineShiftModal } from "@/components/shift/CompleteOfflineShiftModal";
 import { IShift } from "@/types/shift";
+import { format } from "date-fns";
 
-const SEED_ADMIN_SHIFT_LOGS: IShift[] = [
-  {
-    id: "shift_2026_08_14_001",
-    shifterId: "usr_103",
-    shifterName: "Hasan Mahmud (Shifter)",
-    status: "COMPLETED",
-    startTime: "2026-08-14T08:00:00.000Z",
-    endTime: "2026-08-14T15:00:00.000Z",
-    openingCash: 2000,
-    startingCash: 2000,
-    closingCash: 3250,
-    endingCash: 3250,
-    expectedCash: 3200,
-    cashVariance: 50,
-    totalTransactions: 12,
-    cashCollected: 1250,
-    totalCashCollected: 1250,
-    handoverNotes: "Normal morning-afternoon shift. All book checkouts logged with correct fees. Small surplus from rounded change.",
-    notes: "Normal morning-afternoon shift. All book checkouts logged with correct fees. Small surplus from rounded change.",
-  },
-  {
-    id: "shift_2026_08_13_001",
-    shifterId: "usr_103",
-    shifterName: "Hasan Mahmud (Shifter)",
-    status: "COMPLETED",
-    startTime: "2026-08-13T08:00:00.000Z",
-    endTime: "2026-08-13T16:00:00.000Z",
-    openingCash: 2000,
-    startingCash: 2000,
-    closingCash: 4100,
-    endingCash: 4100,
-    expectedCash: 4200,
-    cashVariance: -100,
-    totalTransactions: 18,
-    cashCollected: 2200,
-    totalCashCollected: 2200,
-    handoverNotes: "High footfall during university break. Variance likely due to two manual fee records that were corrected after closing.",
-    notes: "High footfall during university break. Variance likely due to two manual fee records that were corrected after closing.",
-  },
-  {
-    id: "shift_2026_08_12_001",
-    shifterId: "usr_104",
-    shifterName: "Fatima Khanam",
-    status: "COMPLETED",
-    startTime: "2026-08-12T09:00:00.000Z",
-    endTime: "2026-08-12T17:00:00.000Z",
-    openingCash: 1500,
-    startingCash: 1500,
-    closingCash: 2800,
-    endingCash: 2800,
-    expectedCash: 2800,
-    cashVariance: 0,
-    totalTransactions: 10,
-    cashCollected: 1300,
-    totalCashCollected: 1300,
-    handoverNotes: "Perfect float reconciliation. No overdue fines or discrepancy noted.",
-    notes: "Perfect float reconciliation. No overdue fines or discrepancy noted.",
-  },
-  {
-    id: "shift_2026_08_11_001",
-    shifterId: "usr_104",
-    shifterName: "Fatima Khanam",
-    status: "COMPLETED",
-    startTime: "2026-08-11T09:00:00.000Z",
-    endTime: "2026-08-11T16:30:00.000Z",
-    openingCash: 1500,
-    startingCash: 1500,
-    closingCash: 2650,
-    endingCash: 2650,
-    expectedCash: 2600,
-    cashVariance: 50,
-    totalTransactions: 9,
-    cashCollected: 1150,
-    totalCashCollected: 1150,
-    handoverNotes: "Quiet afternoon session. Library inventory check conducted.",
-    notes: "Quiet afternoon session. Library inventory check conducted.",
-  },
-];
-
-function formatDuration(start: string, end?: string): string {
+function formatDuration(start?: string, end?: string): string {
+  if (!start) return "—";
   const s = new Date(start).getTime();
+  if (isNaN(s)) return "—";
   const e = end ? new Date(end).getTime() : Date.now();
   const diff = Math.max(0, e - s);
   const h = Math.floor(diff / 3600000);
@@ -111,27 +41,46 @@ function formatDuration(start: string, end?: string): string {
   return `${h}h ${m}m`;
 }
 
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString("en-BD", { hour: "2-digit", minute: "2-digit" });
+function formatTime(iso?: string): string {
+  if (!iso) return "—";
+  try {
+    return format(new Date(iso), "hh:mm a");
+  } catch {
+    return String(iso);
+  }
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-BD", { weekday: "short", year: "numeric", month: "short", day: "numeric" });
+function formatDate(iso?: string): string {
+  if (!iso) return "—";
+  try {
+    return format(new Date(iso), "EEE, dd MMM yyyy");
+  } catch {
+    return String(iso);
+  }
 }
 
 export default function AdminShiftLogsPage() {
   const { data: apiLogs = [], isLoading } = useGetAllShiftLogs();
   const { data: activeShift } = useActiveShift();
   const { mutate: deleteShiftLog, isPending: isDeleting } = useDeleteShiftLog();
-  const shiftLogs: IShift[] = apiLogs.length > 0 ? apiLogs : SEED_ADMIN_SHIFT_LOGS;
+  const shiftLogs: IShift[] = apiLogs;
 
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "SCHEDULED" | "ACTIVE" | "COMPLETED" | "CANCELLED">("ALL");
   const [selectedNote, setSelectedNote] = useState<IShift | null>(null);
   const [deleteShiftId, setDeleteShiftId] = useState<string | number | null>(null);
+  const [cancelModalShift, setCancelModalShift] = useState<IShift | null>(null);
+  const [rescheduleModalShift, setRescheduleModalShift] = useState<IShift | null>(null);
+  const [offlineModalShift, setOfflineModalShift] = useState<IShift | null>(null);
   const [startShiftModalOpen, setStartShiftModalOpen] = useState(false);
   const [scheduleShiftModalOpen, setScheduleShiftModalOpen] = useState(false);
   const [endShiftModalOpen, setEndShiftModalOpen] = useState(false);
 
   const isShiftActive = activeShift && activeShift.status === "ACTIVE";
+
+  const filteredLogs = React.useMemo(() => {
+    if (statusFilter === "ALL") return shiftLogs;
+    return shiftLogs.filter((s) => s.status === statusFilter);
+  }, [shiftLogs, statusFilter]);
 
   const totalShifts = shiftLogs.length;
   const totalCollected = shiftLogs.reduce((acc, s) => acc + (s.totalCashCollected ?? 0), 0);
@@ -244,6 +193,43 @@ export default function AdminShiftLogsPage() {
       },
     },
     {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const status = row.original.status;
+        if (status === "ACTIVE") {
+          return (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-bold text-[10px]">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
+              Active
+            </span>
+          );
+        }
+        if (status === "SCHEDULED") {
+          return (
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-bold text-[10px]">
+              <Calendar className="h-3 w-3" />
+              Scheduled
+            </span>
+          );
+        }
+        if (status === "CANCELLED") {
+          return (
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 font-bold text-[10px]">
+              <X className="h-3 w-3" />
+              Cancelled
+            </span>
+          );
+        }
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground font-bold text-[10px]">
+            <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+            Completed
+          </span>
+        );
+      },
+    },
+    {
       accessorKey: "totalTransactions",
       header: "Txn Count",
       cell: ({ row }) => (
@@ -260,6 +246,44 @@ export default function AdminShiftLogsPage() {
         const noteContent = shift.handoverNotes || shift.notes;
         return (
           <div className="flex items-center space-x-1.5">
+            {shift.status === "SCHEDULED" && (
+              <>
+                <button
+                  onClick={() => setRescheduleModalShift(shift)}
+                  className="inline-flex items-center gap-1 rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-500/10 hover:bg-amber-500/20 px-2 py-1 text-[11px] font-bold text-amber-800 dark:text-amber-300 transition-colors cursor-pointer"
+                  title="Reschedule Shift"
+                >
+                  <CalendarClock className="h-3 w-3" />
+                  <span>Reschedule</span>
+                </button>
+                <button
+                  onClick={() => setCancelModalShift(shift)}
+                  className="inline-flex items-center gap-1 rounded-lg border border-red-200 dark:border-red-900 bg-red-500/10 hover:bg-red-500/20 px-2 py-1 text-[11px] font-bold text-red-700 dark:text-red-300 transition-colors cursor-pointer"
+                  title="Cancel Shift"
+                >
+                  <XCircle className="h-3 w-3" />
+                  <span>Cancel</span>
+                </button>
+                <button
+                  onClick={() => setOfflineModalShift(shift)}
+                  className="inline-flex items-center gap-1 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-500/10 hover:bg-emerald-500/20 px-2 py-1 text-[11px] font-bold text-emerald-800 dark:text-emerald-300 transition-colors cursor-pointer"
+                  title="Complete Shift on behalf of shifter"
+                >
+                  <CheckCircle2 className="h-3 w-3" />
+                  <span>Complete</span>
+                </button>
+              </>
+            )}
+            {shift.status === "ACTIVE" && (
+              <button
+                onClick={() => setEndShiftModalOpen(true)}
+                className="inline-flex items-center gap-1 rounded-lg border border-amber-400 bg-amber-500/10 hover:bg-amber-500/20 px-2 py-1 text-[11px] font-bold text-amber-800 dark:text-amber-300 transition-colors cursor-pointer"
+                title="End & Reconcile Active Shift"
+              >
+                <Clock className="h-3 w-3" />
+                <span>Reconcile</span>
+              </button>
+            )}
             {noteContent ? (
               <button
                 onClick={() => setSelectedNote(shift)}
@@ -326,6 +350,38 @@ export default function AdminShiftLogsPage() {
         </div>
       </div>
 
+      {/* Active Shift Desk Banner */}
+      {isShiftActive && activeShift && (
+        <div className="rounded-2xl border border-emerald-300 dark:border-emerald-800 bg-emerald-500/10 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="h-10 w-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <Radio className="h-5 w-5 animate-pulse" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-extrabold text-emerald-900 dark:text-emerald-200">
+                  CURRENTLY ACTIVE DUTY DESK
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold">
+                  <span className="h-1.5 w-1.5 rounded-full bg-white animate-ping" />
+                  LIVE
+                </span>
+              </div>
+              <p className="text-sm font-bold text-foreground truncate mt-0.5">
+                {activeShift.shifter?.name || activeShift.shifterName || "Duty Staff"} • Started: {formatTime(activeShift.startTime)} ({formatDuration(activeShift.startTime)})
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setEndShiftModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-sm transition-colors cursor-pointer shrink-0"
+          >
+            <Clock className="h-3.5 w-3.5" />
+            <span>End Shift &amp; Reconcile Float</span>
+          </button>
+        </div>
+      )}
+
       {/* Summary KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="rounded-2xl border border-border bg-card p-4 space-y-1 shadow-2xs">
@@ -371,10 +427,45 @@ export default function AdminShiftLogsPage() {
         </div>
       </div>
 
+      {/* Status Filter Tabs */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+        <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-2xl bg-muted/60 border border-border">
+          {[
+            { id: "ALL", label: "All Records", count: shiftLogs.length },
+            { id: "ACTIVE", label: "Active", count: shiftLogs.filter((s) => s.status === "ACTIVE").length },
+            { id: "SCHEDULED", label: "Scheduled", count: shiftLogs.filter((s) => s.status === "SCHEDULED").length },
+            { id: "COMPLETED", label: "Completed", count: shiftLogs.filter((s) => s.status === "COMPLETED").length },
+            { id: "CANCELLED", label: "Cancelled", count: shiftLogs.filter((s) => s.status === "CANCELLED").length },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setStatusFilter(tab.id as any)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                statusFilter === tab.id
+                  ? "bg-primary text-primary-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
+            >
+              <span>{tab.label}</span>
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                  statusFilter === tab.id
+                    ? "bg-white/20 text-white"
+                    : "bg-muted-foreground/15 text-muted-foreground"
+                }`}
+              >
+                {tab.count}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Datatable */}
       <RUTable
         columns={columns}
-        data={shiftLogs}
+        data={filteredLogs}
         isLoading={isLoading}
         searchPlaceholder="Filter shift logs by shifter name or reference ID..."
       />
@@ -493,6 +584,32 @@ export default function AdminShiftLogsPage() {
         onClose={() => setEndShiftModalOpen(false)}
         activeShift={activeShift || null}
       />
+
+      {/* Admin Action: Cancel Shift Modal */}
+      <CancelShiftModal
+        isOpen={Boolean(cancelModalShift)}
+        onClose={() => setCancelModalShift(null)}
+        shift={cancelModalShift}
+      />
+
+      {/* Admin Action: Reschedule Shift Modal */}
+      <RescheduleShiftModal
+        isOpen={Boolean(rescheduleModalShift)}
+        onClose={() => setRescheduleModalShift(null)}
+        shift={rescheduleModalShift}
+      />
+
+      {/* Admin Action: Complete Offline Shift Modal */}
+      {offlineModalShift && (
+        <CompleteOfflineShiftModal
+          open={Boolean(offlineModalShift)}
+          onOpenChange={(open) => {
+            if (!open) setOfflineModalShift(null);
+          }}
+          shiftId={offlineModalShift.id}
+          shifterName={offlineModalShift.shifter?.name || offlineModalShift.shifterName || "Shifter"}
+        />
+      )}
     </div>
   );
 }

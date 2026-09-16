@@ -22,6 +22,7 @@ import {
   Barcode,
   User,
   Newspaper,
+  Calendar,
 } from "lucide-react";
 import { useGetMe, useLogout } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
@@ -63,7 +64,7 @@ const ROLE_NAV_ITEMS: Record<UserRole, NavItem[]> = {
     },
     {
       label: "Publications & Articles",
-      href: "/dashboard/admin/publications",
+      href: "/dashboard/super-admin/publications",
       icon: Newspaper,
     },
     {
@@ -78,8 +79,13 @@ const ROLE_NAV_ITEMS: Record<UserRole, NavItem[]> = {
     },
     {
       label: "Shift Logs & Duty",
-      href: "/dashboard/admin/shift-logs",
+      href: "/dashboard/super-admin/shift-logs",
       icon: History,
+    },
+    {
+      label: "Duty Rosters & Schedules",
+      href: "/dashboard/super-admin/shifter-schedules",
+      icon: Calendar,
     },
     {
       label: "Review Moderation",
@@ -144,6 +150,11 @@ const ROLE_NAV_ITEMS: Record<UserRole, NavItem[]> = {
       label: "Shift Logs & Duty",
       href: "/dashboard/admin/shift-logs",
       icon: History,
+    },
+    {
+      label: "Duty Rosters & Schedules",
+      href: "/dashboard/admin/shifter-schedules",
+      icon: Calendar,
     },
     {
       label: "Review Moderation",

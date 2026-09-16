@@ -51,7 +51,7 @@ export function CancelShiftModal({
       window.open(`https://t.me/share/url?url=${encodeURIComponent("https://ru-islamic-library.ac.bd")}&text=${text}`, "_blank");
     } else {
       navigator.clipboard?.writeText(generateSocialShareText());
-      window.open(`https://www.facebook.com/dialog/send?link=${encodeURIComponent("https://ru-islamic-library.ac.bd")}&app_id=12345&redirect_uri=${encodeURIComponent(window.location.href)}`, "_blank");
+      window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
     }
   };
 
@@ -189,7 +189,6 @@ export function CancelShiftModal({
                     {[
                       { id: "WHATSAPP", label: "WhatsApp" },
                       { id: "TELEGRAM", label: "Telegram" },
-                      { id: "MESSENGER", label: "Messenger" },
                     ].map((sp) => (
                       <button
                         type="button"

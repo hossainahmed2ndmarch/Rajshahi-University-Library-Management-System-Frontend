@@ -10,6 +10,43 @@ export interface ProvidersProps {
   children: React.ReactNode;
 }
 
+// Suppress known third-party browser extension / Core Web Vitals attribution error
+if (typeof window !== "undefined") {
+  const isTargetError = (msg?: string, stack?: string) => {
+    return Boolean(
+      (msg && (msg.includes("startTime") || msg.includes("reportAllChanges"))) ||
+      (stack && (stack.includes("startTime") || stack.includes("reportAllChanges")))
+    );
+  };
+
+  window.addEventListener(
+    "error",
+    (event) => {
+      const msg = event.message || "";
+      const stack = event.error?.stack || "";
+      if (isTargetError(msg, stack)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    },
+    true
+  );
+
+  window.addEventListener(
+    "unhandledrejection",
+    (event) => {
+      const reason = event.reason;
+      const msg = reason?.message || String(reason || "");
+      const stack = reason?.stack || "";
+      if (isTargetError(msg, stack)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    },
+    true
+  );
+}
+
 /**
  * Triggers Zustand persist rehydration from localStorage after the first
  * client render. This prevents SSR/hydration mismatch caused by the persisted
@@ -35,6 +72,8 @@ function LanguageStoreHydrator() {
   return null;
 }
 
+import { GlobalShiftStartTrigger } from "@/components/shift/GlobalShiftStartTrigger";
+
 export function Providers({ children }: ProvidersProps) {
   const [queryClient] = useState(
     () =>
@@ -59,6 +98,7 @@ export function Providers({ children }: ProvidersProps) {
       >
         <LanguageStoreHydrator />
         {children}
+        <GlobalShiftStartTrigger />
         <Toaster position="top-right" richColors />
       </NextThemesProvider>
     </QueryClientProvider>

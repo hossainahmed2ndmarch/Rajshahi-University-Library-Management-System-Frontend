@@ -19,6 +19,7 @@ export const ArticleService = {
     if (queryParams.category === "ALL" || queryParams.category === "all") {
       delete queryParams.category;
     }
+    queryParams.limit = params?.limit ?? 10000;
     const response = await axiosInstance.get<ApiResponse<IArticle[]>>("/articles", {
       params: queryParams,
     });

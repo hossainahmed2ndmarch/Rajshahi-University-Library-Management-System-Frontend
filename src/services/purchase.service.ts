@@ -43,7 +43,9 @@ export const PurchaseService = {
   },
 
   getAllPurchases: async (params?: Record<string, unknown>): Promise<IPurchase[]> => {
-    const response = await axiosInstance.get<ApiResponse<IPurchase[]>>("/purchases", { params });
+    const response = await axiosInstance.get<ApiResponse<IPurchase[]>>("/purchases", {
+      params: { limit: 10000, ...params },
+    });
     const raw = response.data?.data;
     return Array.isArray(raw) ? raw : (raw as unknown as { result: IPurchase[] })?.result || [];
   },

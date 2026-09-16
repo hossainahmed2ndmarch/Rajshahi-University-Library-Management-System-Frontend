@@ -78,7 +78,7 @@ const ROLE_NAV_ITEMS: Record<UserRole, NavItem[]> = {
       icon: Receipt,
     },
     {
-      label: "Shift Logs & Duty",
+      label: "Shift Logs & Audit System",
       href: "/dashboard/super-admin/shift-logs",
       icon: History,
     },
@@ -147,7 +147,7 @@ const ROLE_NAV_ITEMS: Record<UserRole, NavItem[]> = {
       icon: Receipt,
     },
     {
-      label: "Shift Logs & Duty",
+      label: "Shift Logs & Audit System",
       href: "/dashboard/admin/shift-logs",
       icon: History,
     },
@@ -207,7 +207,7 @@ const ROLE_NAV_ITEMS: Record<UserRole, NavItem[]> = {
       icon: Receipt,
     },
     {
-      label: "Shift Reconciliation",
+      label: "Shift Logs & Handover",
       href: "/dashboard/shifter/shift-logs",
       icon: History,
     },

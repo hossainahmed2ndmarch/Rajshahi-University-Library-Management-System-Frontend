@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { TablePagination } from "@/components/ui/TablePagination";
 import {
   Users,
   Search,
   CheckCircle2,
   Clock,
   Shield,
-  Banknote,
   Phone,
   Mail,
   UserCheck,
@@ -37,7 +37,7 @@ import { IUser, UserStatus } from "@/types/auth";
 import { format } from "date-fns";
 
 // ─── Status badge config ───────────────────────────────────────────────────────
-const STATUS_MAP: Record<UserStatus, { label: string; className: string; icon: React.ReactNode }> = {
+const STATUS_MAP: Record<string, { label: string; className: string; icon: React.ReactNode }> = {
   ACTIVE: { label: "Active", className: "bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300", icon: <CheckCircle2 className="h-3 w-3" /> },
   PENDING_PAYMENT: { label: "Pending Payment", className: "bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300", icon: <Clock className="h-3 w-3" /> },
   PENDING_APPROVAL: { label: "Pending Approval", className: "bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300", icon: <AlertCircle className="h-3 w-3" /> },
@@ -55,13 +55,14 @@ function AddMemberModal({
 }) {
   const { mutate: registerMember, isPending } = useRegisterMemberByStaff();
 
-  // Registration Type: "OFFLINE_LEGACY" | "WALKIN_NEW"
   const [regMode, setRegMode] = useState<"OFFLINE_LEGACY" | "WALKIN_NEW">("OFFLINE_LEGACY");
 
-  const todayStr = new Date().toISOString().split("T")[0];
-  const oneYearFromNowStr = new Date(new Date().setFullYear(new Date().getFullYear() + 1))
-    .toISOString()
-    .split("T")[0];
+  const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
+  const oneYearFromNowStr = useMemo(() => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() + 1);
+    return d.toISOString().split("T")[0];
+  }, []);
 
   const [form, setForm] = useState({
     name: "",
@@ -73,7 +74,6 @@ function AddMemberModal({
     department: "Islamic Studies",
     session: "2024-2025",
     paymentMethod: "CASH",
-    // Offline specific fields
     membershipStartedAt: todayStr,
     membershipExpiresAt: oneYearFromNowStr,
     isPaid: true,
@@ -108,7 +108,6 @@ function AddMemberModal({
   };
 
   const handleSetExpiredPreset = () => {
-    // Set expiry to 1 month in the past
     const past = new Date();
     past.setMonth(past.getMonth() - 1);
     const pastStart = new Date(past.getTime());
@@ -124,7 +123,7 @@ function AddMemberModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const v = validate();
-    if (Object.keys(v).length) {
+    if (Object.keys(v).length > 0) {
       setErrors(v);
       return;
     }
@@ -168,25 +167,26 @@ function AddMemberModal({
     });
   };
 
-  const field = (key: keyof typeof form) => ({
-    value: form[key] as string,
+  type StringFormKeys = Exclude<keyof typeof form, "isPaid">;
+
+  const field = (key: StringFormKeys) => ({
+    value: form[key],
     onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
       setForm((f) => ({ ...f, [key]: e.target.value })),
   });
 
   const isExpiredOffline =
     regMode === "OFFLINE_LEGACY" &&
-    form.membershipExpiresAt &&
+    Boolean(form.membershipExpiresAt) &&
     new Date(form.membershipExpiresAt) < new Date();
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto animate-in fade-in-50">
       <div className="relative w-full max-w-xl rounded-3xl border border-border bg-card p-6 shadow-2xl my-8 space-y-4 max-h-[92vh] overflow-y-auto">
-        <button onClick={onClose} className="absolute right-4 top-4 text-muted-foreground hover:text-foreground cursor-pointer">
+        <button onClick={onClose} className="absolute right-4 top-4 text-muted-foreground hover:text-foreground cursor-pointer" type="button">
           <X className="h-5 w-5" />
         </button>
 
-        {/* Header */}
         <div className="flex items-center gap-3 pb-3 border-b border-border">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#004F32] text-white shrink-0">
             <UserPlus className="h-6 w-6 text-amber-300" />
@@ -197,7 +197,6 @@ function AddMemberModal({
           </div>
         </div>
 
-        {/* Mode Selector Tabs */}
         <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-muted/60 border border-border/80">
           <button
             type="button"
@@ -225,7 +224,6 @@ function AddMemberModal({
           </button>
         </div>
 
-        {/* Informational Banner based on mode */}
         {regMode === "OFFLINE_LEGACY" ? (
           <div className="rounded-xl border border-emerald-300/40 bg-emerald-500/10 p-3 text-xs text-emerald-950 dark:text-emerald-200 flex items-start gap-2.5">
             <Sparkles className="h-4 w-4 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
@@ -245,14 +243,12 @@ function AddMemberModal({
           </div>
         )}
 
-        {/* Role Notice */}
         <div className="rounded-xl border border-border bg-muted/40 px-3 py-2 text-[11px] text-muted-foreground flex items-center gap-2">
           <Lock className="h-3.5 w-3.5 text-amber-500 shrink-0" />
           <span>New members are automatically assigned the <strong>MEMBER</strong> role. Shifters cannot alter user roles.</span>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3 text-xs">
-          {/* Full Name */}
           <div className="space-y-1">
             <label className="font-semibold text-foreground">Full Name *</label>
             <div className="relative">
@@ -262,7 +258,6 @@ function AddMemberModal({
             {errors.name && <p className="text-red-500 text-[11px]">{errors.name}</p>}
           </div>
 
-          {/* Email + Phone */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="font-semibold text-foreground">Email *</label>
@@ -282,7 +277,6 @@ function AddMemberModal({
             </div>
           </div>
 
-          {/* Student Reg # + Temporary Password */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="font-semibold text-foreground">Student Reg # / Voter ID *</label>
@@ -303,7 +297,6 @@ function AddMemberModal({
             </div>
           </div>
 
-          {/* Institution + Department + Session */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1">
               <label className="font-semibold text-foreground">Institution</label>
@@ -325,7 +318,6 @@ function AddMemberModal({
             </div>
           </div>
 
-          {/* Mode-specific Section: Membership Validity (Offline) OR Payment Method (New Walkin) */}
           {regMode === "OFFLINE_LEGACY" ? (
             <div className="rounded-2xl border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/40 dark:bg-emerald-950/20 p-4 space-y-3">
               <div className="flex items-center justify-between">
@@ -381,7 +373,6 @@ function AddMemberModal({
                 </div>
               </div>
 
-              {/* Expiry dynamic feedback */}
               <div className="text-[11px] pt-1">
                 {isExpiredOffline ? (
                   <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-medium">
@@ -456,7 +447,7 @@ function EditMemberValidityModal({
   const [startedAt, setStartedAt] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (user) {
       if (user.membershipStartedAt) {
         setStartedAt(new Date(user.membershipStartedAt).toISOString().split("T")[0]);
@@ -504,7 +495,7 @@ function EditMemberValidityModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto animate-in fade-in-50">
       <div className="relative w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-2xl space-y-4">
-        <button onClick={onClose} className="absolute right-4 top-4 text-muted-foreground hover:text-foreground cursor-pointer">
+        <button onClick={onClose} className="absolute right-4 top-4 text-muted-foreground hover:text-foreground cursor-pointer" type="button">
           <X className="h-5 w-5" />
         </button>
 
@@ -590,39 +581,57 @@ export default function ShifterMembersPage() {
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "PENDING_APPROVAL" | "PENDING_PAYMENT" | "EXPIRED">("ALL");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [addMemberOpen, setAddMemberOpen] = useState(false);
   const [editingValidityUser, setEditingValidityUser] = useState<IUser | null>(null);
 
-  const now = new Date();
+  const handleSearchChange = (term: string) => {
+    setSearch(term);
+    setCurrentPage(1);
+  };
+
+  const handleStatusFilterChange = (filter: "ALL" | "ACTIVE" | "PENDING_APPROVAL" | "PENDING_PAYMENT" | "EXPIRED") => {
+    setStatusFilter(filter);
+    setCurrentPage(1);
+  };
 
   const isUserExpired = (u: IUser) => {
     if (!u.membershipExpiresAt) return false;
-    return new Date(u.membershipExpiresAt) < now;
+    return new Date(u.membershipExpiresAt) < new Date();
   };
 
-  const filtered: IUser[] = users.filter((u) => {
+  const filtered: IUser[] = useMemo(() => {
     const term = search.toLowerCase();
-    const nameMatch = (u.name ?? "").toLowerCase().includes(term);
-    const emailMatch = (u.email ?? "").toLowerCase().includes(term);
-    const idMatch = (u.studentOrVoterId ?? "").toLowerCase().includes(term);
-    const phoneMatch = ((u.phone ?? u.phoneNumber) ?? "").toLowerCase().includes(term);
+    return users.filter((u) => {
+      const userPhone = u.phone ?? (u as Record<string, unknown>).phoneNumber as string ?? "";
+      const nameMatch = (u.name ?? "").toLowerCase().includes(term);
+      const emailMatch = (u.email ?? "").toLowerCase().includes(term);
+      const idMatch = (u.studentOrVoterId ?? "").toLowerCase().includes(term);
+      const phoneMatch = userPhone.toLowerCase().includes(term);
 
-    let statusMatch = true;
-    if (statusFilter === "EXPIRED") {
-      statusMatch = isUserExpired(u);
-    } else if (statusFilter !== "ALL") {
-      statusMatch = u.status === statusFilter;
-    }
+      let statusMatch = true;
+      if (statusFilter === "EXPIRED") {
+        statusMatch = isUserExpired(u);
+      } else if (statusFilter !== "ALL") {
+        statusMatch = u.status === statusFilter;
+      }
 
-    return (nameMatch || emailMatch || idMatch || phoneMatch) && statusMatch;
-  });
+      return (nameMatch || emailMatch || idMatch || phoneMatch) && statusMatch;
+    });
+  }, [users, search, statusFilter]);
 
-  const totalMembers = users.filter((u) => u.role === "MEMBER").length;
-  const activeMembers = users.filter((u) => u.status === "ACTIVE" && !isUserExpired(u)).length;
-  const pendingPayment = users.filter((u) => u.status === "PENDING_PAYMENT").length;
-  const pendingApproval = users.filter((u) => u.status === "PENDING_APPROVAL").length;
-  const expiredMembers = users.filter((u) => isUserExpired(u)).length;
+  const paginatedUsers = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, currentPage, pageSize]);
+
+  const totalMembers = useMemo(() => users.filter((u) => u.role === "MEMBER").length, [users]);
+  const activeMembers = useMemo(() => users.filter((u) => u.status === "ACTIVE" && !isUserExpired(u)).length, [users]);
+  const pendingPayment = useMemo(() => users.filter((u) => u.status === "PENDING_PAYMENT").length, [users]);
+  const pendingApproval = useMemo(() => users.filter((u) => u.status === "PENDING_APPROVAL").length, [users]);
+  const expiredMembers = useMemo(() => users.filter((u) => isUserExpired(u)).length, [users]);
 
   const handleApproveCash = (user: IUser) => {
     setProcessingId(String(user.id));
@@ -649,6 +658,7 @@ export default function ShifterMembersPage() {
         </div>
 
         <button
+          type="button"
           onClick={() => setAddMemberOpen(true)}
           className="inline-flex items-center gap-2 rounded-xl bg-[#004F32] hover:bg-emerald-900 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition-all cursor-pointer"
         >
@@ -662,285 +672,184 @@ export default function ShifterMembersPage() {
         {[
           { label: "Total Members", value: totalMembers, icon: <Users className="h-4 w-4" />, color: "text-[#004F32] dark:text-emerald-400", bg: "bg-[#004F32]/10" },
           { label: "Active Members", value: activeMembers, icon: <CheckCircle2 className="h-4 w-4" />, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10" },
+          { label: "Pending Payment", value: pendingPayment, icon: <Clock className="h-4 w-4" />, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10" },
           { label: "Pending Approval", value: pendingApproval, icon: <AlertCircle className="h-4 w-4" />, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10" },
-          { label: "Pending Payment", value: pendingPayment, icon: <Banknote className="h-4 w-4" />, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10" },
-          { label: "Expired Validity", value: expiredMembers, icon: <Clock className="h-4 w-4" />, color: "text-rose-600 dark:text-rose-400", bg: "bg-rose-500/10" },
-        ].map(({ label, value, icon, color, bg }) => (
-          <div key={label} className="rounded-2xl border border-border bg-card p-4 space-y-1.5">
-            <div className={`h-8 w-8 rounded-xl ${bg} flex items-center justify-center ${color}`}>{icon}</div>
-            <p className={`text-xl font-extrabold ${color}`}>{value}</p>
-            <p className="text-[11px] text-muted-foreground">{label}</p>
+          { label: "Expired Validity", value: expiredMembers, icon: <AlertTriangle className="h-4 w-4" />, color: "text-rose-600 dark:text-rose-400", bg: "bg-rose-500/10" },
+        ].map((s, idx) => (
+          <div key={idx} className="rounded-2xl border border-border bg-card p-4 space-y-1 shadow-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground">{s.label}</span>
+              <div className={`p-2 rounded-xl ${s.bg} ${s.color}`}>{s.icon}</div>
+            </div>
+            <p className="text-xl font-black text-foreground">{s.value}</p>
           </div>
         ))}
       </div>
 
-      {/* Pending Approval Callout Banner */}
-      {pendingApproval > 0 && (
-        <div className="rounded-2xl border border-blue-300/40 bg-blue-500/10 p-4 flex items-start justify-between gap-3">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
-            <div className="text-xs">
-              <p className="font-bold text-blue-900 dark:text-blue-200">
-                {pendingApproval} Membership {pendingApproval === 1 ? "Request" : "Requests"} Awaiting Desk Approval
-              </p>
-              <p className="text-blue-800 dark:text-blue-300 mt-0.5">
-                Review verified applicants who paid in cash at the counter desk to activate their accounts.
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => setStatusFilter("PENDING_APPROVAL")}
-            className="shrink-0 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold cursor-pointer"
-          >
-            Review Requests
-          </button>
-        </div>
-      )}
-
       {/* Filters & Search */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, email, phone, or student ID..."
-            className="w-full rounded-xl border border-input bg-card pl-9 pr-3 py-2 text-xs focus:ring-2 focus:ring-primary focus:outline-none"
+            onChange={(e) => handleSearchChange(e.target.value)}
+            placeholder="Search by name, email, ID, phone..."
+            className="w-full rounded-xl border border-input bg-background pl-9 pr-4 py-2 text-xs focus:ring-2 focus:ring-primary focus:outline-none"
           />
         </div>
-        <div className="flex flex-wrap gap-2">
-          {([
-            { val: "ALL", label: "All" },
-            { val: "ACTIVE", label: "Active" },
-            { val: "PENDING_APPROVAL", label: "Pending Approval" },
-            { val: "PENDING_PAYMENT", label: "Pending Payment" },
-            { val: "EXPIRED", label: "Expired" },
-          ] as const).map(({ val, label }) => (
+
+        <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-muted/60 border border-border/60 text-xs">
+          {(["ALL", "ACTIVE", "PENDING_APPROVAL", "PENDING_PAYMENT", "EXPIRED"] as const).map((filter) => (
             <button
-              key={val}
-              onClick={() => setStatusFilter(val)}
-              className={`rounded-lg px-3 py-2 text-[11px] font-bold transition-colors cursor-pointer ${
-                statusFilter === val
-                  ? "bg-[#004F32] text-white"
-                  : "border border-input bg-card text-muted-foreground hover:bg-accent"
+              type="button"
+              key={filter}
+              onClick={() => handleStatusFilterChange(filter)}
+              className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
+                statusFilter === filter
+                  ? "bg-card text-foreground shadow-xs border border-border"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {label}
-              {val === "PENDING_APPROVAL" && pendingApproval > 0 && (
-                <span className="ml-1.5 rounded-full bg-blue-500 text-white px-1.5 py-0.5 text-[9px] font-bold">{pendingApproval}</span>
-              )}
-              {val === "PENDING_PAYMENT" && pendingPayment > 0 && (
-                <span className="ml-1.5 rounded-full bg-amber-500 text-white px-1.5 py-0.5 text-[9px] font-bold">{pendingPayment}</span>
-              )}
-              {val === "EXPIRED" && expiredMembers > 0 && (
-                <span className="ml-1.5 rounded-full bg-rose-500 text-white px-1.5 py-0.5 text-[9px] font-bold">{expiredMembers}</span>
-              )}
+              {filter.replace("_", " ")}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Members Directory Table */}
+      {/* Directory Table */}
       <div className="rounded-2xl border border-border bg-card shadow-xs overflow-hidden">
-        {isLoading ? (
-          <div className="p-12 text-center text-xs text-muted-foreground">Loading member directory...</div>
-        ) : filtered.length === 0 ? (
-          <div className="p-12 text-center text-muted-foreground text-xs space-y-2">
-            <Users className="h-8 w-8 mx-auto text-muted" />
-            <p>No members match the search or filter criteria.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-border bg-muted/40">
-                  <th className="px-4 py-3 font-semibold text-muted-foreground">Member &amp; ID</th>
-                  <th className="px-4 py-3 font-semibold text-muted-foreground">Contact</th>
-                  <th className="px-4 py-3 font-semibold text-muted-foreground">Role</th>
-                  <th className="px-4 py-3 font-semibold text-muted-foreground">Membership Validity</th>
-                  <th className="px-4 py-3 font-semibold text-muted-foreground">Status</th>
-                  <th className="px-4 py-3 font-semibold text-muted-foreground text-right">Actions</th>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-muted/50 border-b border-border text-muted-foreground font-semibold">
+              <tr>
+                <th className="px-4 py-3">Member Info</th>
+                <th className="px-4 py-3">Contact &amp; Identifiers</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Validity</th>
+                <th className="px-4 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {isLoading ? (
+                <tr>
+                  <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                    Loading directory users...
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
-                {filtered.map((u) => {
-                  const statusCfg = STATUS_MAP[u.status ?? "ACTIVE"];
-                  const isPendingCash = u.status === "PENDING_PAYMENT" && u.paymentMethod === "CASH";
-                  const isPendingApproval = u.status === "PENDING_APPROVAL";
-                  const isProcessing = (isApprovingCash || isApprovingMembership) && processingId === String(u.id);
-                  const expired = isUserExpired(u);
+              ) : paginatedUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                    No members matching search criteria.
+                  </td>
+                </tr>
+              ) : (
+                paginatedUsers.map((user) => {
+                  const statusInfo = STATUS_MAP[user.status] || STATUS_MAP.INACTIVE;
+                  const isExpired = isUserExpired(user);
+                  const isProcessing = processingId === String(user.id);
+                  const userPhone = user.phone ?? (user as Record<string, unknown>).phoneNumber as string ?? "No Phone";
 
                   return (
-                    <tr key={String(u.id)} className="hover:bg-muted/30 transition-colors">
-                      {/* Member info */}
-                      <td className="px-4 py-3.5">
+                    <tr key={user.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#004F32] to-emerald-700 flex items-center justify-center text-white font-bold text-xs shrink-0">
-                            {u.name ? u.name[0].toUpperCase() : "U"}
+                          <div className="h-9 w-9 rounded-full bg-[#004F32]/10 text-[#004F32] dark:text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0">
+                            {user.name ? user.name.charAt(0).toUpperCase() : "U"}
                           </div>
                           <div>
-                            <p className="font-bold text-foreground">{u.name}</p>
-                            <p className="text-[11px] text-muted-foreground font-mono">{u.studentOrVoterId ?? "—"}</p>
+                            <p className="font-bold text-foreground">{user.name || "N/A"}</p>
+                            <p className="text-[11px] text-muted-foreground">{user.email}</p>
                           </div>
                         </div>
                       </td>
-
-                      {/* Contact */}
-                      <td className="px-4 py-3.5">
-                        <div className="space-y-0.5">
-                          <p className="flex items-center gap-1 text-muted-foreground">
-                            <Mail className="h-3 w-3" /> {u.email}
-                          </p>
-                          {(u.phone ?? u.phoneNumber) && (
-                            <p className="flex items-center gap-1 text-muted-foreground">
-                              <Phone className="h-3 w-3" /> {u.phone ?? u.phoneNumber}
-                            </p>
-                          )}
-                        </div>
+                      <td className="px-4 py-3 space-y-0.5">
+                        <p className="text-foreground font-mono">{user.studentOrVoterId || "—"}</p>
+                        <p className="text-[11px] text-muted-foreground">{userPhone}</p>
                       </td>
-
-                      {/* Role (Read-only for Shifter) */}
-                      <td className="px-4 py-3.5">
-                        <div className="space-y-0.5">
-                          <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-[11px] font-bold text-foreground">
-                            <Shield className="h-3 w-3 text-primary" />
-                            {u.role}
-                          </span>
-                          <p className="text-[9px] text-muted-foreground flex items-center gap-0.5">
-                            <Lock className="h-2.5 w-2.5 text-muted-foreground" /> Non-editable
-                          </p>
-                        </div>
-                      </td>
-
-                      {/* Membership Validity Window */}
-                      <td className="px-4 py-3.5">
-                        <div className="space-y-1">
-                          {u.membershipExpiresAt ? (
-                            <div className="space-y-0.5">
-                              <div className="flex items-center gap-1 font-mono text-[11px]">
-                                {expired ? (
-                                  <span className="inline-flex items-center gap-1 text-rose-600 dark:text-rose-400 font-bold">
-                                    <Clock className="h-3 w-3" /> Expired {format(new Date(u.membershipExpiresAt), "dd MMM yyyy")}
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-medium">
-                                    <CheckCircle2 className="h-3 w-3" /> Valid to {format(new Date(u.membershipExpiresAt), "dd MMM yyyy")}
-                                  </span>
-                                )}
-                              </div>
-                              {u.membershipStartedAt && (
-                                <p className="text-[10px] text-muted-foreground font-mono">
-                                  From {format(new Date(u.membershipStartedAt), "dd MMM yyyy")}
-                                </p>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-[11px] text-muted-foreground italic">Not set</span>
-                          )}
-
-                          <button
-                            type="button"
-                            onClick={() => setEditingValidityUser(u)}
-                            className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary hover:underline cursor-pointer"
-                          >
-                            <Edit2 className="h-2.5 w-2.5" /> Edit Validity
-                          </button>
-                        </div>
-                      </td>
-
-                      {/* Status */}
-                      <td className="px-4 py-3.5">
-                        <div className="space-y-1">
-                          <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold ${statusCfg.className}`}>
-                            {statusCfg.icon} {statusCfg.label}
-                          </span>
-                          {expired && (
-                            <span className="block text-[10px] font-bold text-amber-600 dark:text-amber-400">
-                              Needs Renewal
-                            </span>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Action */}
-                      <td className="px-4 py-3.5 text-right">
-                        {isPendingApproval ? (
-                          <button
-                            onClick={() => handleApproveMembership(u)}
-                            disabled={isProcessing}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 px-3 py-1.5 text-[11px] font-bold text-white shadow-xs transition-all disabled:opacity-60 cursor-pointer"
-                          >
-                            <UserCheck className="h-3.5 w-3.5" />
-                            {isProcessing ? "Approving..." : "Approve Membership"}
-                          </button>
-                        ) : isPendingCash ? (
-                          <button
-                            onClick={() => handleApproveCash(u)}
-                            disabled={isProcessing}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-[#C78700] hover:bg-amber-600 px-3 py-1.5 text-[11px] font-bold text-white shadow-xs transition-all disabled:opacity-60 cursor-pointer"
-                          >
-                            <Banknote className="h-3.5 w-3.5" />
-                            {isProcessing ? "Approving..." : "Approve Cash"}
-                          </button>
-                        ) : u.status === "ACTIVE" ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                            <UserCheck className="h-3.5 w-3.5" /> Verified
+                      <td className="px-4 py-3">
+                        {isExpired ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300">
+                            <AlertTriangle className="h-3 w-3" />
+                            Expired
                           </span>
                         ) : (
-                          <span className="text-[11px] text-muted-foreground">—</span>
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${statusInfo.className}`}>
+                            {statusInfo.icon}
+                            {statusInfo.label}
+                          </span>
                         )}
+                      </td>
+                      <td className="px-4 py-3 space-y-0.5 text-[11px]">
+                        {user.membershipExpiresAt ? (
+                          <>
+                            <p className="text-foreground font-medium">
+                              Expires: {format(new Date(user.membershipExpiresAt), "MMM dd, yyyy")}
+                            </p>
+                            {user.membershipStartedAt && (
+                              <p className="text-muted-foreground">
+                                Started: {format(new Date(user.membershipStartedAt), "MMM dd, yyyy")}
+                              </p>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-muted-foreground">Not set</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {user.status === "PENDING_PAYMENT" && user.paymentMethod === "CASH" && (
+                            <button
+                              type="button"
+                              onClick={() => handleApproveCash(user)}
+                              disabled={isProcessing || isApprovingCash}
+                              className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-[11px] transition-all disabled:opacity-50 cursor-pointer"
+                            >
+                              Verify Cash
+                            </button>
+                          )}
+                          {user.status === "PENDING_APPROVAL" && (
+                            <button
+                              type="button"
+                              onClick={() => handleApproveMembership(user)}
+                              disabled={isProcessing || isApprovingMembership}
+                              className="px-2.5 py-1 rounded-lg bg-[#004F32] hover:bg-emerald-900 text-white font-semibold text-[11px] transition-all disabled:opacity-50 cursor-pointer"
+                            >
+                              Approve
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => setEditingValidityUser(user)}
+                            className="p-1.5 rounded-lg border border-border hover:bg-accent text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+                            title="Edit Validity Dates"
+                          >
+                            <Edit2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Permission boundary information notice */}
-      <div className="rounded-2xl border border-border bg-card p-5 space-y-3 shadow-xs">
-        <div className="flex items-center gap-2 text-foreground font-bold text-xs">
-          <AlertTriangle className="h-4 w-4 text-amber-500" />
-          <span>Shifter Access &amp; Permission Guidelines</span>
+                })
+              )}
+            </tbody>
+          </table>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-          <div className="rounded-xl border border-emerald-300/40 bg-emerald-500/5 p-3 space-y-1">
-            <p className="font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-              Add &amp; Register Members
-            </p>
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
-              Register walk-in members or onboard offline-registered members with existing <code className="font-mono text-[10px]">membershipStartedAt</code> &amp; <code className="font-mono text-[10px]">membershipExpiresAt</code>.
-            </p>
-          </div>
-          <div className="rounded-xl border border-blue-300/40 bg-blue-500/5 p-3 space-y-1">
-            <p className="font-bold text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
-              <UserCheck className="h-3.5 w-3.5 text-blue-600" />
-              Approve Requests
-            </p>
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
-              Verify counter cash fee payments and approve pending membership applications to immediately activate library access.
-            </p>
-          </div>
-          <div className="rounded-xl border border-amber-300/40 bg-amber-500/5 p-3 space-y-1">
-            <p className="font-bold text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
-              <Lock className="h-3.5 w-3.5 text-amber-600" />
-              Role Editing Restricted
-            </p>
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
-              Shifters cannot edit user roles (Member, Shifter, Admin, Super Admin) of any user including their own account. Role promotion is strictly restricted to Admins.
-            </p>
-          </div>
+
+        {/* Table Pagination */}
+        <div className="border-t border-border p-4">
+          <TablePagination
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalItems={filtered.length}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+          />
         </div>
       </div>
 
-      {/* Add Member Modal */}
+      {/* Modals */}
       <AddMemberModal isOpen={addMemberOpen} onClose={() => setAddMemberOpen(false)} />
-
-      {/* Edit Validity Modal */}
       <EditMemberValidityModal
         user={editingValidityUser}
         isOpen={Boolean(editingValidityUser)}

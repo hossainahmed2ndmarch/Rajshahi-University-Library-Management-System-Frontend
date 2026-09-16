@@ -19,6 +19,7 @@ import {
   PurchaseReceiptModal,
   PurchaseDeleteConfirmModal,
 } from "./purchases";
+import { TablePagination } from "@/components/ui/TablePagination";
 
 export interface PurchasesManagementTableProps {
   roleTitle?: string;
@@ -35,6 +36,25 @@ export function PurchasesManagementTable({
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [buyerTypeFilter, setBuyerTypeFilter] = useState("ALL"); // ALL, MEMBER, GUEST
+
+  // ── Pagination State ──────────────────────────────────────────────────────
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const handleSearchChange = (val: string) => {
+    setSearchTerm(val);
+    setCurrentPage(1);
+  };
+
+  const handleStatusFilterChange = (val: string) => {
+    setStatusFilter(val);
+    setCurrentPage(1);
+  };
+
+  const handleBuyerTypeFilterChange = (val: string) => {
+    setBuyerTypeFilter(val);
+    setCurrentPage(1);
+  };
 
   // ── Modal State ───────────────────────────────────────────────────────────
   const [editingOrder, setEditingOrder] = useState<IPurchase | null>(null);
@@ -134,6 +154,11 @@ export function PurchasesManagementTable({
     }
   }, [deletingOrder, allowDelete, deletePurchase, refetch]);
 
+  const paginatedPurchases = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredPurchases.slice(startIndex, startIndex + pageSize);
+  }, [filteredPurchases, currentPage, pageSize]);
+
   return (
     <div className="space-y-6">
       {/* ── Top Header Banner ── */}
@@ -151,11 +176,11 @@ export function PurchasesManagementTable({
       <div className="bg-card rounded-3xl border border-border p-6 shadow-sm space-y-4 text-card-foreground">
         <PurchasesFiltersBar
           searchTerm={searchTerm}
-          onSearchTermChange={setSearchTerm}
+          onSearchTermChange={handleSearchChange}
           buyerTypeFilter={buyerTypeFilter}
-          onBuyerTypeFilterChange={setBuyerTypeFilter}
+          onBuyerTypeFilterChange={handleBuyerTypeFilterChange}
           statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
+          onStatusFilterChange={handleStatusFilterChange}
         />
 
         {isLoading ? (
@@ -173,14 +198,26 @@ export function PurchasesManagementTable({
             </p>
           </div>
         ) : (
-          <PurchasesTableBody
-            purchases={filteredPurchases}
-            allowDelete={allowDelete}
-            onCopy={handleCopy}
-            onOpenStatusModal={handleOpenStatusModal}
-            onOpenReceiptModal={(order) => setReceiptOrder(order)}
-            onOpenDeleteModal={(order) => setDeletingOrder(order)}
-          />
+          <div className="space-y-4">
+            <PurchasesTableBody
+              purchases={paginatedPurchases}
+              allowDelete={allowDelete}
+              onCopy={handleCopy}
+              onOpenStatusModal={handleOpenStatusModal}
+              onOpenReceiptModal={(order) => setReceiptOrder(order)}
+              onOpenDeleteModal={(order) => setDeletingOrder(order)}
+            />
+            <TablePagination
+              currentPage={currentPage}
+              pageSize={pageSize}
+              totalItems={filteredPurchases.length}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={(size) => {
+                setPageSize(size);
+                setCurrentPage(1);
+              }}
+            />
+          </div>
         )}
       </div>
 

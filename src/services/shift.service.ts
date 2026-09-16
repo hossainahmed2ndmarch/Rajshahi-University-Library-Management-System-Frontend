@@ -60,7 +60,9 @@ export const ShiftService = {
   },
 
   getAllShiftLogs: async (params?: Record<string, unknown>): Promise<IShift[]> => {
-    const response = await axiosInstance.get<ApiResponse<IShift[]>>("/shift-logs", { params });
+    const response = await axiosInstance.get<ApiResponse<IShift[]>>("/shift-logs", {
+      params: { limit: 10000, ...params },
+    });
     const raw = response.data?.data;
     return Array.isArray(raw) ? raw : (raw as unknown as { result: IShift[] })?.result || [];
   },
@@ -136,6 +138,13 @@ export const ShiftService = {
     const response = await axiosInstance.post<ApiResponse<IShift>>(
       '/shift-logs/email-action',
       payload
+    );
+    return response.data?.data;
+  },
+
+  verifyShiftLog: async (id: number | string): Promise<IShift> => {
+    const response = await axiosInstance.patch<ApiResponse<IShift>>(
+      `/shift-logs/verify/${id}`
     );
     return response.data?.data;
   },

@@ -13,40 +13,42 @@ export function StatsCounter() {
   const { data: donationsData } = useGetDonations();
   const {data: categoriesData}= useGetBookCategories()
 
-  const borrowableCount =
-    booksData?.data?.filter(
-      (b) => b.isBorrowable || b.type === "BORROW_ONLY" || b.type === "HYBRID"
-    ).length || 8200;
-  const membersCount = usersData?.length || 4850;
-  const donationsCount = donationsData?.length || 2140;
-  const categoriessCount = categoriesData?.length || 2140;
-
+  const totalBooks = booksData?.total ?? booksData?.data?.length ?? 0;
+  const borrowableCount = booksData?.data?.length
+    ? booksData.data.filter(
+        (b) => b.isBorrowable || b.type === "BORROW_ONLY" || b.type === "HYBRID"
+      ).length
+    : totalBooks;
+  const displayBooksCount = totalBooks > 0 ? totalBooks : borrowableCount;
+  const membersCount = usersData?.length ?? 0;
+  const donationsCount = donationsData?.length ?? 0;
+  const categoriesCount = categoriesData?.length ?? 0;
 
   const stats = [
     {
-      label: "Total Borrowable Books",
-      value: `${borrowableCount.toLocaleString()}+`,
+      label: "Total Books & Collections",
+      value: `${displayBooksCount.toLocaleString()}${displayBooksCount > 0 ? "+" : ""}`,
       description: "Classical & contemporary titles ready for issue",
       icon: BookOpen,
       color: "text-emerald-600 dark:text-emerald-400 bg-emerald-100/80 dark:bg-emerald-950/60",
     },
     {
-      label: "Total Active Members",
-      value: `${membersCount.toLocaleString()}+`,
+      label: "Total Registered Members",
+      value: `${membersCount.toLocaleString()}${membersCount > 0 ? "+" : ""}`,
       description: "RU students, research fellows & faculty",
       icon: Users,
       color: "text-[#C78700] bg-amber-100/80 dark:bg-amber-950/60",
     },
     {
       label: "Total Donated Books",
-      value: `${donationsCount.toLocaleString()}+`,
+      value: `${donationsCount.toLocaleString()}${donationsCount > 0 ? "+" : ""}`,
       description: "Sadaqah Jariyah community contributions",
       icon: HeartHandshake,
       color: "text-rose-600 dark:text-rose-400 bg-rose-100/80 dark:bg-rose-950/60",
     },
     {
       label: "Total Active Categories",
-      value: `${categoriessCount.toLocaleString()}+`,
+      value: `${categoriesCount.toLocaleString()}${categoriesCount > 0 ? "+" : ""}`,
       description: "Tafsir, Hadith, Fiqh, Seerah & History",
       icon: Layers,
       color: "text-blue-600 dark:text-blue-400 bg-blue-100/80 dark:bg-blue-950/60",

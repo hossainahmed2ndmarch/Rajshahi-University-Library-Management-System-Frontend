@@ -25,6 +25,7 @@ import {
 import { IArticle, ICreateArticlePayload } from "@/types/article";
 import { PublicationFormModal } from "@/components/dashboard/publications/PublicationFormModal";
 import { PublicationDeleteModal } from "@/components/dashboard/publications/PublicationDeleteModal";
+import { TablePagination } from "@/components/ui/TablePagination";
 
 type StatusFilter = "ALL" | "PUBLISHED" | "DRAFT";
 
@@ -49,6 +50,9 @@ export function PublicationsManagement({
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [editingArticle, setEditingArticle] = useState<IArticle | null>(null);
@@ -100,6 +104,12 @@ export function PublicationsManagement({
       return matchesSearch && matchesStatus && matchesCategory;
     });
   }, [articles, search, statusFilter, categoryFilter]);
+
+  // Paginated slice
+  const paginatedArticles = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredArticles.slice(startIndex, startIndex + pageSize);
+  }, [filteredArticles, currentPage, pageSize]);
 
   // Summary stats
   const totalArticles = articles.length;
@@ -240,7 +250,10 @@ export function PublicationsManagement({
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
             placeholder="Search by article title, author, category, slug…"
             className="w-full rounded-xl border border-input bg-card pl-9 pr-3 py-2 text-xs focus:ring-2 focus:ring-[#004F32] focus:outline-none"
           />
@@ -250,7 +263,10 @@ export function PublicationsManagement({
         <div className="flex items-center gap-2">
           <select
             value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
+            onChange={(e) => {
+              setCategoryFilter(e.target.value);
+              setCurrentPage(1);
+            }}
             className="rounded-xl border border-input bg-card px-3 py-2 text-xs text-foreground focus:ring-2 focus:ring-[#004F32] focus:outline-none cursor-pointer"
           >
             {categories.map((c) => (
@@ -272,7 +288,10 @@ export function PublicationsManagement({
           ).map(({ val, label }) => (
             <button
               key={val}
-              onClick={() => setStatusFilter(val)}
+              onClick={() => {
+                setStatusFilter(val);
+                setCurrentPage(1);
+              }}
               className={`rounded-xl px-3 py-2 text-xs font-bold transition-colors cursor-pointer ${
                 statusFilter === val
                   ? "bg-[#004F32] text-white"
@@ -317,7 +336,7 @@ export function PublicationsManagement({
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
-                {filteredArticles.map((article) => {
+                {paginatedArticles.map((article) => {
                   return (
                     <tr key={article.id} className="hover:bg-muted/30 transition-colors">
                       {/* Cover & Title */}
@@ -443,6 +462,18 @@ export function PublicationsManagement({
                 })}
               </tbody>
             </table>
+            <div className="p-4 border-t border-border">
+              <TablePagination
+                currentPage={currentPage}
+                pageSize={pageSize}
+                totalItems={filteredArticles.length}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={(size) => {
+                  setPageSize(size);
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
           </div>
         )}
       </div>

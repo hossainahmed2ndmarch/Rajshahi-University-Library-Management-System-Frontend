@@ -376,3 +376,21 @@ export const useEmailActionShift = () => {
   });
 };
 
+export const useVerifyShiftLog = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number | string) => ShiftService.verifyShiftLog(id),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["shiftLogs"] });
+      queryClient.invalidateQueries({ queryKey: ["activeShift"] });
+      if (data?.verifiedById) {
+        toast.success("Shift log successfully audited & verified!");
+      } else {
+        toast.info("Shift log verification cleared.");
+      }
+    },
+    onError: (error: unknown) =>
+      toast.error(getErrorMessage(error, "Failed to update shift audit verification.")),
+  });
+};
+

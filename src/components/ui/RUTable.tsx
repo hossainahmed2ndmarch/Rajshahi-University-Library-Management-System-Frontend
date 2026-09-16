@@ -185,68 +185,76 @@ export function RUTable<TData, TValue>({
         </div>
 
         {/* Table Pagination Footer */}
-        {!isLoading && table.getPageCount() > 0 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-border/80 bg-muted/20 text-xs text-muted-foreground">
-            <div className="flex items-center space-x-2">
-              <span>Rows per page:</span>
-              <select
-                value={table.getState().pagination.pageSize}
-                onChange={(e) => table.setPageSize(Number(e.target.value))}
-                className="rounded-lg border border-input bg-card px-2 py-1 text-xs text-foreground focus:ring-1 focus:ring-primary focus:outline-none"
-              >
-                {[5, 10, 20, 50].map((pageSize) => (
-                  <option key={pageSize} value={pageSize}>
-                    {pageSize}
-                  </option>
-                ))}
-              </select>
-              <span className="hidden sm:inline">
-                Showing {table.getRowModel().rows.length} of {table.getFilteredRowModel().rows.length} records
-              </span>
-            </div>
+        {!isLoading && table.getPageCount() > 0 && (() => {
+          const pageIndex = table.getState().pagination.pageIndex;
+          const pageSize = table.getState().pagination.pageSize;
+          const totalRecords = table.getFilteredRowModel().rows.length;
+          const startRecord = totalRecords === 0 ? 0 : pageIndex * pageSize + 1;
+          const endRecord = Math.min((pageIndex + 1) * pageSize, totalRecords);
 
-            <div className="flex items-center space-x-2">
-              <span className="font-medium text-foreground">
-                Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-              </span>
+          return (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-border/80 bg-muted/20 text-xs text-muted-foreground">
+              <div className="flex items-center space-x-2">
+                <span>Rows per page:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => table.setPageSize(Number(e.target.value))}
+                  className="rounded-lg border border-input bg-card px-2 py-1 text-xs text-foreground focus:ring-1 focus:ring-primary focus:outline-none"
+                >
+                  {[5, 10, 20, 50].map((size) => (
+                    <option key={size} value={size}>
+                      {size}
+                    </option>
+                  ))}
+                </select>
+                <span className="hidden sm:inline font-medium text-foreground">
+                  Showing {startRecord} to {endRecord} of {totalRecords} records
+                </span>
+              </div>
 
-              <div className="flex items-center space-x-1">
-                <button
-                  onClick={() => table.setPageIndex(0)}
-                  disabled={!table.getCanPreviousPage()}
-                  className="rounded-lg border border-input bg-card p-1.5 text-foreground hover:bg-accent disabled:opacity-40 transition-colors"
-                  title="First Page"
-                >
-                  <ChevronsLeft className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => table.previousPage()}
-                  disabled={!table.getCanPreviousPage()}
-                  className="rounded-lg border border-input bg-card p-1.5 text-foreground hover:bg-accent disabled:opacity-40 transition-colors"
-                  title="Previous Page"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => table.nextPage()}
-                  disabled={!table.getCanNextPage()}
-                  className="rounded-lg border border-input bg-card p-1.5 text-foreground hover:bg-accent disabled:opacity-40 transition-colors"
-                  title="Next Page"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                  disabled={!table.getCanNextPage()}
-                  className="rounded-lg border border-input bg-card p-1.5 text-foreground hover:bg-accent disabled:opacity-40 transition-colors"
-                  title="Last Page"
-                >
-                  <ChevronsRight className="h-4 w-4" />
-                </button>
+              <div className="flex items-center space-x-2">
+                <span className="font-medium text-foreground">
+                  Page {pageIndex + 1} of {table.getPageCount()}
+                </span>
+
+                <div className="flex items-center space-x-1">
+                  <button
+                    onClick={() => table.setPageIndex(0)}
+                    disabled={!table.getCanPreviousPage()}
+                    className="rounded-lg border border-input bg-card p-1.5 text-foreground hover:bg-accent disabled:opacity-40 transition-colors cursor-pointer disabled:cursor-not-allowed"
+                    title="First Page"
+                  >
+                    <ChevronsLeft className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => table.previousPage()}
+                    disabled={!table.getCanPreviousPage()}
+                    className="rounded-lg border border-input bg-card p-1.5 text-foreground hover:bg-accent disabled:opacity-40 transition-colors cursor-pointer disabled:cursor-not-allowed"
+                    title="Previous Page"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => table.nextPage()}
+                    disabled={!table.getCanNextPage()}
+                    className="rounded-lg border border-input bg-card p-1.5 text-foreground hover:bg-accent disabled:opacity-40 transition-colors cursor-pointer disabled:cursor-not-allowed"
+                    title="Next Page"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                    disabled={!table.getCanNextPage()}
+                    className="rounded-lg border border-input bg-card p-1.5 text-foreground hover:bg-accent disabled:opacity-40 transition-colors cursor-pointer disabled:cursor-not-allowed"
+                    title="Last Page"
+                  >
+                    <ChevronsRight className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   ClipboardList,
   Play,
@@ -25,6 +25,8 @@ import { ScheduleShiftModal } from "@/components/shifter/ScheduleShiftModal";
 import { CancelShiftModal } from "@/components/shifter/CancelShiftModal";
 import { RescheduleShiftModal } from "@/components/shifter/RescheduleShiftModal";
 import { CompleteOfflineShiftModal } from "@/components/shift/CompleteOfflineShiftModal";
+import { ShiftAuditModal } from "@/components/shift/ShiftAuditModal";
+import { TablePagination } from "@/components/ui/TablePagination";
 import { IShift } from "@/types/shift";
 import { format } from "date-fns";
 
@@ -73,6 +75,15 @@ export default function ShifterShiftLogsPage() {
   const scheduledShifts = shiftLogs.filter((s) => s.status === "SCHEDULED");
   const completedShifts = shiftLogs.filter((s) => s.status === "COMPLETED");
   const cancelledShifts = shiftLogs.filter((s) => s.status === "CANCELLED");
+
+  // Pagination for Completed Shifts
+  const [completedPage, setCompletedPage] = useState(1);
+  const [completedPageSize, setCompletedPageSize] = useState(10);
+
+  const paginatedCompletedShifts = useMemo(() => {
+    const startIndex = (completedPage - 1) * completedPageSize;
+    return completedShifts.slice(startIndex, startIndex + completedPageSize);
+  }, [completedShifts, completedPage, completedPageSize]);
 
   // Aggregate stats
   const totalCompleted = completedShifts.length;
@@ -258,7 +269,7 @@ export default function ShifterShiftLogsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
-                {completedShifts.map((log) => {
+                {paginatedCompletedShifts.map((log) => {
                   const opening = log.openingCash ?? log.startingCash ?? 0;
                   const closing = log.closingCash ?? log.endingCash ?? opening;
                   const collected = log.cashCollected ?? log.totalCashCollected ?? 0;
@@ -297,26 +308,50 @@ export default function ShifterShiftLogsPage() {
                           {variance >= 0 ? "+" : ""}৳{variance}
                         </div>
                       </td>
-                      <td className="px-4 py-4 max-w-[200px]">
-                        <p className="text-foreground line-clamp-2">{log.tasksCompleted || "Desk operations"}</p>
+                      <td className="px-4 py-4 max-w-[220px]">
+                        <div
+                          onClick={() => setDetailModal(log)}
+                          className="cursor-pointer group"
+                          title="Click to inspect tasks and handover notes"
+                        >
+                          <p className="text-foreground line-clamp-2 font-medium group-hover:text-primary transition-colors">
+                            {log.tasksCompleted || "Desk operations"}
+                          </p>
+                          {log.handoverNotes && (
+                            <p className="text-[10px] text-amber-700 dark:text-amber-400 truncate mt-0.5 flex items-center gap-1">
+                              <ArrowRightLeft className="h-2.5 w-2.5 shrink-0" />
+                              <span>{log.handoverNotes}</span>
+                            </p>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-4 text-center">
-                        {log.handoverNotes ? (
-                          <button
-                            onClick={() => setDetailModal(log)}
-                            className="inline-flex items-center gap-1 rounded-lg border border-input bg-background hover:bg-accent px-2 py-1 text-[11px] font-semibold text-foreground transition-colors cursor-pointer"
-                          >
-                            <ArrowRightLeft className="h-3 w-3 text-amber-600" /> Notes
-                          </button>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
+                        <button
+                          onClick={() => setDetailModal(log)}
+                          className="inline-flex items-center gap-1 rounded-lg border border-input bg-background hover:bg-accent px-2 py-1 text-[11px] font-semibold text-primary transition-colors cursor-pointer shadow-2xs"
+                          title="View Full Tasks & Handover Audit"
+                        >
+                          <FileText className="h-3 w-3" />
+                          <span>Audit</span>
+                        </button>
                       </td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
+            <div className="p-4 border-t border-border">
+              <TablePagination
+                currentPage={completedPage}
+                pageSize={completedPageSize}
+                totalItems={completedShifts.length}
+                onPageChange={setCompletedPage}
+                onPageSizeChange={(size) => {
+                  setCompletedPageSize(size);
+                  setCompletedPage(1);
+                }}
+              />
+            </div>
           </div>
         )}
       </div>
@@ -345,60 +380,12 @@ export default function ShifterShiftLogsPage() {
       )}
 
       {/* Note / Handover Detail Modal */}
-      {detailModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4"
-          onClick={() => setDetailModal(null)}
-        >
-          <div
-            className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl space-y-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-xl bg-[#004F32] flex items-center justify-center text-white">
-                <FileText className="h-4 w-4" />
-              </div>
-              <div>
-                <h3 className="font-bold text-base text-foreground">Shift Tasks &amp; Handover</h3>
-                <p className="text-[11px] text-muted-foreground">{detailModal.shifter?.name || detailModal.shifterName} — {formatDate(detailModal.startTime)}</p>
-              </div>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              {detailModal.tasksCompleted && (
-                <div className="space-y-1">
-                  <span className="font-bold text-foreground flex items-center gap-1">
-                    <ListChecks className="h-3.5 w-3.5 text-emerald-600" /> Completed Tasks:
-                  </span>
-                  <div className="rounded-xl bg-muted/40 border border-border p-3 leading-relaxed">
-                    {detailModal.tasksCompleted}
-                  </div>
-                </div>
-              )}
-
-              {detailModal.handoverNotes && (
-                <div className="space-y-1">
-                  <span className="font-bold text-foreground flex items-center gap-1">
-                    <ArrowRightLeft className="h-3.5 w-3.5 text-amber-600" /> Remaining Tasks / Handover Notes:
-                  </span>
-                  <div className="rounded-xl bg-amber-500/5 border border-amber-500/30 p-3 leading-relaxed text-amber-950 dark:text-amber-200">
-                    {detailModal.handoverNotes}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-end">
-              <button
-                onClick={() => setDetailModal(null)}
-                className="px-4 py-2 text-xs font-semibold rounded-lg border border-input bg-background hover:bg-accent text-foreground cursor-pointer"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ShiftAuditModal
+        shift={detailModal}
+        isOpen={Boolean(detailModal)}
+        onClose={() => setDetailModal(null)}
+        canVerify={false}
+      />
 
       {/* Schedule Duty Modal */}
       <ScheduleShiftModal

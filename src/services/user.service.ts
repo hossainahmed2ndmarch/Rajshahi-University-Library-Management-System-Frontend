@@ -13,7 +13,9 @@ const normalizeUser = (u: RawUser): IUser => ({
 
 export const UserService = {
   getAllUsers: async (params?: Record<string, string | number | boolean>): Promise<IUser[]> => {
-    const response = await axiosInstance.get<ApiResponse<unknown>>("/users", { params });
+    const response = await axiosInstance.get<ApiResponse<unknown>>("/users", {
+      params: { limit: 10000, ...params },
+    });
     const raw = response.data?.data;
     const list = Array.isArray(raw)
       ? (raw as RawUser[])

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Square,
   DollarSign,
@@ -11,38 +11,67 @@ import {
   ArrowRightLeft,
   AlertTriangle,
 } from "lucide-react";
-import { RUForm, RUInput } from "@/components/forms";
 import { useEndShift } from "@/hooks/useShifts";
-import { endShiftSchema, EndShiftFormValues } from "@/schemas/shift.schema";
 import { IShift } from "@/types/shift";
+import { toast } from "sonner";
+
+interface EndShiftModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  activeShift: IShift | null;
+  initialTasksCompleted?: string;
+  initialHandoverNotes?: string;
+}
 
 export function EndShiftModal({
   isOpen,
   onClose,
   activeShift,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  activeShift: IShift | null;
-}) {
+  initialTasksCompleted = "",
+  initialHandoverNotes = "",
+}: EndShiftModalProps) {
   const { mutate: endShift, isPending } = useEndShift();
   const openingCash = activeShift?.openingCash ?? activeShift?.startingCash ?? 0;
   const collectedCash = activeShift?.cashCollected ?? activeShift?.totalCashCollected ?? 0;
   const expectedCash = openingCash + collectedCash;
 
   const [enteredClosingCash, setEnteredClosingCash] = useState<number>(expectedCash || 500);
+  const [tasksCompleted, setTasksCompleted] = useState<string>(initialTasksCompleted);
+  const [handoverNotes, setHandoverNotes] = useState<string>(initialHandoverNotes);
+
+  useEffect(() => {
+    if (isOpen) {
+      setEnteredClosingCash(expectedCash || 500);
+      if (initialTasksCompleted) {
+        setTasksCompleted(initialTasksCompleted);
+      }
+      if (initialHandoverNotes) {
+        setHandoverNotes(initialHandoverNotes);
+      }
+    }
+  }, [isOpen, expectedCash, initialTasksCompleted, initialHandoverNotes]);
 
   if (!isOpen) return null;
 
   const variance = enteredClosingCash - expectedCash;
 
-  const handleSubmit = (values: EndShiftFormValues) => {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isNaN(enteredClosingCash) || enteredClosingCash < 0) {
+      toast.error("Please enter a valid closing physical cash amount.");
+      return;
+    }
+    if (!tasksCompleted.trim() || tasksCompleted.trim().length < 3) {
+      toast.error("Please specify tasks completed during your duty shift (minimum 3 characters).");
+      return;
+    }
+
     endShift(
       {
-        closingCash: values.closingCash,
+        closingCash: enteredClosingCash,
         cashCollected: collectedCash,
-        tasksCompleted: values.tasksCompleted,
-        handoverNotes: values.handoverNotes,
+        tasksCompleted: tasksCompleted.trim(),
+        handoverNotes: handoverNotes.trim() || undefined,
       },
       {
         onSuccess: () => onClose(),
@@ -106,73 +135,79 @@ export function EndShiftModal({
           </div>
         </div>
 
-        <RUForm<EndShiftFormValues>
-          schema={endShiftSchema}
-          defaultValues={{
-            closingCash: expectedCash,
-            tasksCompleted: "",
-            handoverNotes: "",
-          }}
-          onSubmit={handleSubmit}
-        >
-          <div className="space-y-4">
-            <RUInput
-              name="closingCash"
-              label="Closing Physical Cash Count in Drawer (৳) *"
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-foreground flex items-center gap-1">
+              <DollarSign className="h-3.5 w-3.5 text-primary" />
+              <span>Closing Physical Cash Count in Drawer (৳) *</span>
+            </label>
+            <input
               type="number"
-              placeholder="Count total physical cash in drawer"
-              prependIcon={<DollarSign className="h-4 w-4 text-primary" />}
+              min={0}
+              value={enteredClosingCash}
               onChange={(e) => {
                 const val = Number(e.target.value);
                 setEnteredClosingCash(isNaN(val) ? 0 : val);
               }}
+              placeholder="Count total physical cash in drawer"
               required
+              className="w-full rounded-xl border border-input bg-background px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             />
-
-            <div className="space-y-1">
-              <RUInput
-                name="tasksCompleted"
-                label="Completed Tasks during Duty Shift *"
-                placeholder="e.g. Issued 4 books, returned 2 books, shelved 5 new donations, verified 1 cash membership"
-                prependIcon={<ListChecks className="h-4 w-4 text-emerald-600" />}
-                required
-              />
-              <p className="text-[10px] text-muted-foreground">
-                Document all operations, checkouts, returns, or cataloging executed during this shift.
-              </p>
-            </div>
-
-            <div className="space-y-1">
-              <RUInput
-                name="handoverNotes"
-                label="Remaining Tasks & Handover Notes (If any)"
-                placeholder="e.g. 2 books on shelf A3 need repair, student RU-482 arriving for pickup at 4 PM"
-                prependIcon={<ArrowRightLeft className="h-4 w-4 text-amber-600" />}
-              />
-              <p className="text-[10px] text-muted-foreground">
-                Mention any pending tasks, unresolved borrower requests, or handover instructions for the next shifter / admin.
-              </p>
-            </div>
-
-            <div className="pt-2 flex justify-end space-x-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 text-xs font-semibold rounded-xl border border-input bg-background hover:bg-accent text-foreground cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isPending}
-                className="inline-flex items-center gap-2 px-5 py-2 text-xs font-bold rounded-xl bg-[#C78700] hover:bg-amber-600 text-white shadow-xs disabled:opacity-50 cursor-pointer"
-              >
-                <Square className="h-3.5 w-3.5" />
-                <span>{isPending ? "Ending Shift..." : "End Duty Shift & Reconcile"}</span>
-              </button>
-            </div>
           </div>
-        </RUForm>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-foreground flex items-center gap-1">
+              <ListChecks className="h-3.5 w-3.5 text-emerald-600" />
+              <span>Completed Tasks during Duty Shift *</span>
+            </label>
+            <textarea
+              rows={3}
+              value={tasksCompleted}
+              onChange={(e) => setTasksCompleted(e.target.value)}
+              placeholder="e.g. • Issued 4 books, returned 2 books&#10;• Shelved 5 new donations&#10;• Verified 1 cash membership"
+              required
+              className="w-full rounded-xl border border-input bg-background px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary leading-relaxed"
+            />
+            <p className="text-[10px] text-muted-foreground">
+              Document all operations, checkouts, returns, or cataloging executed during this shift.
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-foreground flex items-center gap-1">
+              <ArrowRightLeft className="h-3.5 w-3.5 text-amber-600" />
+              <span>Remaining Tasks &amp; Handover Notes (If any)</span>
+            </label>
+            <textarea
+              rows={2}
+              value={handoverNotes}
+              onChange={(e) => setHandoverNotes(e.target.value)}
+              placeholder="e.g. • 2 books on shelf A3 need repair&#10;• Student RU-482 arriving for pickup at 4 PM"
+              className="w-full rounded-xl border border-input bg-background px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary leading-relaxed"
+            />
+            <p className="text-[10px] text-muted-foreground">
+              Mention any pending tasks, unresolved borrower requests, or handover instructions for the next shifter / admin.
+            </p>
+          </div>
+
+          <div className="pt-2 flex justify-end space-x-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-xs font-semibold rounded-xl border border-input bg-background hover:bg-accent text-foreground cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isPending}
+              className="inline-flex items-center gap-2 px-5 py-2 text-xs font-bold rounded-xl bg-[#C78700] hover:bg-amber-600 text-white shadow-xs disabled:opacity-50 cursor-pointer"
+            >
+              <Square className="h-3.5 w-3.5" />
+              <span>{isPending ? "Ending Shift..." : "End Duty Shift & Reconcile"}</span>
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

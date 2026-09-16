@@ -24,7 +24,9 @@ export const DonationService = {
   },
 
   getAllDonations: async (params?: Record<string, string | number>): Promise<IDonation[]> => {
-    const response = await axiosInstance.get<ApiResponse<unknown>>("/donations", { params });
+    const response = await axiosInstance.get<ApiResponse<unknown>>("/donations", {
+      params: { limit: 10000, ...params },
+    });
     const raw = response.data?.data;
     const list = Array.isArray(raw)
       ? (raw as RawDonation[])

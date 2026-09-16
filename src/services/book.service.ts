@@ -130,7 +130,7 @@ export const BookService = {
     if (params?.minPrice !== undefined) apiParams.minPrice = params.minPrice;
     if (params?.maxPrice !== undefined) apiParams.maxPrice = params.maxPrice;
     if (params?.page) apiParams.page = params.page;
-    if (params?.limit) apiParams.limit = params.limit;
+    apiParams.limit = params?.limit ?? 10000;
 
     if (params?.sortBy) apiParams.sortBy = params.sortBy;
     if (params?.sortOrder) apiParams.sortOrder = params.sortOrder;

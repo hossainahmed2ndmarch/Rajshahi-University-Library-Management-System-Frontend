@@ -27,7 +27,9 @@ export const BorrowService = {
   },
 
   getAllBorrows: async (params?: Record<string, unknown>): Promise<IBorrow[]> => {
-    const response = await axiosInstance.get<ApiResponse<IBorrow[]>>("/borrows", { params });
+    const response = await axiosInstance.get<ApiResponse<IBorrow[]>>("/borrows", {
+      params: { limit: 10000, ...params },
+    });
     const raw = response.data?.data;
     return Array.isArray(raw) ? raw : (raw as unknown as { result: IBorrow[] })?.result || [];
   },

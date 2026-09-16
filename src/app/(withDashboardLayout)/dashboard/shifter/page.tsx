@@ -27,6 +27,7 @@ import {
   Package,
   HeartHandshake,
   TrendingUp,
+  ClipboardList,
 } from "lucide-react";
 import { useActiveShift, useMySchedule, useGetAllShiftLogs } from "@/hooks/useShifts";
 import { useGetBooks } from "@/hooks/useBooks";
@@ -37,6 +38,7 @@ import { useCreatePOSDonation, useGetDonations } from "@/hooks/useDonations";
 import { StartShiftModal } from "@/components/shifter/StartShiftModal";
 import { EndShiftModal } from "@/components/shifter/EndShiftModal";
 import { ScheduleShiftModal } from "@/components/shifter/ScheduleShiftModal";
+import { ShiftTasksTracker } from "@/components/shift/ShiftTasksTracker";
 import { IBook } from "@/types/book";
 import { IUser } from "@/types/auth";
 import { IPurchase } from "@/types/purchase";
@@ -367,6 +369,23 @@ export default function ShifterCounterDeskPage() {
   const [offlineModalOpen, setOfflineModalOpen] = useState(false);
   const [offlineShiftId, setOfflineShiftId] = useState<number | string | null>(null);
   const [offlineShifterName, setOfflineShifterName] = useState<string>("");
+
+  const [endShiftPrefill, setEndShiftPrefill] = useState<{
+    tasksCompleted: string;
+    handoverNotes: string;
+  }>({ tasksCompleted: "", handoverNotes: "" });
+
+  const latestCompletedShift = useMemo(() => {
+    return shiftLogs.find((s: IShift) => s.status === "COMPLETED") || null;
+  }, [shiftLogs]);
+
+  const handleOpenEndShiftWithTasks = (prefill: {
+    tasksCompleted: string;
+    handoverNotes: string;
+  }) => {
+    setEndShiftPrefill(prefill);
+    setEndModalOpen(true);
+  };
 
   const [elapsedTime, setElapsedTime] = useState("00:00:00");
 
@@ -784,6 +803,13 @@ export default function ShifterCounterDeskPage() {
               <BookMarked className="h-3.5 w-3.5 text-blue-600" />
               <span>Borrow Log</span>
             </Link>
+            <Link
+              href="/dashboard/shifter/shift-logs"
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 rounded-xl border border-input bg-background hover:bg-accent px-3 py-2 text-xs font-semibold text-foreground transition-colors shadow-2xs"
+            >
+              <ClipboardList className="h-3.5 w-3.5 text-primary" />
+              <span>Shift Handover Logs</span>
+            </Link>
 
             {!isShiftActive ? (
               <button
@@ -805,6 +831,13 @@ export default function ShifterCounterDeskPage() {
           </div>
         </div>
       </div>
+
+      {/* ─── Previous Shift Handover & Active Duty Tasks Tracker ───────────── */}
+      <ShiftTasksTracker
+        activeShift={activeShift || null}
+        latestCompletedShift={latestCompletedShift}
+        onOpenEndShiftModal={handleOpenEndShiftWithTasks}
+      />
 
       {/* ─── My Recurring Duty Schedule & Offline Action ───────────────────── */}
       {mySchedules.length > 0 && (
@@ -2081,6 +2114,8 @@ export default function ShifterCounterDeskPage() {
         isOpen={endModalOpen}
         onClose={() => setEndModalOpen(false)}
         activeShift={activeShift || null}
+        initialTasksCompleted={endShiftPrefill.tasksCompleted}
+        initialHandoverNotes={endShiftPrefill.handoverNotes}
       />
       <ScheduleShiftModal
         isOpen={scheduleModalOpen}

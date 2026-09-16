@@ -9,6 +9,9 @@
     "lint": "eslint",
     "test": "tsx --test src/__tests__/*.test.ts"
   },
+  "allowScripts": {
+    "unrs-resolver": true
+  },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
     "@hookform/resolvers": "^5.7.1",

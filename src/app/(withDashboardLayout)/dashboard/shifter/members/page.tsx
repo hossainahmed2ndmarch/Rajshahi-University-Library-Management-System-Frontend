@@ -605,7 +605,7 @@ export default function ShifterMembersPage() {
   const filtered: IUser[] = useMemo(() => {
     const term = search.toLowerCase();
     return users.filter((u) => {
-      const userPhone = u.phone ?? (u as Record<string, unknown>).phoneNumber as string ?? "";
+      const userPhone = u.phone ?? (u as unknown as Record<string, unknown>).phoneNumber as string ?? "";
       const nameMatch = (u.name ?? "").toLowerCase().includes(term);
       const emailMatch = (u.email ?? "").toLowerCase().includes(term);
       const idMatch = (u.studentOrVoterId ?? "").toLowerCase().includes(term);
@@ -745,10 +745,10 @@ export default function ShifterMembersPage() {
                 </tr>
               ) : (
                 paginatedUsers.map((user) => {
-                  const statusInfo = STATUS_MAP[user.status] || STATUS_MAP.INACTIVE;
+                  const statusInfo = STATUS_MAP[user.status ?? 'INACTIVE'] || STATUS_MAP.INACTIVE;
                   const isExpired = isUserExpired(user);
                   const isProcessing = processingId === String(user.id);
-                  const userPhone = user.phone ?? (user as Record<string, unknown>).phoneNumber as string ?? "No Phone";
+                  const userPhone = user.phone ?? (user as unknown as Record<string, unknown>).phoneNumber as string ?? "No Phone";
 
                   return (
                     <tr key={user.id} className="hover:bg-muted/30 transition-colors">

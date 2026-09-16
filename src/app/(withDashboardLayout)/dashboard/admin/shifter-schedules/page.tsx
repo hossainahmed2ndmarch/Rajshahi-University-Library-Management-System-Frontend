@@ -103,7 +103,8 @@ export default function AdminShifterSchedulesPage() {
 
   // Modal states
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingSchedule, setEditingSchedule] = useState<IShifterSchedule | null>(null);
+  const [editingSchedule, setEditingSchedule] =
+    useState<IShifterSchedule | null>(null);
 
   // Form states
   const [selectedShifterId, setSelectedShifterId] = useState<string>("");
@@ -119,16 +120,16 @@ export default function AdminShifterSchedulesPage() {
   const eligibleShifters = useMemo(() => {
     return users.filter(
       (u) =>
-        u.role === "SHIFTER" ||
-        u.role === "ADMIN" ||
-        u.role === "SUPER_ADMIN"
+        u.role === "SHIFTER" || u.role === "ADMIN" || u.role === "SUPER_ADMIN",
     );
   }, [users]);
 
   // Open modal for Create
   const handleOpenCreate = () => {
     setEditingSchedule(null);
-    setSelectedShifterId(eligibleShifters[0]?.id ? String(eligibleShifters[0].id) : "");
+    setSelectedShifterId(
+      eligibleShifters[0]?.id ? String(eligibleShifters[0].id) : "",
+    );
     setSelectedDayOfWeek(6);
     setSelectedSlot("asr_maghrib");
     setSlotName("আসর – মাগরিব");
@@ -165,7 +166,9 @@ export default function AdminShifterSchedulesPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const dayConfig = DAYS_CONFIG.find((d) => d.dayOfWeek === Number(selectedDayOfWeek));
+    const dayConfig = DAYS_CONFIG.find(
+      (d) => d.dayOfWeek === Number(selectedDayOfWeek),
+    );
     if (!dayConfig || !selectedShifterId) return;
 
     const payload: ICreateSchedulePayload = {
@@ -184,7 +187,7 @@ export default function AdminShifterSchedulesPage() {
     if (editingSchedule) {
       updateSchedule(
         { id: editingSchedule.id, payload },
-        { onSuccess: () => setModalOpen(false) }
+        { onSuccess: () => setModalOpen(false) },
       );
     } else {
       createSchedule(payload, { onSuccess: () => setModalOpen(false) });
@@ -195,7 +198,8 @@ export default function AdminShifterSchedulesPage() {
   const filteredSchedules = useMemo(() => {
     return schedules.filter((s) => {
       const matchesDay =
-        selectedDayFilter === "ALL" || String(s.dayOfWeek) === selectedDayFilter;
+        selectedDayFilter === "ALL" ||
+        String(s.dayOfWeek) === selectedDayFilter;
       const matchesSearch =
         !searchTerm ||
         s.shifter?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -218,7 +222,8 @@ export default function AdminShifterSchedulesPage() {
             শিফটার সময়সূচি ও নামাজ ভিত্তিক স্লট
           </h1>
           <p className="text-xs text-muted-foreground mt-1">
-            প্রতিদিনের নামাজের সময় ভিত্তিক শিফট শুরুর ও সমাপ্তির সময় নির্ধারণ করুন।
+            প্রতিদিনের নামাজের সময় ভিত্তিক শিফট শুরুর ও সমাপ্তির সময় নির্ধারণ
+            করুন।
           </p>
         </div>
 
@@ -286,19 +291,29 @@ export default function AdminShifterSchedulesPage() {
             <tbody className="divide-y divide-border">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-8 text-center text-muted-foreground">
+                  <td
+                    colSpan={6}
+                    className="px-5 py-8 text-center text-muted-foreground"
+                  >
                     সময়সূচি লোড হচ্ছে...
                   </td>
                 </tr>
               ) : filteredSchedules.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-8 text-center text-muted-foreground">
-                    কোনো নির্ধারিত শিডিউল পাওয়া যায়নি। &ldquo;নতুন শিডিউল যোগ করুন&rdquo; এ ক্লিক করুন।
+                  <td
+                    colSpan={6}
+                    className="px-5 py-8 text-center text-muted-foreground"
+                  >
+                    কোনো নির্ধারিত শিডিউল পাওয়া যায়নি। &ldquo;নতুন শিডিউল যোগ
+                    করুন&rdquo; এ ক্লিক করুন।
                   </td>
                 </tr>
               ) : (
                 filteredSchedules.map((schedule) => (
-                  <tr key={schedule.id} className="hover:bg-muted/20 transition-colors">
+                  <tr
+                    key={schedule.id}
+                    className="hover:bg-muted/20 transition-colors"
+                  >
                     <td className="px-5 py-4 font-bold text-foreground">
                       <span className="inline-flex px-2.5 py-1 rounded-md bg-primary/10 text-primary font-black text-xs">
                         {schedule.dayName}
@@ -344,7 +359,7 @@ export default function AdminShifterSchedulesPage() {
                         {schedule.shifter?.phone && (
                           <a
                             href={`https://wa.me/88${schedule.shifter.phone.replace(/-/g, "")}?text=${encodeURIComponent(
-                              `আসসালামু আলাইকুম ${schedule.shifter?.name || "ভাই"}, RU Islamic Library তে আপনার নির্ধারিত কাউন্টার ডিউটি শিডিউল:\n📅 বার: ${schedule.dayName} (${schedule.dayEn})\n⏰ স্লট: ${schedule.slotName} (${schedule.startTime} - ${schedule.endTime})\n\nঅনুগ্রহ করে সময়মতো উপস্থিত থাকবেন। জাযাকাল্লাহু খাইরান।`
+                              `আসসালামু আলাইকুম ${schedule.shifter?.name || "ভাই"}, RU Islamic Library তে আপনার নির্ধারিত কাউন্টার ডিউটি শিডিউল:\n📅 বার: ${schedule.dayName} (${schedule.dayEn})\n⏰ স্লট: ${schedule.slotName} (${schedule.startTime} - ${schedule.endTime})\n\nঅনুগ্রহ করে সময়মতো উপস্থিত থাকবেন। জাযাকাল্লাহু খাইরান।`,
                             )}`}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -363,7 +378,11 @@ export default function AdminShifterSchedulesPage() {
                         </button>
                         <button
                           onClick={() => {
-                            if (confirm(`আপনি কি "${schedule.dayName}" এর এই শিডিউলটি মুছতে চান?`)) {
+                            if (
+                              confirm(
+                                `আপনি কি "${schedule.dayName}" এর এই শিডিউলটি মুছতে চান?`,
+                              )
+                            ) {
                               deleteSchedule(schedule.id);
                             }
                           }}
@@ -385,60 +404,68 @@ export default function AdminShifterSchedulesPage() {
 
       {/* Add / Edit Modal */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="max-w-md rounded-2xl border-border bg-card p-6 shadow-xl">
-          <DialogHeader className="space-y-1 pb-2 border-b border-border/60">
-            <DialogTitle className="text-xl font-black text-foreground">
-              {editingSchedule ? "শিডিউল সম্পাদনা করুন" : "নতুন শিডিউল নির্ধারণ"}
+        <DialogContent className="w-[95vw] sm:max-w-xl md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl border-border bg-card p-4 sm:p-6 md:p-8 shadow-xl">
+          <DialogHeader className="space-y-1 pb-3 border-b border-border/60">
+            <DialogTitle className="text-lg sm:text-xl md:text-2xl font-black text-foreground">
+              {editingSchedule
+                ? "শিডিউল সম্পাদনা করুন"
+                : "নতুন শিডিউল নির্ধারণ"}
             </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground">
-              শিফটার, বার এবং নামাজের সময় অনুযায়ী শুরুর ও শেষ সময় নির্ধারণ করুন।
+            <DialogDescription className="text-xs sm:text-sm text-muted-foreground">
+              শিফটার, বার এবং নামাজের সময় অনুযায়ী শুরুর ও শেষ সময় নির্ধারণ
+              করুন।
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-            {/* Shifter select */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-foreground">
-                শিফটার নির্বাচন করুন *
-              </Label>
-              <select
-                value={selectedShifterId}
-                onChange={(e) => setSelectedShifterId(e.target.value)}
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs font-medium text-foreground"
-                required
-              >
-                <option value="">-- শিফটার নির্বাচন করুন --</option>
-                {eligibleShifters.map((u) => (
-                  <option key={u.id} value={String(u.id)}>
-                    {u.name} ({u.phoneNumber || u.email}) — {u.role}
-                  </option>
-                ))}
-              </select>
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 pt-3">
+            {/* 2-Column Grid on Tablet/PC for Selects */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Shifter select */}
+              <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-bold text-foreground">
+                  শিফটার নির্বাচন করুন *
+                </Label>
+                <select
+                  value={selectedShifterId}
+                  onChange={(e) => setSelectedShifterId(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs sm:text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  required
+                >
+                  <option value="">-- শিফটার নির্বাচন করুন --</option>
+                  {eligibleShifters.map((u) => (
+                    <option key={u.id} value={String(u.id)}>
+                      {u.name} — {u.role}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Day of Week */}
+              <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-bold text-foreground">
+                  দিন (Day) *
+                </Label>
+                <select
+                  value={selectedDayOfWeek}
+                  onChange={(e) => setSelectedDayOfWeek(Number(e.target.value))}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs sm:text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  required
+                >
+                  {DAYS_CONFIG.map((d) => (
+                    <option key={d.dayOfWeek} value={d.dayOfWeek}>
+                      {d.dayName} ({d.dayEn})
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            {/* Day of Week */}
+            {/* Preset Slot (Prayer Times Based) - Scales up to 5 items per row */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-foreground">দিন (Day) *</Label>
-              <select
-                value={selectedDayOfWeek}
-                onChange={(e) => setSelectedDayOfWeek(Number(e.target.value))}
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs font-medium text-foreground"
-                required
-              >
-                {DAYS_CONFIG.map((d) => (
-                  <option key={d.dayOfWeek} value={d.dayOfWeek}>
-                    {d.dayName} ({d.dayEn})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Preset Slot (Prayer Times Based) */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-foreground">
+              <Label className="text-xs sm:text-sm font-bold text-foreground">
                 নামাজ ভিত্তিক স্লট প্রিসেট
               </Label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
                 {PRESET_SLOTS.map((p) => {
                   const Icon = p.icon;
                   const isSelected = selectedSlot === p.slot;
@@ -447,14 +474,16 @@ export default function AdminShifterSchedulesPage() {
                       type="button"
                       key={p.slot}
                       onClick={() => handleSlotPresetChange(p.slot)}
-                      className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-center transition-all ${
+                      className={`flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-xl border text-center transition-all ${
                         isSelected
                           ? "bg-primary/10 border-primary text-primary font-bold shadow-2xs"
                           : "bg-muted/30 border-border text-muted-foreground hover:bg-muted/60"
                       }`}
                     >
-                      <Icon className="h-4 w-4 mb-1" />
-                      <span className="text-[11px] leading-tight">{p.slotName}</span>
+                      <Icon className="h-4 w-4 mb-1 shrink-0" />
+                      <span className="text-[11px] sm:text-xs leading-tight truncate w-full">
+                        {p.slotName}
+                      </span>
                     </button>
                   );
                 })}
@@ -463,41 +492,41 @@ export default function AdminShifterSchedulesPage() {
 
             {/* Slot Name Display */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-foreground">
+              <Label className="text-xs sm:text-sm font-bold text-foreground">
                 স্লটের নাম (Display Name) *
               </Label>
               <Input
                 value={slotName}
                 onChange={(e) => setSlotName(e.target.value)}
                 placeholder="যেমন: আসর – মাগরিব"
-                className="text-xs"
+                className="text-xs sm:text-sm"
                 required
               />
             </div>
 
             {/* Timing (Start Time & End Time) */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-foreground">
+                <Label className="text-xs sm:text-sm font-bold text-foreground">
                   শুরুর সময় (HH:MM) *
                 </Label>
                 <Input
                   type="time"
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
-                  className="text-xs font-mono"
+                  className="text-xs sm:text-sm font-mono w-full"
                   required
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-foreground">
+                <Label className="text-xs sm:text-sm font-bold text-foreground">
                   শেষের সময় (HH:MM) *
                 </Label>
                 <Input
                   type="time"
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
-                  className="text-xs font-mono"
+                  className="text-xs sm:text-sm font-mono w-full"
                   required
                 />
               </div>
@@ -510,33 +539,36 @@ export default function AdminShifterSchedulesPage() {
                 id="isActiveSchedule"
                 checked={isActive}
                 onChange={(e) => setIsActive(e.target.checked)}
-                className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                className="h-4 w-4 rounded border-border text-primary focus:ring-primary accent-[#004F32]"
               />
-              <Label htmlFor="isActiveSchedule" className="text-xs font-bold cursor-pointer">
+              <Label
+                htmlFor="isActiveSchedule"
+                className="text-xs sm:text-sm font-bold cursor-pointer select-none"
+              >
                 এই শিডিউলটি সক্রিয় রাখুন (Active)
               </Label>
             </div>
 
             {/* Actions */}
-            <div className="flex gap-2 pt-3 border-t border-border/60">
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-3 border-t border-border/60">
               <Button
                 type="button"
                 variant="outline"
-                className="flex-1 text-xs"
+                className="w-full sm:w-auto px-6 text-xs sm:text-sm"
                 onClick={() => setModalOpen(false)}
               >
                 বাতিল (Cancel)
               </Button>
               <Button
                 type="submit"
-                className="flex-1 bg-[#004F32] hover:bg-[#003824] text-white font-bold text-xs"
+                className="w-full sm:w-auto px-6 bg-[#004F32] hover:bg-[#003824] text-white font-bold text-xs sm:text-sm"
                 disabled={isCreating || isUpdating}
               >
                 {isCreating || isUpdating
                   ? "সংরক্ষণ হচ্ছে..."
                   : editingSchedule
-                  ? "আপডেট করুন"
-                  : "সংরক্ষণ করুন"}
+                    ? "আপডেট করুন"
+                    : "সংরক্ষণ করুন"}
               </Button>
             </div>
           </form>

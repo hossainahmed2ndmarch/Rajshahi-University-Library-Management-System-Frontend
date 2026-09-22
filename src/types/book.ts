@@ -74,6 +74,11 @@ export interface IUpdateBookPayload extends Partial<ICreateBookPayload> {
 export interface IBookQueryParams {
   searchTerm?: string;
   category?: string;
+  categories?: string[];    // multi-select: sent as comma-joined string
+  author?: string;
+  authors?: string[];       // multi-select: sent as comma-joined string
+  publisher?: string;
+  publishers?: string[];    // multi-select: sent as comma-joined string
   type?: BookType;
   isBorrowable?: boolean;
   isSellable?: boolean;

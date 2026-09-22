@@ -27,6 +27,14 @@ export const UserService = {
     return list.map(normalizeUser);
   },
 
+  /** Lightweight call to get the true total count from meta.total (limit=1). */
+  getTotalCount: async (): Promise<number> => {
+    const response = await axiosInstance.get<ApiResponse<unknown>>("/users", {
+      params: { limit: 1, page: 1 },
+    });
+    return response.data?.meta?.total ?? 0;
+  },
+
   getUserById: async (id: string | number): Promise<IUser> => {
     const response = await axiosInstance.get<ApiResponse<RawUser>>(`/users/${id}`);
     return normalizeUser(response.data?.data);

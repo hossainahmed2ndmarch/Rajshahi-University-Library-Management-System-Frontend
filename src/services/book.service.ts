@@ -112,16 +112,35 @@ export const normalizeBook = (raw: RawBook): IBook => {
 export const BookService = {
   getBooks: async (
     params?: IBookQueryParams
-  ): Promise<{ data: IBook[]; total: number }> => {
+  ): Promise<{ data: IBook[]; total: number; meta?: { page: number; limit: number; total: number; totalPage: number } }> => {
     return BookService.getAllBooks(params);
   },
 
   getAllBooks: async (
     params?: IBookQueryParams
-  ): Promise<{ data: IBook[]; total: number }> => {
+  ): Promise<{ data: IBook[]; total: number; meta?: { page: number; limit: number; total: number; totalPage: number } }> => {
     const apiParams: Record<string, unknown> = {};
     if (params?.searchTerm) apiParams.searchTerm = params.searchTerm;
-    if (params?.category && params.category !== "ALL") apiParams.category = params.category;
+
+    // Multi-value filters: join arrays as comma-separated strings for backend
+    if (params?.categories && params.categories.length > 0) {
+      apiParams.category = params.categories.join(",");
+    } else if (params?.category && params.category !== "ALL") {
+      apiParams.category = params.category;
+    }
+
+    if (params?.authors && params.authors.length > 0) {
+      apiParams.author = params.authors.join(",");
+    } else if (params?.author) {
+      apiParams.author = params.author;
+    }
+
+    if (params?.publishers && params.publishers.length > 0) {
+      apiParams.publisher = params.publishers.join(",");
+    } else if (params?.publisher) {
+      apiParams.publisher = params.publisher;
+    }
+
     if (params?.type && (params.type as string) !== "ALL") {
       apiParams.type = params.type;
     }
@@ -129,8 +148,10 @@ export const BookService = {
     if (params?.isSellable !== undefined) apiParams.isSellable = params.isSellable;
     if (params?.minPrice !== undefined) apiParams.minPrice = params.minPrice;
     if (params?.maxPrice !== undefined) apiParams.maxPrice = params.maxPrice;
-    if (params?.page) apiParams.page = params.page;
-    apiParams.limit = params?.limit ?? 10000;
+
+    // Proper server-side pagination
+    apiParams.page = params?.page ?? 1;
+    apiParams.limit = params?.limit ?? 12;
 
     if (params?.sortBy) apiParams.sortBy = params.sortBy;
     if (params?.sortOrder) apiParams.sortOrder = params.sortOrder;
@@ -162,7 +183,7 @@ export const BookService = {
     }
 
     const normalizedList = list.map(normalizeBook);
-    return { data: normalizedList, total };
+    return { data: normalizedList, total, meta: response.data?.meta };
   },
 
   getBookById: async (id: string | number): Promise<IBook> => {

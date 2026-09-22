@@ -3,31 +3,46 @@
 import React from "react";
 import { BookOpen, Users, HeartHandshake, Layers } from "lucide-react";
 import { motion } from "motion/react";
-import { useGetBookCategories, useGetBooks } from "@/hooks/useBooks";
-import { useGetUsers } from "@/hooks/useUsers";
-import { useGetDonations } from "@/hooks/useDonations";
+import { useQuery } from "@tanstack/react-query";
+import { BookService } from "@/services/book.service";
+import { UserService } from "@/services/user.service";
+import { DonationService } from "@/services/donation.service";
 
 export function StatsCounter() {
-  const { data: booksData } = useGetBooks();
-  const { data: usersData } = useGetUsers();
-  const { data: donationsData } = useGetDonations();
-  const {data: categoriesData}= useGetBookCategories()
+  // Use limit=1 queries and read meta.total for accurate counts —
+  // avoids showing only the current page's item count when the server
+  // enforces its own pagination limits.
+  const { data: booksData } = useQuery({
+    queryKey: ["stats-books-total"],
+    queryFn: () => BookService.getAllBooks({ limit: 1, page: 1 }),
+    staleTime: 5 * 60 * 1000,
+  });
 
-  const totalBooks = booksData?.total ?? booksData?.data?.length ?? 0;
-  const borrowableCount = booksData?.data?.length
-    ? booksData.data.filter(
-        (b) => b.isBorrowable || b.type === "BORROW_ONLY" || b.type === "HYBRID"
-      ).length
-    : totalBooks;
-  const displayBooksCount = totalBooks > 0 ? totalBooks : borrowableCount;
-  const membersCount = usersData?.length ?? 0;
-  const donationsCount = donationsData?.length ?? 0;
+  const { data: membersCount = 0 } = useQuery({
+    queryKey: ["stats-users-total"],
+    queryFn: () => UserService.getTotalCount(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: donationsCount = 0 } = useQuery({
+    queryKey: ["stats-donations-total"],
+    queryFn: () => DonationService.getTotalCount(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: categoriesData } = useQuery({
+    queryKey: ["book-categories"],
+    queryFn: () => BookService.getCategories(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const totalBooks = booksData?.total ?? 0;
   const categoriesCount = categoriesData?.length ?? 0;
 
   const stats = [
     {
       label: "Total Books & Collections",
-      value: `${displayBooksCount.toLocaleString()}${displayBooksCount > 0 ? "+" : ""}`,
+      value: `${totalBooks.toLocaleString()}${totalBooks > 0 ? "+" : ""}`,
       description: "Classical & contemporary titles ready for issue",
       icon: BookOpen,
       color: "text-emerald-600 dark:text-emerald-400 bg-emerald-100/80 dark:bg-emerald-950/60",

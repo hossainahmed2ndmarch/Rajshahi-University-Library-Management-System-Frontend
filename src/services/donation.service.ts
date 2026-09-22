@@ -36,6 +36,14 @@ export const DonationService = {
     return list.map(normalizeDonation);
   },
 
+  /** Lightweight call to get the true total count from meta.total (limit=1). */
+  getTotalCount: async (): Promise<number> => {
+    const response = await axiosInstance.get<ApiResponse<unknown>>("/donations", {
+      params: { limit: 1, page: 1 },
+    });
+    return response.data?.meta?.total ?? 0;
+  },
+
   approveDonation: async (
     id: string | number,
     payload?: Partial<{

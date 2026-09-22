@@ -11,7 +11,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useGetBookCategories } from "@/hooks/useBooks";
+import { useGetBookCategories, useGetBooks } from "@/hooks/useBooks";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 
 // ---------------------------------------------------------------------------
@@ -37,7 +37,7 @@ const CATEGORY_META: Record<
   Fiqh: {
     label: "Islamic Jurisprudence (Fiqh)",
     description:
-      "Hanafi, Shafi'i, Maliki, and Hanbali comparative legal treatises.",
+      "Hanafi, Shafi\u2019i, Maliki, and Hanbali comparative legal treatises.",
   },
   Seerah: {
     label: "Seerah & Prophetic Biography",
@@ -66,7 +66,7 @@ const CATEGORY_META: Record<
   Education: {
     label: "Islamic Education",
     description:
-      "Pedagogical texts, Islamic curricula, children's books, and Arabic learning.",
+      "Pedagogical texts, Islamic curricula, children\u2019s books, and Arabic learning.",
   },
 };
 
@@ -140,7 +140,7 @@ function CategorySkeleton() {
             </div>
           ))}
         </div>
-        {/* Red Link Skeleton */}
+        {/* Link Skeleton */}
         <Skeleton className="h-5 w-28 rounded" />
       </div>
     </CarouselItem>
@@ -151,7 +151,45 @@ function CategorySkeleton() {
 // Main Component
 // ---------------------------------------------------------------------------
 export function CategoryCarousel() {
-  const { data: liveCategories, isLoading } = useGetBookCategories();
+  const { data: liveCategories, isLoading: categoriesLoading } =
+    useGetBookCategories();
+
+  // Fetch all books once — we filter per category client-side so that a book
+  // belonging to multiple categories (e.g. ["Tafsir", "Hadith"]) naturally
+  // appears in every relevant category grid without creating duplicate cards.
+  const { data: booksData, isLoading: booksLoading } = useGetBooks();
+  const allBooks = booksData?.data ?? [];
+
+  const isLoading = categoriesLoading || booksLoading;
+
+  /**
+   * Returns up to 4 preview books for a given category slug.
+   * Matches against the full `categories` array so multi-category books
+   * are included in every category they belong to — the same book object
+   * is simply referenced in multiple grids; no duplicate card is created.
+   */
+  const getBooksForCategory = (categorySlug: string): BookPreview[] =>
+    allBooks
+      .filter((book) => {
+        // Prefer the structured `categories` array; fall back to the
+        // comma-separated legacy `category` string.
+        const cats: string[] =
+          Array.isArray(book.categories) && book.categories.length > 0
+            ? book.categories
+            : book.category
+            ? book.category.split(",").map((c) => c.trim())
+            : [];
+        return cats.some(
+          (c) => c.toLowerCase() === categorySlug.toLowerCase()
+        );
+      })
+      .slice(0, 4)
+      .map((book) => ({
+        id: book.id,
+        title: book.title,
+        coverImage: book.coverImage,
+        author: book.author,
+      }));
 
   return (
     <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
@@ -184,7 +222,10 @@ export function CategoryCarousel() {
               ))
             : (liveCategories ?? []).map((item) => {
                 const meta = CATEGORY_META[item.category];
-                const label = meta?.label ?? DEFAULT_META.label(item.category);
+                const label =
+                  meta?.label ?? DEFAULT_META.label(item.category);
+                // Resolve books that belong to this category (multi-category aware)
+                const previewBooks = getBooksForCategory(item.category);
 
                 return (
                   <CarouselItem
@@ -197,19 +238,20 @@ export function CategoryCarousel() {
                         {label}
                       </h3>
 
-                      {/* 2. 2x2 Grid of 4 Books */}
+                      {/* 2. 2x2 Grid of up to 4 Books for this category.
+                           Multi-category books appear in each matching grid
+                           — no extra category card is generated. */}
                       <CategoryBookPreviewsGrid
-                        books={
-                          (item as typeof item & { books?: BookPreview[] })
-                            .books
-                        }
+                        books={previewBooks}
                         category={item.category}
                       />
 
-                      {/* 3. Red Redirection Link at bottom */}
+                      {/* 3. Redirection Link at bottom */}
                       <div className="mt-auto border-t border-border/60">
                         <Link
-                          href={`/books?category=${encodeURIComponent(item.category)}`}
+                          href={`/books?category=${encodeURIComponent(
+                            item.category
+                          )}`}
                           className="inline-flex items-center gap-1.5 text-sm font-extrabold text-[#C78700] hover:text-amber-600"
                         >
                           <span> সব দেখুন</span>

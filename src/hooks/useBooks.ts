@@ -20,7 +20,7 @@ export const useGetBooks = (params?: IBookQueryParams) => {
   return useQuery({
     queryKey: ["books", params],
     queryFn: () => BookService.getAllBooks(params),
-    staleTime: 2 * 60 * 1000,
+    staleTime: 1 * 60 * 1000,
   });
 };
 

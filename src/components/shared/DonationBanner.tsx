@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { cn } from "@/lib/utils";
+import { IslamicPattern } from "@/components/shared/IslamicPattern";
 
 interface DonationBannerProps {
   className?: string;
@@ -72,9 +73,11 @@ export function DonationBanner({
       )}
     >
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#004F32] via-[#003824] to-[#040D09] p-8 sm:p-12 lg:p-14 text-white border border-emerald-800/80 dark:border-emerald-700/60 shadow-2xl">
-        {/* Ambient Decorative Radial Flares */}
-        <div className="pointer-events-none absolute -left-20 -top-20 h-80 w-80 rounded-full bg-emerald-500/15 blur-3xl" />
-        <div className="pointer-events-none absolute -right-20 -bottom-20 h-96 w-96 rounded-full bg-[#C78700]/15 blur-3xl" />
+        
+
+        {/* Ambient Radial Flares */}
+        <div className="pointer-events-none absolute -left-20 -top-20 h-80 w-80 rounded-full bg-emerald-500/10 blur-3xl" />
+        <div className="pointer-events-none absolute -right-20 -bottom-20 h-96 w-96 rounded-full bg-[#C78700]/10 blur-3xl" />
 
         {/* Decorative Watermark Outline Icon */}
         <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/4 opacity-5 pointer-events-none hidden lg:block">

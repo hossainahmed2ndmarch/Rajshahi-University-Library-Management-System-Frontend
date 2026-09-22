@@ -19,6 +19,7 @@ import {
   CarouselPrevious,
   CarouselDots,
 } from "@/components/ui/carousel";
+import { IslamicPattern } from "@/components/shared/IslamicPattern";
 
 const SLIDES = [
   {
@@ -123,9 +124,12 @@ export function HeroCarousel() {
                   </div>
                 </div>
 
-                {/* Decorative Lighting */}
-                <div className="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-emerald-500/15 blur-3xl pointer-events-none" />
-                <div className="absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-[#C78700]/15 blur-3xl pointer-events-none" />
+                {/* Islamic Seamless SVG Pattern Background */}
+                
+
+                {/* Ambient Glow accents on top of the pattern */}
+                <div className="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-[#C78700]/10 blur-3xl pointer-events-none" />
               </section>
             </CarouselItem>
           ))}

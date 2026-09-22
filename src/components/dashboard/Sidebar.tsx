@@ -9,7 +9,6 @@ import {
   LayoutDashboard,
   Users,
   ShieldAlert,
-  ClipboardList,
   Package,
   HeartHandshake,
   BookMarked,
@@ -25,266 +24,343 @@ import {
   Calendar,
   MoreHorizontal,
   X,
+  Globe,
 } from "lucide-react";
 import { useGetMe, useLogout } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
-import logo from "../../assets/logo/white-version.png";
+import logo from "@/assets/logo/white-version.png";
 
-interface NavItem {
-  label: string;
-  href: string;
-  icon: React.ElementType;
+// Optional: Language store import (Replace with your actual store if available)
+// import { useLanguageStore } from "@/store/useLanguageStore";
+
+// ─── Multilingual Nav Labels Config ──────────────────────────────────────────
+
+export type SupportedLang = "en" | "bn" | "ar";
+
+export interface NavTranslation {
+  en: string;
+  bn: string;
+  ar: string;
 }
 
-const ROLE_NAV_ITEMS: Record<UserRole, NavItem[]> = {
+export interface NavItemConfig {
+  key: string;
+  href: string;
+  icon: React.ElementType;
+  label: NavTranslation;
+}
+
+// Relatable & Concise Multilingual Mapping
+export const NAV_TRANSLATIONS: Record<string, NavItemConfig> = {
+  // Overviews
+  superAdminOverview: {
+    key: "superAdminOverview",
+    href: "/dashboard/super-admin",
+    icon: LayoutDashboard,
+    label: { en: "Overview", bn: "ওভারভিউ", ar: "نظرة عامة" },
+  },
+  adminOverview: {
+    key: "adminOverview",
+    href: "/dashboard/admin",
+    icon: LayoutDashboard,
+    label: { en: "Overview", bn: "ওভারভিউ", ar: "نظرة عامة" },
+  },
+  shifterOverview: {
+    key: "shifterOverview",
+    href: "/dashboard/shifter/overview",
+    icon: LayoutDashboard,
+    label: { en: "Overview", bn: "ওভারভিউ", ar: "نظرة عامة" },
+  },
+  memberOverview: {
+    key: "memberOverview",
+    href: "/dashboard/member",
+    icon: LayoutDashboard,
+    label: { en: "Overview", bn: "ওভারভিউ", ar: "نظرة عامة" },
+  },
+
+  // Management & Desks
+  posDesk: {
+    key: "posDesk",
+    href: "/dashboard/shifter",
+    icon: Barcode,
+    label: { en: "POS Desk", bn: "কাউন্টার ডেস্ক", ar: "نقطة البيع" },
+  },
+  books: {
+    key: "books",
+    href: "/dashboard/admin/books",
+    icon: Package,
+    label: { en: "Book Catalog", bn: "বইয়ের ক্যাটালগ", ar: "كتالوج الكتب" },
+  },
+  shifterBooks: {
+    key: "shifterBooks",
+    href: "/dashboard/shifter/books",
+    icon: Package,
+    label: { en: "Book Directory", bn: "বইয়ের ডিরেক্টরি", ar: "دليل الكتب" },
+  },
+  borrows: {
+    key: "borrows",
+    href: "/dashboard/admin/borrows",
+    icon: BookMarked,
+    label: { en: "Circulation", bn: "ইস্যু ও ধার", ar: "الإعارات" },
+  },
+  shifterBorrows: {
+    key: "shifterBorrows",
+    href: "/dashboard/shifter/borrows",
+    icon: BookMarked,
+    label: { en: "Borrow Desk", bn: "ধার মঞ্জুরি", ar: "مكتب الإعارة" },
+  },
+  donations: {
+    key: "donations",
+    href: "/dashboard/admin/donations",
+    icon: HeartHandshake,
+    label: { en: "Donations", bn: "অনুদান অনুমোদন", ar: "التبرعات" },
+  },
+  shifterDonations: {
+    key: "shifterDonations",
+    href: "/dashboard/shifter/donations",
+    icon: HeartHandshake,
+    label: { en: "Donation Desk", bn: "অনুদান শেল্ভিং", ar: "مكتب التبرعات" },
+  },
+  members: {
+    key: "members",
+    href: "/dashboard/admin/members",
+    icon: Users,
+    label: { en: "Members", bn: "সদস্য তালিকা", ar: "الأعضاء" },
+  },
+  shifterMembers: {
+    key: "shifterMembers",
+    href: "/dashboard/shifter/members",
+    icon: Users,
+    label: { en: "Members Directory", bn: "সদস্য ডিরেক্টরি", ar: "دليل الأعضاء" },
+  },
+  publications: {
+    key: "publications",
+    href: "/dashboard/admin/publications",
+    icon: Newspaper,
+    label: { en: "Publications", bn: "প্রকাশনা", ar: "المنشورات" },
+  },
+  superPublications: {
+    key: "superPublications",
+    href: "/dashboard/super-admin/publications",
+    icon: Newspaper,
+    label: { en: "Publications", bn: "প্রকাশনা", ar: "المنشورات" },
+  },
+  userRoles: {
+    key: "userRoles",
+    href: "/dashboard/super-admin/users",
+    icon: ShieldAlert,
+    label: { en: "User Roles", bn: "ইউজার রোলস", ar: "صلاحيات المستخدمين" },
+  },
+  purchases: {
+    key: "purchases",
+    href: "/dashboard/admin/purchases",
+    icon: Receipt,
+    label: { en: "Purchases", bn: "ক্রয়সমূহ", ar: "المشتريات" },
+  },
+  shifterPurchases: {
+    key: "shifterPurchases",
+    href: "/dashboard/shifter/purchases",
+    icon: Receipt,
+    label: { en: "Purchases List", bn: "সকল ক্রয়", ar: "قائمة المشتريات" },
+  },
+  shiftLogs: {
+    key: "shiftLogs",
+    href: "/dashboard/admin/shift-logs",
+    icon: History,
+    label: { en: "Shift Logs", bn: "শিফট লগ", ar: "سجل الورديات" },
+  },
+  superShiftLogs: {
+    key: "superShiftLogs",
+    href: "/dashboard/super-admin/shift-logs",
+    icon: History,
+    label: { en: "Shift Audit Logs", bn: "শিফট অডিট লগ", ar: "سجل التدقيق" },
+  },
+  shifterLogs: {
+    key: "shifterLogs",
+    href: "/dashboard/shifter/shift-logs",
+    icon: History,
+    label: { en: "Shift Handover", bn: "শিফট হ্যান্ডওভার", ar: "تسليم الوردية" },
+  },
+  shifterSchedules: {
+    key: "shifterSchedules",
+    href: "/dashboard/admin/shifter-schedules",
+    icon: Calendar,
+    label: { en: "Duty Rosters", bn: "ডিউটি রোস্টার", ar: "جدول الورديات" },
+  },
+  superSchedules: {
+    key: "superSchedules",
+    href: "/dashboard/super-admin/shifter-schedules",
+    icon: Calendar,
+    label: { en: "Duty Rosters", bn: "ডিউটি রোস্টার", ar: "جدول الورديات" },
+  },
+  reviews: {
+    key: "reviews",
+    href: "/dashboard/admin/reviews",
+    icon: Sparkles,
+    label: { en: "Reviews", bn: "রিভিউ মডারেশন", ar: "المراجعات" },
+  },
+
+  // Personal Space
+  profile: {
+    key: "profile",
+    href: "/dashboard/member/profile",
+    icon: User,
+    label: { en: "My Profile", bn: "মাই প্রোফাইল", ar: "ملفي الشخصي" },
+  },
+  adminProfile: {
+    key: "adminProfile",
+    href: "/dashboard/admin/profile",
+    icon: User,
+    label: { en: "My Profile", bn: "মাই প্রোফাইল", ar: "ملفي الشخصي" },
+  },
+  shifterProfile: {
+    key: "shifterProfile",
+    href: "/dashboard/shifter/profile",
+    icon: User,
+    label: { en: "My Profile", bn: "মাই প্রোফাইল", ar: "ملفي الشخصي" },
+  },
+  myBorrows: {
+    key: "myBorrows",
+    href: "/dashboard/member/my-borrows",
+    icon: BookMarked,
+    label: { en: "My Borrows", bn: "আমার বই ধার", ar: "استعاراتي" },
+  },
+  adminMyBorrows: {
+    key: "adminMyBorrows",
+    href: "/dashboard/admin/my-borrows",
+    icon: BookMarked,
+    label: { en: "My Borrows", bn: "আমার বই ধার", ar: "استعاراتي" },
+  },
+  shifterMyBorrows: {
+    key: "shifterMyBorrows",
+    href: "/dashboard/shifter/my-borrows",
+    icon: BookMarked,
+    label: { en: "My Borrows", bn: "আমার বই ধার", ar: "استعاراتي" },
+  },
+  myPurchases: {
+    key: "myPurchases",
+    href: "/dashboard/member/purchases",
+    icon: Receipt,
+    label: { en: "My Purchases", bn: "আমার ক্রয়", ar: "مشترياتي" },
+  },
+  adminMyPurchases: {
+    key: "adminMyPurchases",
+    href: "/dashboard/admin/my-purchases",
+    icon: Receipt,
+    label: { en: "My Purchases", bn: "আমার ক্রয়", ar: "مشترياتي" },
+  },
+  shifterMyPurchases: {
+    key: "shifterMyPurchases",
+    href: "/dashboard/shifter/my-purchases",
+    icon: Receipt,
+    label: { en: "My Purchases", bn: "আমার ক্রয়", ar: "مشترياتي" },
+  },
+  myDonations: {
+    key: "myDonations",
+    href: "/dashboard/member/donations",
+    icon: HeartHandshake,
+    label: { en: "My Donations", bn: "আমার অনুদান", ar: "تبرعاتي" },
+  },
+  adminMyDonations: {
+    key: "adminMyDonations",
+    href: "/dashboard/admin/my-donations",
+    icon: HeartHandshake,
+    label: { en: "My Donations", bn: "আমার অনুদান", ar: "تبرعاتي" },
+  },
+  shifterMyDonations: {
+    key: "shifterMyDonations",
+    href: "/dashboard/shifter/my-donations",
+    icon: HeartHandshake,
+    label: { en: "My Donations", bn: "আমার অনুদান", ar: "تبرعاتي" },
+  },
+};
+
+// Role-to-Nav-Keys Mapping
+const ROLE_NAV_KEYS: Record<UserRole, string[]> = {
   SUPER_ADMIN: [
-    {
-      label: "Super Admin Overview",
-      href: "/dashboard/super-admin",
-      icon: LayoutDashboard,
-    },
-    { label: "POS Counter Desk", href: "/dashboard/shifter", icon: Barcode },
-    {
-      label: "Book Catalog Inventory",
-      href: "/dashboard/admin/books",
-      icon: Package,
-    },
-    {
-      label: "Circulation & Borrows",
-      href: "/dashboard/admin/borrows",
-      icon: BookMarked,
-    },
-    {
-      label: "Donation Approvals",
-      href: "/dashboard/admin/donations",
-      icon: HeartHandshake,
-    },
-    {
-      label: "Member Directory & Roles",
-      href: "/dashboard/admin/members",
-      icon: Users,
-    },
-    {
-      label: "Publications & Articles",
-      href: "/dashboard/super-admin/publications",
-      icon: Newspaper,
-    },
-    {
-      label: "User Role Provisioning",
-      href: "/dashboard/super-admin/users",
-      icon: ShieldAlert,
-    },
-    {
-      label: "Purchases & Orders",
-      href: "/dashboard/admin/purchases",
-      icon: Receipt,
-    },
-    {
-      label: "Shift Logs & Audit System",
-      href: "/dashboard/super-admin/shift-logs",
-      icon: History,
-    },
-    {
-      label: "Duty Rosters & Schedules",
-      href: "/dashboard/super-admin/shifter-schedules",
-      icon: Calendar,
-    },
-    {
-      label: "Review Moderation",
-      href: "/dashboard/admin/reviews",
-      icon: Sparkles,
-    },
-    { label: "My Profile", href: "/dashboard/admin/profile", icon: User },
-    {
-      label: "My Borrows",
-      href: "/dashboard/admin/my-borrows",
-      icon: BookMarked,
-    },
-    {
-      label: "My Purchases",
-      href: "/dashboard/admin/my-purchases",
-      icon: Receipt,
-    },
-    {
-      label: "My Donations",
-      href: "/dashboard/admin/my-donations",
-      icon: HeartHandshake,
-    },
+    "superAdminOverview",
+    "posDesk",
+    "books",
+    "borrows",
+    "donations",
+    "members",
+    "superPublications",
+    "userRoles",
+    "purchases",
+    "superShiftLogs",
+    "superSchedules",
+    "reviews",
+    "adminProfile",
+    "adminMyBorrows",
+    "adminMyPurchases",
+    "adminMyDonations",
   ],
   ADMIN: [
-    {
-      label: "Admin Overview",
-      href: "/dashboard/admin",
-      icon: LayoutDashboard,
-    },
-    { label: "POS Counter Desk", href: "/dashboard/shifter", icon: Barcode },
-    {
-      label: "Book Catalog Inventory",
-      href: "/dashboard/admin/books",
-      icon: Package,
-    },
-    {
-      label: "Circulation & Borrows",
-      href: "/dashboard/admin/borrows",
-      icon: BookMarked,
-    },
-    {
-      label: "Donation Approvals",
-      href: "/dashboard/admin/donations",
-      icon: HeartHandshake,
-    },
-    {
-      label: "Member Directory & Roles",
-      href: "/dashboard/admin/members",
-      icon: Users,
-    },
-    {
-      label: "Publications & Articles",
-      href: "/dashboard/admin/publications",
-      icon: Newspaper,
-    },
-    {
-      label: "Purchases & Orders",
-      href: "/dashboard/admin/purchases",
-      icon: Receipt,
-    },
-    {
-      label: "Shift Logs & Audit System",
-      href: "/dashboard/admin/shift-logs",
-      icon: History,
-    },
-    {
-      label: "Duty Rosters & Schedules",
-      href: "/dashboard/admin/shifter-schedules",
-      icon: Calendar,
-    },
-    {
-      label: "Review Moderation",
-      href: "/dashboard/admin/reviews",
-      icon: Sparkles,
-    },
-    { label: "My Profile", href: "/dashboard/admin/profile", icon: User },
-    {
-      label: "My Borrows",
-      href: "/dashboard/admin/my-borrows",
-      icon: BookMarked,
-    },
-    {
-      label: "My Purchases",
-      href: "/dashboard/admin/my-purchases",
-      icon: Receipt,
-    },
-    {
-      label: "My Donations",
-      href: "/dashboard/admin/my-donations",
-      icon: HeartHandshake,
-    },
+    "adminOverview",
+    "posDesk",
+    "books",
+    "borrows",
+    "donations",
+    "members",
+    "publications",
+    "purchases",
+    "shiftLogs",
+    "shifterSchedules",
+    "reviews",
+    "adminProfile",
+    "adminMyBorrows",
+    "adminMyPurchases",
+    "adminMyDonations",
   ],
-
   SHIFTER: [
-    { label: "POS Counter Desk", href: "/dashboard/shifter", icon: Barcode },
-    {
-      label: "Book Catalog Directory",
-      href: "/dashboard/shifter/books",
-      icon: Package,
-    },
-    {
-      label: "Borrow Approvals & Desk",
-      href: "/dashboard/shifter/borrows",
-      icon: BookMarked,
-    },
-    {
-      label: "Donations Shelving",
-      href: "/dashboard/shifter/donations",
-      icon: HeartHandshake,
-    },
-    {
-      label: "Member Directory",
-      href: "/dashboard/shifter/members",
-      icon: Users,
-    },
-    {
-      label: "All Purchases",
-      href: "/dashboard/shifter/purchases",
-      icon: Receipt,
-    },
-    {
-      label: "Shift Logs & Handover",
-      href: "/dashboard/shifter/shift-logs",
-      icon: History,
-    },
-    {
-      label: "Member Overview",
-      href: "/dashboard/shifter/overview",
-      icon: LayoutDashboard,
-    },
-    { label: "My Profile", href: "/dashboard/shifter/profile", icon: User },
-    {
-      label: "My Borrows",
-      href: "/dashboard/shifter/my-borrows",
-      icon: BookMarked,
-    },
-    {
-      label: "My Purchases",
-      href: "/dashboard/shifter/my-purchases",
-      icon: Receipt,
-    },
-    {
-      label: "My Donations",
-      href: "/dashboard/shifter/my-donations",
-      icon: HeartHandshake,
-    },
+    "shifterOverview",
+    "posDesk",
+    "shifterBooks",
+    "shifterBorrows",
+    "shifterDonations",
+    "shifterMembers",
+    "shifterPurchases",
+    "shifterLogs",
+    "shifterProfile",
+    "shifterMyBorrows",
+    "shifterMyPurchases",
+    "shifterMyDonations",
   ],
-  MEMBER: [
-    {
-      label: "Member Overview",
-      href: "/dashboard/member",
-      icon: LayoutDashboard,
-    },
-    { label: "My Profile", href: "/dashboard/member/profile", icon: User },
-    {
-      label: "My Borrow History",
-      href: "/dashboard/member/my-borrows",
-      icon: BookMarked,
-    },
-    {
-      label: "My Book Purchases",
-      href: "/dashboard/member/purchases",
-      icon: Receipt,
-    },
-    {
-      label: "My Donations",
-      href: "/dashboard/member/donations",
-      icon: HeartHandshake,
-    },
-  ],
+  MEMBER: ["memberOverview", "profile", "myBorrows", "myPurchases", "myDonations"],
 };
 
 const BOTTOM_NAV_VISIBLE = 4;
 
+// ─── PC Responsive Sidebar Component ─────────────────────────────────────────
+
 export function Sidebar({
   collapsed,
   setCollapsed,
+  lang = "en",
 }: {
   collapsed: boolean;
   setCollapsed: (val: boolean) => void;
+  lang?: SupportedLang;
 }) {
   const pathname = usePathname();
   const { data: user } = useGetMe();
   const { logout } = useLogout();
 
   const userRole: UserRole = user?.role || "MEMBER";
-  const navItems = ROLE_NAV_ITEMS[userRole] || ROLE_NAV_ITEMS.MEMBER;
+  const navKeys = ROLE_NAV_KEYS[userRole] || ROLE_NAV_KEYS.MEMBER;
+
+  const isRtl = lang === "ar";
 
   return (
     <aside
-      className={`relative z-40 flex flex-col border-r border-border bg-[#003824] text-white transition-all duration-300 ${
+      className={`hidden lg:flex flex-col h-screen sticky top-0 z-40 border-r border-emerald-900/40 bg-[#003824] text-white transition-all duration-300 ease-in-out select-none ${
         collapsed ? "w-20" : "w-64"
       }`}
+      dir={isRtl ? "rtl" : "ltr"}
     >
-      {/* Sidebar Header */}
-      <div className="flex h-16 items-center justify-between px-4 border-b border-emerald-900/60">
-        <Link href="/" className="flex items-center space-x-2.5 shrink-0 group">
+      {/* 1. Header & Brand Logo */}
+      <div className="flex h-16 items-center justify-between px-2 border-b border-emerald-900/60 shrink-0">
+        <Link href="/" className="flex items-center space-x-2 shrink-0 group">
           <div className="flex h-11 w-11 items-center justify-center">
             <Image
               src={logo}
@@ -305,37 +381,39 @@ export function Sidebar({
           )}
         </Link>
 
+        {/* Desktop Collapse Toggle Button */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="rounded-md p-1.5 text-emerald-200/80 hover:bg-emerald-800 hover:text-white transition-colors"
+          className="rounded-lg p-0.5 text-emerald-200/80 hover:bg-emerald-800/80 hover:text-white transition-colors"
           title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          aria-label="Toggle Sidebar"
         >
           {collapsed ? (
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-5 w-5" />
           ) : (
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-5 w-5" />
           )}
         </button>
       </div>
 
-      {/* Role Badge Container */}
+      {/* 2. Logged-in User Role Badge */}
       {!collapsed && (
-        <div className="px-4 py-3 border-b border-emerald-900/40 bg-emerald-950/40">
+        <div className="px-4 py-2.5 border-b border-emerald-900/40 bg-emerald-950/40 shrink-0">
           <div className="flex items-center space-x-2">
-            <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-            <span className="text-xs text-emerald-200 font-medium">
+            <Sparkles className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+            <span className="text-[11px] text-emerald-200 font-medium">
               Logged in as:
             </span>
           </div>
-          <p className="text-xs font-bold text-amber-300 uppercase tracking-wider mt-0.5 font-mono">
+          <p className="text-xs font-bold text-amber-300 uppercase tracking-widest mt-0.5 font-mono">
             {userRole}
           </p>
         </div>
       )}
 
-      {/* Navigation Items (Custom Styled Scrollbar Added) */}
+      {/* 3. Navigation List (Scrollable Container with Custom Styling) */}
       <div
-        className="flex-1 space-y-1 p-3 overflow-y-auto 
+        className="flex-1 space-y-1 p-3 overflow-y-auto overflow-x-hidden 
         [scrollbar-width:thin] [scrollbar-color:#065f46_transparent]
         [&::-webkit-scrollbar]:w-1.5 
         [&::-webkit-scrollbar-track]:bg-transparent 
@@ -343,80 +421,145 @@ export function Sidebar({
         [&::-webkit-scrollbar-thumb]:rounded-full 
         hover:[&::-webkit-scrollbar-thumb]:bg-emerald-600"
       >
-        {navItems.map((item) => {
+        {navKeys.map((key) => {
+          const item = NAV_TRANSLATIONS[key];
+          if (!item) return null;
+
+          const labelText = item.label[lang] || item.label.en;
           const isActive =
             pathname === item.href ||
             (item.href !== "/dashboard" && pathname.startsWith(item.href));
+
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center space-x-3 rounded-lg px-3 py-2.5 text-xs font-semibold transition-colors ${
-                isActive
-                  ? "bg-[#C78700] text-white shadow-xs"
-                  : "text-emerald-100/80 hover:bg-emerald-900/60 hover:text-white"
-              }`}
-              title={collapsed ? item.label : undefined}
-            >
-              <item.icon className="h-4 w-4 shrink-0" />
-              {!collapsed && <span className="truncate">{item.label}</span>}
-            </Link>
+            <div key={item.key} className="relative group">
+              <Link
+                href={item.href}
+                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold transition-all duration-200 relative ${
+                  isActive
+                    ? "bg-[#C78700] text-white shadow-md shadow-amber-950/20"
+                    : "text-emerald-100/80 hover:bg-emerald-900/60 hover:text-white"
+                }`}
+              >
+                {/* Active Indicator Bar */}
+                {isActive && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-md bg-amber-200" />
+                )}
+
+                <item.icon className="h-4 w-4 shrink-0" />
+
+                {!collapsed && (
+                  <span className="truncate leading-none">{labelText}</span>
+                )}
+              </Link>
+
+              {/* Responsive Floating Tooltip for Desktop Collapsed State */}
+              {collapsed && (
+                <div
+                  className={`absolute top-1/2 -translate-y-1/2 z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 rounded-md bg-emerald-950 text-amber-300 px-2.5 py-1.5 text-xs font-medium shadow-xl whitespace-nowrap border border-emerald-800/80 ${
+                    isRtl ? "right-full mr-2" : "left-full ml-2"
+                  }`}
+                >
+                  {labelText}
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
 
-      {/* Sidebar Footer */}
-      <div className="p-3 border-t border-emerald-900/60 space-y-1">
-        <Link
-          href="/books"
-          className="flex items-center space-x-3 rounded-lg px-3 py-2 text-xs font-medium text-amber-300 hover:bg-emerald-900/60 transition-colors"
-          title={collapsed ? "Public Catalog" : undefined}
-        >
-          <BookOpen className="h-4 w-4 shrink-0" />
-          {!collapsed && <span>Public Catalog</span>}
-        </Link>
+      {/* 4. Sidebar Footer Links */}
+      <div className="p-3 border-t border-emerald-900/60 space-y-1 shrink-0 bg-emerald-950/20">
+        {/* Public Catalog Link */}
+        <div className="relative group">
+          <Link
+            href="/books"
+            className="flex items-center gap-3 rounded-lg px-3 py-2 text-xs font-medium text-amber-300 hover:bg-emerald-900/60 transition-colors"
+          >
+            <BookOpen className="h-4 w-4 shrink-0" />
+            {!collapsed && (
+              <span>
+                {lang === "bn"
+                  ? "পাবলিক ক্যাটালগ"
+                  : lang === "ar"
+                  ? "الكتالوج العام"
+                  : "Public Catalog"}
+              </span>
+            )}
+          </Link>
+          {collapsed && (
+            <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity rounded-md bg-emerald-950 text-amber-300 px-2.5 py-1.5 text-xs font-medium border border-emerald-800 whitespace-nowrap">
+              Public Catalog
+            </div>
+          )}
+        </div>
 
-        <button
-          onClick={logout}
-          className="w-full flex items-center space-x-3 rounded-lg px-3 py-2 text-xs font-medium text-red-300 hover:bg-red-950/40 transition-colors"
-          title={collapsed ? "Logout" : undefined}
-        >
-          <LogOut className="h-4 w-4 shrink-0" />
-          {!collapsed && <span>Sign Out</span>}
-        </button>
+        {/* Sign Out Button */}
+        <div className="relative group">
+          <button
+            onClick={logout}
+            className="w-full flex items-center gap-3 rounded-lg px-3 py-2 text-xs font-medium text-red-300 hover:bg-red-950/40 transition-colors cursor-pointer"
+          >
+            <LogOut className="h-4 w-4 shrink-0" />
+            {!collapsed && (
+              <span>
+                {lang === "bn"
+                  ? "সাইন আউট"
+                  : lang === "ar"
+                  ? "تسجيل الخروج"
+                  : "Sign Out"}
+              </span>
+            )}
+          </button>
+          {collapsed && (
+            <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity rounded-md bg-red-950 text-red-200 px-2.5 py-1.5 text-xs font-medium border border-red-800 whitespace-nowrap">
+              Sign Out
+            </div>
+          )}
+        </div>
       </div>
     </aside>
   );
 }
 
-export function MobileBottomNav() {
+// ─── Mobile Bottom Navigation Component ───────────────────────────────────────
+
+export function MobileBottomNav({ lang = "en" }: { lang?: SupportedLang }) {
   const pathname = usePathname();
   const { data: user } = useGetMe();
   const { logout } = useLogout();
   const [moreOpen, setMoreOpen] = useState(false);
 
   const userRole: UserRole = user?.role || "MEMBER";
-  const allItems = ROLE_NAV_ITEMS[userRole] || ROLE_NAV_ITEMS.MEMBER;
+  const navKeys = ROLE_NAV_KEYS[userRole] || ROLE_NAV_KEYS.MEMBER;
 
-  const pinnedItems = allItems.slice(0, BOTTOM_NAV_VISIBLE);
-  const overflowItems = allItems.slice(BOTTOM_NAV_VISIBLE);
-  const hasMore = overflowItems.length > 0;
+  const pinnedKeys = navKeys.slice(0, BOTTOM_NAV_VISIBLE);
+  const overflowKeys = navKeys.slice(BOTTOM_NAV_VISIBLE);
+  const hasMore = overflowKeys.length > 0;
 
   const isActive = (href: string) =>
     pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
 
-  const moreIsActive = overflowItems.some((item) => isActive(item.href));
+  const overflowIsActive = overflowKeys.some((key) => {
+    const item = NAV_TRANSLATIONS[key];
+    return item ? isActive(item.href) : false;
+  });
 
   return (
     <>
+      {/* Fixed Bottom Navigation Bar */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex items-stretch bg-[#003824] border-t border-emerald-900/60 safe-area-pb">
-        {pinnedItems.map((item) => {
+        {pinnedKeys.map((key) => {
+          const item = NAV_TRANSLATIONS[key];
+          if (!item) return null;
+
+          const labelText = item.label[lang] || item.label.en;
           const active = isActive(item.href);
+
           return (
             <Link
-              key={item.href}
+              key={item.key}
               href={item.href}
-              className={`flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-semibold transition-colors relative ${
+              className={`flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[10px] font-semibold transition-colors relative ${
                 active
                   ? "text-amber-300"
                   : "text-emerald-200/60 hover:text-emerald-100"
@@ -427,8 +570,8 @@ export function MobileBottomNav() {
                 <span className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full bg-amber-400" />
               )}
               <item.icon className="h-5 w-5 shrink-0" />
-              <span className="truncate max-w-[56px] text-center leading-none">
-                {item.label.split(" ")[0]}
+              <span className="truncate max-w-[60px] text-center leading-none">
+                {labelText.split(" ")[0]}
               </span>
             </Link>
           );
@@ -437,25 +580,28 @@ export function MobileBottomNav() {
         {hasMore && (
           <button
             onClick={() => setMoreOpen((v) => !v)}
-            className={`flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-semibold transition-colors relative ${
-              moreOpen || moreIsActive
+            className={`flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[10px] font-semibold transition-colors relative ${
+              moreOpen || overflowIsActive
                 ? "text-amber-300"
                 : "text-emerald-200/60 hover:text-emerald-100"
             }`}
           >
-            {(moreOpen || moreIsActive) && (
+            {(moreOpen || overflowIsActive) && (
               <span className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full bg-amber-400" />
             )}
             <MoreHorizontal className="h-5 w-5 shrink-0" />
-            <span>More</span>
+            <span>
+              {lang === "bn" ? "আরও" : lang === "ar" ? "المزيد" : "More"}
+            </span>
           </button>
         )}
       </nav>
 
+      {/* Overflow Bottom Sheet for Mobile */}
       {moreOpen && (
         <>
           <div
-            className="lg:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+            className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-xs"
             onClick={() => setMoreOpen(false)}
           />
 
@@ -466,7 +612,11 @@ export function MobileBottomNav() {
 
             <div className="flex items-center justify-between px-5 py-3 border-b border-emerald-900/40">
               <span className="text-xs font-bold text-emerald-200 uppercase tracking-wider">
-                All Navigation
+                {lang === "bn"
+                  ? "সকল নেভিগেশন"
+                  : lang === "ar"
+                  ? "جميع التنقلا"
+                  : "All Navigation"}
               </span>
               <button
                 onClick={() => setMoreOpen(false)}
@@ -476,31 +626,30 @@ export function MobileBottomNav() {
               </button>
             </div>
 
-            {/* Mobile Sheet Scrollbar Customization */}
-            <div 
-              className="overflow-y-auto max-h-[55vh] p-4 
-              [scrollbar-width:thin] [scrollbar-color:#065f46_transparent]
-              [&::-webkit-scrollbar]:w-1.5 
-              [&::-webkit-scrollbar-track]:bg-transparent 
-              [&::-webkit-scrollbar-thumb]:bg-emerald-800/60 
-              [&::-webkit-scrollbar-thumb]:rounded-full"
-            >
+            <div className="overflow-y-auto max-h-[55vh] p-4 [scrollbar-width:thin] [scrollbar-color:#065f46_transparent]">
               <div className="grid grid-cols-2 gap-2">
-                {overflowItems.map((item) => {
+                {overflowKeys.map((key) => {
+                  const item = NAV_TRANSLATIONS[key];
+                  if (!item) return null;
+
+                  const labelText = item.label[lang] || item.label.en;
                   const active = isActive(item.href);
+
                   return (
                     <Link
-                      key={item.href}
+                      key={item.key}
                       href={item.href}
                       onClick={() => setMoreOpen(false)}
                       className={`flex items-center gap-2.5 rounded-xl px-3 py-3 text-xs font-semibold transition-colors ${
                         active
-                          ? "bg-[#C78700] text-white shadow-sm"
+                          ? "bg-[#C78700] text-white shadow-xs"
                           : "bg-emerald-900/40 text-emerald-100/80 hover:bg-emerald-800/60 hover:text-white"
                       }`}
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
-                      <span className="leading-tight">{item.label}</span>
+                      <span className="leading-tight truncate">
+                        {labelText}
+                      </span>
                     </Link>
                   );
                 })}
@@ -520,7 +669,7 @@ export function MobileBottomNav() {
                     setMoreOpen(false);
                     logout();
                   }}
-                  className="flex items-center gap-2.5 rounded-xl px-3 py-3 text-xs font-semibold bg-red-950/30 text-red-300 hover:bg-red-950/50 transition-colors"
+                  className="flex items-center gap-2.5 rounded-xl px-3 py-3 text-xs font-semibold bg-red-950/30 text-red-300 hover:bg-red-950/50 transition-colors cursor-pointer"
                 >
                   <LogOut className="h-4 w-4 shrink-0" />
                   <span>Sign Out</span>

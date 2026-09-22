@@ -3,12 +3,25 @@
 import React, { useState } from "react";
 import { Sidebar, MobileBottomNav } from "@/components/dashboard/Sidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { IslamicPattern } from "@/components/shared/IslamicPattern";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background text-foreground transition-colors">
+      <IslamicPattern
+        variant="light"
+        fixed
+        opacity={0.85}
+        className="dark:hidden"
+      />
+      <IslamicPattern
+        variant="dark"
+        fixed
+        opacity={0.85}
+        className="hidden dark:block"
+      />
       {/* Sidebar — hidden on mobile, visible on lg+ */}
       <div className="hidden lg:flex">
         <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />

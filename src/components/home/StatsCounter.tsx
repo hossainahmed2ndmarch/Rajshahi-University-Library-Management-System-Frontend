@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { BookService } from "@/services/book.service";
 import { UserService } from "@/services/user.service";
 import { DonationService } from "@/services/donation.service";
+import { IslamicPattern } from "@/components/shared/IslamicPattern";
 
 export function StatsCounter() {
   // Use limit=1 queries and read meta.total for accurate counts —
@@ -71,8 +72,10 @@ export function StatsCounter() {
   ];
 
   return (
-    <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
+      {/* Subtle arabesque pattern behind the stat cards */}
+      <IslamicPattern variant="minimal" opacity={0.7} />
+      <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat, idx) => (
           <motion.div
             key={idx}

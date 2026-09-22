@@ -13,6 +13,7 @@ import {
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { cn } from "@/lib/utils";
+import { IslamicPattern } from "@/components/shared/IslamicPattern";
 
 interface ServiceItem {
   id: string;

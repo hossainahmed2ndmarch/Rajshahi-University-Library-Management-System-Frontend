@@ -9,7 +9,6 @@ import {
   SlidersHorizontal,
   X,
   ChevronDown,
-  ChevronUp,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -22,9 +21,12 @@ import { BookType } from "@/types/book";
 // Constants
 // ---------------------------------------------------------------------------
 const BOOKS_PER_PAGE = 12;
+const PRICE_MIN = 0;
+const PRICE_MAX = 5000;
+const PRICE_STEP = 10;
 
 // ---------------------------------------------------------------------------
-// Helpers: URL ↔ filter state
+// Helpers: URL <-> filter state
 // ---------------------------------------------------------------------------
 function parseMulti(sp: URLSearchParams, key: string): string[] {
   const val = sp.get(key);
@@ -70,54 +72,58 @@ function FilterSection({
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="border-b border-border last:border-b-0">
+    <div className="border-b border-border/60 last:border-b-0 py-1">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between py-3 text-xs font-bold text-foreground hover:text-primary transition-colors"
+        className="w-full flex items-center justify-between py-2.5 text-xs font-bold text-foreground hover:text-primary transition-colors select-none group"
       >
-        <span className="uppercase tracking-wide flex items-center gap-1.5">
+        <span className="uppercase tracking-wider text-[11px] flex items-center gap-2">
           {title}
           {count > 0 && (
-            <span className="rounded-full bg-[#004F32] text-white text-[10px] font-bold px-1.5 py-0.5 leading-none">
+            <span className="rounded-full bg-[#004F32] text-white text-[10px] font-bold px-1.5 py-0.2 leading-none shadow-xs">
               {count}
             </span>
           )}
         </span>
-        {open ? (
-          <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
-        ) : (
-          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-        )}
+        <div
+          className={`p-1 rounded-md text-muted-foreground group-hover:text-foreground transition-transform duration-200 ${
+            open ? "rotate-180" : ""
+          }`}
+        >
+          <ChevronDown className="h-3.5 w-3.5" />
+        </div>
       </button>
-      {open && <div className="pb-4">{children}</div>}
+      {open && <div className="pb-3 pt-0.5">{children}</div>}
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Scrollable checkbox list
+// Scrollable checkbox list with optional inline search — no show-more/less
 // ---------------------------------------------------------------------------
 function CheckboxList({
   items,
   selected,
   onToggle,
-  maxVisible = 6,
   loading = false,
+  searchable = false,
 }: {
   items: string[];
   selected: string[];
   onToggle: (value: string) => void;
-  maxVisible?: number;
   loading?: boolean;
+  /** @deprecated kept for API compatibility but no longer used */
+  maxVisible?: number;
+  searchable?: boolean;
 }) {
-  const [showAll, setShowAll] = useState(false);
+  const [filterQuery, setFilterQuery] = useState("");
 
   if (loading) {
     return (
-      <div className="space-y-2">
+      <div className="space-y-1.5 py-1">
         {[1, 2, 3, 4].map((n) => (
-          <div key={n} className="h-3 bg-muted animate-pulse rounded w-3/4" />
+          <div key={n} className="h-7 bg-muted/50 animate-pulse rounded-lg w-full" />
         ))}
       </div>
     );
@@ -125,42 +131,212 @@ function CheckboxList({
 
   if (items.length === 0) {
     return (
-      <p className="text-[11px] text-muted-foreground italic">
-        No options available
+      <p className="text-[11px] text-muted-foreground/80 italic py-1">
+        কোনো অপশন পাওয়া যায়নি
       </p>
     );
   }
 
-  const visible = showAll ? items : items.slice(0, maxVisible);
+  // Apply inline search filter
+  const filtered = filterQuery.trim()
+    ? items.filter((i) => i.toLowerCase().includes(filterQuery.toLowerCase()))
+    : items;
+
+  // Always show selected items first
+  const sortedFiltered = [
+    ...filtered.filter((i) => selected.includes(i)),
+    ...filtered.filter((i) => !selected.includes(i)),
+  ];
 
   return (
     <div className="space-y-1.5">
-      {visible.map((item) => (
-        <label
-          key={item}
-          className="flex items-center gap-2 text-xs text-foreground cursor-pointer hover:text-primary transition-colors group"
-        >
+      {/* Inline search for larger lists */}
+      {(searchable || items.length > 8) && (
+        <div className="relative mb-1">
           <input
-            type="checkbox"
-            checked={selected.includes(item)}
-            onChange={() => onToggle(item)}
-            className="h-3.5 w-3.5 rounded border-input accent-[#004F32] cursor-pointer"
+            type="text"
+            value={filterQuery}
+            onChange={(e) => setFilterQuery(e.target.value)}
+            placeholder="Search..."
+            className="w-full rounded-md border border-input bg-background px-2.5 py-1 text-[11px] focus:ring-1 focus:ring-primary focus:outline-none placeholder:text-muted-foreground/60"
           />
-          <span className="truncate flex-1">{item}</span>
-          {selected.includes(item) && (
-            <span className="text-[10px] text-primary font-semibold">✓</span>
+          {filterQuery && (
+            <button
+              type="button"
+              onClick={() => setFilterQuery("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-2.5 w-2.5" />
+            </button>
           )}
-        </label>
-      ))}
-      {items.length > maxVisible && (
+        </div>
+      )}
+
+      {/* Scrollable list — all items visible, no show-more */}
+      <div className="overflow-y-auto max-h-52 space-y-0.5 pr-1 scrollbar-thin scrollbar-thumb-[#004F32]/20 scrollbar-track-transparent hover:scrollbar-thumb-[#004F32]/40">
+        {sortedFiltered.length === 0 ? (
+          <p className="text-[11px] text-muted-foreground/70 italic py-1 text-center">
+            No results for &quot;{filterQuery}&quot;
+          </p>
+        ) : (
+          sortedFiltered.map((item) => {
+            const isChecked = selected.includes(item);
+            return (
+              <label
+                key={item}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onToggle(item);
+                }}
+                className={`flex items-center gap-2 text-xs px-2.5 py-1.5 rounded-lg cursor-pointer transition-all duration-150 select-none group border ${
+                  isChecked
+                    ? "bg-[#004F32]/10 text-[#004F32] dark:bg-emerald-950/40 dark:text-emerald-300 font-semibold border-[#004F32]/25 dark:border-emerald-700/40 shadow-xs"
+                    : "text-foreground/85 hover:bg-muted/60 hover:text-foreground border-transparent"
+                }`}
+              >
+                <div
+                  className={`h-3.5 w-3.5 rounded border flex items-center justify-center transition-colors shrink-0 ${
+                    isChecked
+                      ? "bg-[#004F32] border-[#004F32] text-white"
+                      : "border-input bg-background group-hover:border-muted-foreground/50"
+                  }`}
+                >
+                  {isChecked && <span className="text-[10px] leading-none font-bold">✓</span>}
+                </div>
+                <span className="truncate flex-1">{item}</span>
+              </label>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Dual-handle price range slider (pure React/CSS — no extra dependency)
+// ---------------------------------------------------------------------------
+function DualRangeSlider({
+  min,
+  max,
+  value,
+  onChange,
+  step = PRICE_STEP,
+}: {
+  min: number;
+  max: number;
+  value: [number, number];
+  onChange: (val: [number, number]) => void;
+  step?: number;
+}) {
+  const [low, high] = value;
+  const rangeRef = React.useRef<HTMLDivElement>(null);
+
+  const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+  const toPercent = (v: number) => ((v - min) / (max - min)) * 100;
+
+  const startDrag = (thumb: "low" | "high") => (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    const track = rangeRef.current;
+    if (!track) return;
+
+    const move = (clientX: number) => {
+      const rect = track.getBoundingClientRect();
+      const ratio = clamp((clientX - rect.left) / rect.width, 0, 1);
+      const raw = min + ratio * (max - min);
+      const snapped = Math.round(raw / step) * step;
+
+      if (thumb === "low") {
+        onChange([clamp(snapped, min, high - step), high]);
+      } else {
+        onChange([low, clamp(snapped, low + step, max)]);
+      }
+    };
+
+    const onMouseMove = (ev: MouseEvent) => move(ev.clientX);
+    const onTouchMove = (ev: TouchEvent) => move(ev.touches[0].clientX);
+    const stop = () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", stop);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", stop);
+    };
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", stop);
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", stop);
+  };
+
+  const lowPct = toPercent(low);
+  const highPct = toPercent(high);
+
+  return (
+    <div className="px-1 pt-2 pb-1 select-none">
+      {/* Live value labels */}
+      <div className="flex justify-between items-center mb-4">
+        <span className="bg-[#004F32]/10 text-[#004F32] dark:bg-emerald-950/40 dark:text-emerald-300 px-2 py-0.5 rounded-md border border-[#004F32]/20 text-[11px] font-semibold tabular-nums">
+          ৳{low.toLocaleString()}
+        </span>
+        <span className="text-muted-foreground text-[10px]">to</span>
+        <span className="bg-[#004F32]/10 text-[#004F32] dark:bg-emerald-950/40 dark:text-emerald-300 px-2 py-0.5 rounded-md border border-[#004F32]/20 text-[11px] font-semibold tabular-nums">
+          ৳{high.toLocaleString()}
+        </span>
+      </div>
+
+      {/* Slider track */}
+      <div
+        ref={rangeRef}
+        className="relative h-2 rounded-full bg-muted cursor-pointer mx-2"
+      >
+        {/* Active range fill */}
+        <div
+          className="absolute h-full rounded-full bg-[#004F32] dark:bg-emerald-500 pointer-events-none"
+          style={{ left: `${lowPct}%`, right: `${100 - highPct}%` }}
+        />
+
+        {/* Low thumb */}
         <button
           type="button"
-          onClick={() => setShowAll((v) => !v)}
-          className="text-[11px] text-primary font-semibold mt-1 hover:underline"
-        >
-          {showAll ? "Show less" : `+ ${items.length - maxVisible} more`}
-        </button>
-      )}
+          onMouseDown={startDrag("low")}
+          onTouchStart={startDrag("low")}
+          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 h-5 w-5 rounded-full bg-white border-2 border-[#004F32] shadow-md cursor-grab active:cursor-grabbing focus:outline-none focus:ring-2 focus:ring-[#004F32]/40 hover:scale-110 transition-transform z-10"
+          style={{ left: `${lowPct}%` }}
+          role="slider"
+          aria-valuenow={low}
+          aria-valuemin={min}
+          aria-valuemax={high - step}
+          aria-label="Minimum price"
+          onKeyDown={(e) => {
+            if (e.key === "ArrowLeft") onChange([clamp(low - step, min, high - step), high]);
+            if (e.key === "ArrowRight") onChange([clamp(low + step, min, high - step), high]);
+          }}
+        />
+
+        {/* High thumb */}
+        <button
+          type="button"
+          onMouseDown={startDrag("high")}
+          onTouchStart={startDrag("high")}
+          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 h-5 w-5 rounded-full bg-white border-2 border-[#004F32] shadow-md cursor-grab active:cursor-grabbing focus:outline-none focus:ring-2 focus:ring-[#004F32]/40 hover:scale-110 transition-transform z-10"
+          style={{ left: `${highPct}%` }}
+          role="slider"
+          aria-valuenow={high}
+          aria-valuemin={low + step}
+          aria-valuemax={max}
+          aria-label="Maximum price"
+          onKeyDown={(e) => {
+            if (e.key === "ArrowLeft") onChange([low, clamp(high - step, low + step, max)]);
+            if (e.key === "ArrowRight") onChange([low, clamp(high + step, low + step, max)]);
+          }}
+        />
+      </div>
+
+      {/* Track min/max labels */}
+      <div className="flex justify-between text-[10px] text-muted-foreground mt-3 px-1">
+        <span>৳{min}</span>
+        <span>৳{max.toLocaleString()}</span>
+      </div>
     </div>
   );
 }
@@ -288,6 +464,34 @@ function BooksCatalogContent() {
   const sort = searchParams.get("sort") || "default";
   const currentPage = Math.max(1, Number(searchParams.get("page")) || 1);
 
+  // ── Price slider local state (synced from URL) ────────────────────────────
+  const sliderLow = minPrice ? Math.max(PRICE_MIN, Number(minPrice)) : PRICE_MIN;
+  const sliderHigh = maxPrice ? Math.min(PRICE_MAX, Number(maxPrice)) : PRICE_MAX;
+  const [sliderValue, setSliderValue] = useState<[number, number]>([sliderLow, sliderHigh]);
+
+  // Debounce slider → URL update
+  const sliderDebounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleSliderChange = (val: [number, number]) => {
+    setSliderValue(val);
+    if (sliderDebounceRef.current) clearTimeout(sliderDebounceRef.current);
+    sliderDebounceRef.current = setTimeout(() => {
+      const updates: Record<string, string | null> = {};
+      updates.minPrice = val[0] > PRICE_MIN ? String(val[0]) : null;
+      updates.maxPrice = val[1] < PRICE_MAX ? String(val[1]) : null;
+      navigate(updates);
+    }, 300);
+  };
+
+  // Sync slider when URL params change externally (e.g. clear all)
+  React.useEffect(() => {
+    setSliderValue([
+      minPrice ? Math.max(PRICE_MIN, Number(minPrice)) : PRICE_MIN,
+      maxPrice ? Math.min(PRICE_MAX, Number(maxPrice)) : PRICE_MAX,
+    ]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [minPrice, maxPrice]);
+
   // ── Compute active filter count ──────────────────────────────────────────
   const activeFilterCount =
     selectedCategories.length +
@@ -319,7 +523,7 @@ function BooksCatalogContent() {
     [router, pathname, searchParams]
   );
 
-  // ── Toggle helpers ────────────────────────────────────────────────────────
+  // ── Toggle helpers (multi-select for category / author / publisher) ───────
   const toggleCategory = (v: string) => {
     const next = selectedCategories.includes(v)
       ? selectedCategories.filter((c) => c !== v)
@@ -344,6 +548,7 @@ function BooksCatalogContent() {
   const setType = (t: BookType | "ALL") => navigate({ type: t === "ALL" ? null : t });
 
   const resetFilters = () => {
+    setSliderValue([PRICE_MIN, PRICE_MAX]);
     startTransition(() => {
       router.push(pathname, { scroll: false });
     });
@@ -362,12 +567,18 @@ function BooksCatalogContent() {
   };
 
   // ── API query params ─────────────────────────────────────────────────────
-  const sortBy = sort === "price_asc" || sort === "price_desc" ? "sellPrice" : sort === "title_asc" ? "title" : undefined;
+  const sortBy =
+    sort === "price_asc" || sort === "price_desc"
+      ? "sellPrice"
+      : sort === "title_asc"
+      ? "title"
+      : undefined;
   const sortOrder = sort === "price_asc" || sort === "title_asc" ? "asc" : "desc";
 
   const queryParams = useMemo(
     () => ({
       searchTerm: searchTerm || undefined,
+      // Send multi-value arrays — the service joins them as comma-separated strings for the API
       categories: selectedCategories.length > 0 ? selectedCategories : undefined,
       authors: selectedAuthors.length > 0 ? selectedAuthors : undefined,
       publishers: selectedPublishers.length > 0 ? selectedPublishers : undefined,
@@ -379,6 +590,7 @@ function BooksCatalogContent() {
       sortBy,
       sortOrder: sortOrder as "asc" | "desc",
     }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [searchTerm, selectedCategories, selectedAuthors, selectedPublishers, selectedType, minPrice, maxPrice, currentPage, sortBy, sortOrder]
   );
 
@@ -432,6 +644,23 @@ function BooksCatalogContent() {
         )}
       </div>
 
+      {/* Sort by — always at the top of the filter bar */}
+      <div className="px-4 py-3 border-b border-border/60 bg-muted/10">
+        <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+          Sort By
+        </label>
+        <select
+          value={sort}
+          onChange={(e) => navigate({ sort: e.target.value })}
+          className="w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-xs focus:ring-1 focus:ring-primary focus:outline-none"
+        >
+          <option value="default">Default</option>
+          <option value="title_asc">Title: A–Z</option>
+          <option value="price_asc">Price: Low → High</option>
+          <option value="price_desc">Price: High → Low</option>
+        </select>
+      </div>
+
       <div className="px-4 divide-y divide-border/50">
         {/* Search */}
         <FilterSection title="Search" defaultOpen={true}>
@@ -483,7 +712,7 @@ function BooksCatalogContent() {
           </div>
         </FilterSection>
 
-        {/* Category */}
+        {/* Category — multi-select */}
         <FilterSection title="Category" defaultOpen={true} count={selectedCategories.length}>
           <CheckboxList
             items={liveCategories}
@@ -494,7 +723,7 @@ function BooksCatalogContent() {
           />
         </FilterSection>
 
-        {/* Author */}
+        {/* Author — multi-select */}
         <FilterSection title="Author" defaultOpen={false} count={selectedAuthors.length}>
           <CheckboxList
             items={liveAuthors}
@@ -505,7 +734,7 @@ function BooksCatalogContent() {
           />
         </FilterSection>
 
-        {/* Publisher */}
+        {/* Publisher — multi-select */}
         <FilterSection title="Publisher" defaultOpen={false} count={selectedPublishers.length}>
           <CheckboxList
             items={livePublishers}
@@ -516,37 +745,68 @@ function BooksCatalogContent() {
           />
         </FilterSection>
 
-        {/* Price Range */}
+        {/* Price Range — dual-handle slider */}
         <FilterSection
           title="Price Range (৳)"
           defaultOpen={false}
           count={(minPrice ? 1 : 0) + (maxPrice ? 1 : 0)}
         >
-          <div className="flex items-center gap-2">
+          <DualRangeSlider
+            min={PRICE_MIN}
+            max={PRICE_MAX}
+            value={sliderValue}
+            onChange={handleSliderChange}
+            step={PRICE_STEP}
+          />
+          {/* Quick manual inputs below the slider */}
+          <div className="flex items-center gap-2 mt-3">
             <div className="flex-1">
-              <label className="text-[10px] text-muted-foreground mb-1 block">Min</label>
+              <label className="text-[10px] text-muted-foreground mb-1 block">Min ৳</label>
               <input
                 type="number"
-                value={minPrice}
-                onChange={(e) => navigate({ minPrice: e.target.value || null })}
-                placeholder="0"
-                min={0}
+                value={sliderValue[0] === PRICE_MIN ? "" : sliderValue[0]}
+                onChange={(e) => {
+                  const v = e.target.value === "" ? PRICE_MIN : Number(e.target.value);
+                  const clamped = Math.max(PRICE_MIN, Math.min(v, sliderValue[1] - PRICE_STEP));
+                  handleSliderChange([clamped, sliderValue[1]]);
+                }}
+                placeholder={`${PRICE_MIN}`}
+                min={PRICE_MIN}
+                max={sliderValue[1] - PRICE_STEP}
                 className="w-full rounded-lg border border-input bg-background px-2 py-1.5 text-xs focus:ring-1 focus:ring-primary focus:outline-none"
               />
             </div>
             <span className="text-muted-foreground text-xs mt-4">–</span>
             <div className="flex-1">
-              <label className="text-[10px] text-muted-foreground mb-1 block">Max</label>
+              <label className="text-[10px] text-muted-foreground mb-1 block">Max ৳</label>
               <input
                 type="number"
-                value={maxPrice}
-                onChange={(e) => navigate({ maxPrice: e.target.value || null })}
-                placeholder="∞"
-                min={0}
+                value={sliderValue[1] === PRICE_MAX ? "" : sliderValue[1]}
+                onChange={(e) => {
+                  const v = e.target.value === "" ? PRICE_MAX : Number(e.target.value);
+                  const clamped = Math.min(PRICE_MAX, Math.max(v, sliderValue[0] + PRICE_STEP));
+                  handleSliderChange([sliderValue[0], clamped]);
+                }}
+                placeholder={`${PRICE_MAX}`}
+                min={sliderValue[0] + PRICE_STEP}
+                max={PRICE_MAX}
                 className="w-full rounded-lg border border-input bg-background px-2 py-1.5 text-xs focus:ring-1 focus:ring-primary focus:outline-none"
               />
             </div>
           </div>
+          {/* Reset price */}
+          {(minPrice || maxPrice) && (
+            <button
+              type="button"
+              onClick={() => {
+                setSliderValue([PRICE_MIN, PRICE_MAX]);
+                navigate({ minPrice: null, maxPrice: null });
+              }}
+              className="mt-2 text-[11px] text-muted-foreground hover:text-destructive flex items-center gap-1"
+            >
+              <X className="h-2.5 w-2.5" /> Reset price
+            </button>
+          )}
         </FilterSection>
       </div>
     </div>
@@ -571,30 +831,20 @@ function BooksCatalogContent() {
       </div>
 
       {/* Mobile: filter toggle */}
-      <div className="flex items-center justify-between mb-4 lg:hidden">
+      <div className="flex items-center mb-4 lg:hidden">
         <button
           type="button"
           onClick={() => setMobileFiltersOpen((v) => !v)}
           className="inline-flex items-center gap-2 rounded-lg border border-input bg-card px-3 py-2 text-xs font-semibold text-foreground shadow-sm"
         >
           <SlidersHorizontal className="h-3.5 w-3.5" />
-          Filters
+          Filters &amp; Sort
           {activeFilterCount > 0 && (
             <span className="rounded-full bg-[#004F32] text-white text-[10px] font-bold px-1.5 py-0.5">
               {activeFilterCount}
             </span>
           )}
         </button>
-        <select
-          value={sort}
-          onChange={(e) => navigate({ sort: e.target.value })}
-          className="rounded-lg border border-input bg-background px-2 py-2 text-xs focus:ring-1 focus:ring-primary focus:outline-none"
-        >
-          <option value="default">Sort: Default</option>
-          <option value="title_asc">Sort: A–Z</option>
-          <option value="price_asc">Price: Low → High</option>
-          <option value="price_desc">Price: High → Low</option>
-        </select>
       </div>
 
       {/* Mobile filter drawer */}
@@ -637,19 +887,6 @@ function BooksCatalogContent() {
                   </span>
                 )}
               </h2>
-              {/* Desktop sort */}
-              <div className="hidden lg:block">
-                <select
-                  value={sort}
-                  onChange={(e) => navigate({ sort: e.target.value })}
-                  className="rounded-lg border border-input bg-background px-3 py-1.5 text-xs focus:ring-1 focus:ring-primary focus:outline-none"
-                >
-                  <option value="default">Sort: Default</option>
-                  <option value="title_asc">Sort: A–Z</option>
-                  <option value="price_asc">Price: Low → High</option>
-                  <option value="price_desc">Price: High → Low</option>
-                </select>
-              </div>
             </div>
 
             {/* Active filter badges */}
@@ -694,13 +931,19 @@ function BooksCatalogContent() {
                 {minPrice && (
                   <FilterBadge
                     label={`Min ৳${minPrice}`}
-                    onRemove={() => navigate({ minPrice: null })}
+                    onRemove={() => {
+                      setSliderValue([PRICE_MIN, sliderValue[1]]);
+                      navigate({ minPrice: null });
+                    }}
                   />
                 )}
                 {maxPrice && (
                   <FilterBadge
                     label={`Max ৳${maxPrice}`}
-                    onRemove={() => navigate({ maxPrice: null })}
+                    onRemove={() => {
+                      setSliderValue([sliderValue[0], PRICE_MAX]);
+                      navigate({ maxPrice: null });
+                    }}
                   />
                 )}
                 <button

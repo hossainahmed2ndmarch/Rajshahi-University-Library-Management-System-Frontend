@@ -132,7 +132,13 @@ export const useUploadBookImages = () => {
 };
 
 export const useGetBookCategories = () => {
-  return useQuery<{ category: string; count: number }[]>({
+  return useQuery<
+    {
+      category: string;
+      count: number;
+      books?: { id: string | number; title: string; coverImage?: string; author: string }[];
+    }[]
+  >({
     queryKey: ["book-categories"],
     queryFn: () => BookService.getCategories(),
     staleTime: 5 * 60 * 1000,

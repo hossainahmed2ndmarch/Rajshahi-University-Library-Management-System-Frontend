@@ -235,8 +235,21 @@ export const BookService = {
     return true;
   },
 
-  getCategories: async (): Promise<{ category: string; count: number }[]> => {
-    const response = await axiosInstance.get<{ success: boolean; data: { category: string; count: number }[] }>("/books/categories");
+  getCategories: async (): Promise<
+    {
+      category: string;
+      count: number;
+      books?: { id: string | number; title: string; coverImage?: string; author: string }[];
+    }[]
+  > => {
+    const response = await axiosInstance.get<{
+      success: boolean;
+      data: {
+        category: string;
+        count: number;
+        books?: { id: string | number; title: string; coverImage?: string; author: string }[];
+      }[];
+    }>("/books/categories");
     return response.data?.data ?? [];
   },
 

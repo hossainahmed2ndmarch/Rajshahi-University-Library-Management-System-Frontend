@@ -33,7 +33,7 @@ export function BooksManagementTable({
   allowDelete = false,
 }: BooksManagementTableProps) {
   // ── Data & Mutations ──────────────────────────────────────────────────────
-  const { data, isLoading } = useGetBooks();
+  const { data, isLoading } = useGetBooks({ limit: 1000 });
   const { data: bookOptions } = useGetBookOptions();
   const { mutate: createBook, isPending: isCreating } = useCreateBook();
   const { mutate: updateBook, isPending: isUpdating } = useUpdateBook();

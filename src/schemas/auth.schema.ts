@@ -8,17 +8,23 @@ export const loginSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
-export const registerSchema = z.object({
-  name: z.string().min(2, "Full name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().min(10, "Valid phone number required"),
-  studentOrVoterId: z.string().min(3, "Student Registration ID or Voter ID required"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  department: z.string().optional(),
-  session: z.string().optional(),
-  institution: z.string().optional(),
-  paymentMethod: z.enum(["CASH", "ONLINE"]),
-});
+export const registerSchema = z
+  .object({
+    name: z.string().min(2, "Full name must be at least 2 characters"),
+    email: z.string().email("Invalid email address"),
+    phone: z.string().min(10, "Valid phone number required"),
+    studentOrVoterId: z.string().min(3, "Student Registration ID or Voter ID required"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string().min(6, "Please confirm your password"),
+    department: z.string().optional(),
+    session: z.string().optional(),
+    institution: z.string().optional(),
+    paymentMethod: z.enum(["CASH", "ONLINE"]),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 export const changePasswordSchema = z
   .object({

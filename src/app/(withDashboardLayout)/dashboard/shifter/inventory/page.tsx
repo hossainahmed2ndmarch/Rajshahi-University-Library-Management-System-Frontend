@@ -21,19 +21,9 @@ const TYPE_CONFIG: Record<BookType, { label: string; className: string }> = {
   HYBRID: { label: "Hybrid", className: "bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300" },
 };
 
-const SEED_BOOKS: IBook[] = [
-  { id: "1", title: "Tafsir Ibn Kathir (Vol 1)", author: "Hafiz Ibn Kathir", category: "Tafsir", type: "BORROW_ONLY", isbn: "978-1591440130", locationCell: "A-01-T", borrowStock: 4, availableQuantity: 2 },
-  { id: "2", title: "Ar-Raheeq Al-Makhtum", author: "Safiur Rahman Mubarakpuri", category: "Seerah", type: "HYBRID", isbn: "978-9960899558", locationCell: "B-03-S", sellPrice: 650, borrowStock: 2, sellStock: 5, availableQuantity: 2 },
-  { id: "3", title: "Sahih Al-Bukhari (Arabic-Bengali)", author: "Imam Al-Bukhari", category: "Hadith", type: "BORROW_ONLY", isbn: "978-9842025601", locationCell: "A-02-H", borrowStock: 3, availableQuantity: 1 },
-  { id: "4", title: "Riyad as-Salihin", author: "Imam An-Nawawi", category: "Hadith", type: "HYBRID", isbn: "978-9960740348", locationCell: "A-02-H", borrowStock: 5, availableQuantity: 3 },
-  { id: "5", title: "Purification of the Soul", author: "Ibn al-Qayyim", category: "Spirituality", type: "SELL_ONLY", isbn: "978-1898649687", locationCell: "C-01-SP", sellPrice: 320, sellStock: 8 },
-  { id: "6", title: "Principles of Islamic Jurisprudence", author: "Mohammad Hashim Kamali", category: "Fiqh", type: "BORROW_ONLY", isbn: "978-0946621339", locationCell: "B-01-F", borrowStock: 2, availableQuantity: 1 },
-  { id: "7", title: "Fortress of the Muslim", author: "Said bin Wahf Al-Qahtani", category: "Spirituality", type: "HYBRID", isbn: "978-9960741055", locationCell: "C-02-SP", sellPrice: 150, borrowStock: 6, sellStock: 12, availableQuantity: 4 },
-];
-
 export default function ShifterInventoryPage() {
-  const { data: bookData } = useGetBooks();
-  const books: IBook[] = bookData?.data && bookData.data.length > 0 ? bookData.data : SEED_BOOKS;
+  const { data: bookData } = useGetBooks({ limit: 1000 });
+  const books: IBook[] = bookData?.data || [];
 
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<BookType | "ALL">("ALL");

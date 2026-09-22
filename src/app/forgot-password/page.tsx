@@ -2,12 +2,22 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { BookOpen, Mail, ArrowRight, ArrowLeft, CheckCircle2 } from "lucide-react";
+import {
+  BookOpen,
+  Mail,
+  ArrowRight,
+  ArrowLeft,
+  CheckCircle2,
+} from "lucide-react";
 import { RUForm, RUInput } from "@/components/forms";
 import { AuthService } from "@/services/auth.service";
 import { forgotPasswordSchema, type ForgotPasswordFormValues } from "@/schemas";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/errorUtils";
+import Image from "next/image";
+import logo from "../../assets/logo/Version 3- Multi transparent.png";
+import logoDark from "../../assets/logo/white-version.png";
+import { useLanguageStore } from "@/store/useLanguageStore";
 
 export default function ForgotPasswordPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -27,6 +37,9 @@ export default function ForgotPasswordPage() {
       setIsLoading(false);
     }
   };
+  const { t } = useLanguageStore();
+  const logoTitle = t("nav.logoTitle");
+  const logoSubTitle = t("nav.logoSubTitle");
 
   return (
     <div className="min-h-screen flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 bg-background transition-colors relative overflow-hidden">
@@ -35,15 +48,26 @@ export default function ForgotPasswordPage() {
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-3 z-10">
         <Link href="/" className="inline-flex items-center space-x-3 group">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#004F32] text-white shadow-lg group-hover:scale-105 transition-transform">
-            <BookOpen className="h-7 w-7 text-amber-400" />
+          <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl">
+            <Image
+              src={logo}
+              alt="RUIL Logo"
+              priority
+              className="h-11 w-11 object-contain dark:hidden"
+            />
+            <Image
+              src={logoDark}
+              alt="RUIL Logo"
+              priority
+              className="hidden h-11 w-11 object-contain dark:block"
+            />
           </div>
           <div className="text-left">
             <span className="text-xl font-extrabold tracking-tight text-foreground block">
-              RU Islamic Library
+              {logoTitle}
             </span>
             <span className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400 tracking-wider uppercase block">
-              Rajshahi University
+              {logoSubTitle}
             </span>
           </div>
         </Link>
@@ -51,7 +75,8 @@ export default function ForgotPasswordPage() {
           Forgot Your Password?
         </h2>
         <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-          Enter your registered email address and we'll send you a password reset link.
+          Enter your registered email address and we'll send you a password
+          reset link.
         </p>
       </div>
 
@@ -64,9 +89,16 @@ export default function ForgotPasswordPage() {
                   <CheckCircle2 className="h-8 w-8" />
                 </div>
               </div>
-              <h3 className="text-lg font-bold text-foreground">Check your inbox</h3>
+              <h3 className="text-lg font-bold text-foreground">
+                Check your inbox
+              </h3>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                If an account exists for <span className="font-semibold text-foreground">{submittedEmail}</span>, we have sent a secure link to reset your password. It will expire in 5 minutes.
+                If an account exists for{" "}
+                <span className="font-semibold text-foreground">
+                  {submittedEmail}
+                </span>
+                , we have sent a secure link to reset your password. It will
+                expire in 5 minutes.
               </p>
               <div className="pt-4">
                 <Link
@@ -78,7 +110,11 @@ export default function ForgotPasswordPage() {
               </div>
             </div>
           ) : (
-            <RUForm schema={forgotPasswordSchema} onSubmit={handleSubmit} defaultValues={{ email: "" }}>
+            <RUForm
+              schema={forgotPasswordSchema}
+              onSubmit={handleSubmit}
+              defaultValues={{ email: "" }}
+            >
               <div className="space-y-4">
                 <RUInput
                   name="email"
@@ -94,7 +130,9 @@ export default function ForgotPasswordPage() {
                   disabled={isLoading}
                   className="w-full flex items-center justify-center space-x-2 rounded-xl bg-[#004F32] hover:bg-emerald-900 py-3 px-4 text-xs font-bold text-white shadow-md focus:ring-2 focus:ring-emerald-400 disabled:opacity-50 transition-all cursor-pointer"
                 >
-                  <span>{isLoading ? "Sending Link..." : "Send Reset Link"}</span>
+                  <span>
+                    {isLoading ? "Sending Link..." : "Send Reset Link"}
+                  </span>
                   <ArrowRight className="h-4 w-4 ml-1" />
                 </button>
 

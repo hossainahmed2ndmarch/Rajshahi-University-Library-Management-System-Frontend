@@ -2,13 +2,23 @@
 
 import React, { Suspense, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { BookOpen, Lock, ArrowRight, ArrowLeft, CheckCircle2, AlertTriangle } from "lucide-react";
+import {
+  Lock,
+  ArrowRight,
+  ArrowLeft,
+  CheckCircle2,
+  AlertTriangle,
+} from "lucide-react";
 import { RUForm, RUInput } from "@/components/forms";
 import { AuthService } from "@/services/auth.service";
 import { resetPasswordSchema, type ResetPasswordFormValues } from "@/schemas";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/errorUtils";
+import logo from "../../assets/logo/Version 3- Multi transparent.png";
+import logoDark from "../../assets/logo/white-version.png";
+import { useLanguageStore } from "@/store/useLanguageStore";
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -27,9 +37,12 @@ function ResetPasswordForm() {
             <AlertTriangle className="h-8 w-8" />
           </div>
         </div>
-        <h3 className="text-lg font-bold text-foreground">Invalid Reset Link</h3>
+        <h3 className="text-lg font-bold text-foreground">
+          Invalid Reset Link
+        </h3>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          The password reset token is missing or malformed. Please request a new link.
+          The password reset token is missing or malformed. Please request a new
+          link.
         </p>
         <div className="pt-4">
           <Link
@@ -51,7 +64,7 @@ function ResetPasswordForm() {
           id: Number(id),
           newPassword: values.newPassword,
         },
-        token
+        token,
       );
       setIsSuccess(true);
       toast.success(res.message || "Password has been reset successfully!");
@@ -73,9 +86,12 @@ function ResetPasswordForm() {
             <CheckCircle2 className="h-8 w-8" />
           </div>
         </div>
-        <h3 className="text-lg font-bold text-foreground">Password Reset Successful!</h3>
+        <h3 className="text-lg font-bold text-foreground">
+          Password Reset Successful!
+        </h3>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          Your account password has been updated. You will be redirected to the sign-in page shortly.
+          Your account password has been updated. You will be redirected to the
+          sign-in page shortly.
         </p>
         <div className="pt-4">
           <Link
@@ -137,6 +153,10 @@ function ResetPasswordForm() {
 }
 
 export default function ResetPasswordPage() {
+  const { t } = useLanguageStore();
+  const logoTitle = t("nav.logoTitle");
+  const logoSubTitle = t("nav.logoSubTitle");
+
   return (
     <div className="min-h-screen flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 bg-background transition-colors relative overflow-hidden">
       <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-[#004F32]/15 blur-3xl pointer-events-none" />
@@ -144,15 +164,26 @@ export default function ResetPasswordPage() {
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-3 z-10">
         <Link href="/" className="inline-flex items-center space-x-3 group">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#004F32] text-white shadow-lg group-hover:scale-105 transition-transform">
-            <BookOpen className="h-7 w-7 text-amber-400" />
+          <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl">
+            <Image
+              src={logo}
+              alt="RUIL Logo"
+              priority
+              className="h-11 w-11 object-contain dark:hidden"
+            />
+            <Image
+              src={logoDark}
+              alt="RUIL Logo"
+              priority
+              className="hidden h-11 w-11 object-contain dark:block"
+            />
           </div>
           <div className="text-left">
             <span className="text-xl font-extrabold tracking-tight text-foreground block">
-              RU Islamic Library
+              {logoTitle}
             </span>
             <span className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400 tracking-wider uppercase block">
-              Rajshahi University
+              {logoSubTitle}
             </span>
           </div>
         </Link>
@@ -166,7 +197,13 @@ export default function ResetPasswordPage() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md z-10">
         <div className="bg-card py-8 px-6 shadow-xl border border-border/70 rounded-3xl sm:px-10">
-          <Suspense fallback={<div className="text-center text-xs py-4">Loading secure portal...</div>}>
+          <Suspense
+            fallback={
+              <div className="text-center text-xs py-4">
+                Loading secure portal...
+              </div>
+            }
+          >
             <ResetPasswordForm />
           </Suspense>
         </div>

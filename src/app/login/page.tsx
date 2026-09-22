@@ -18,11 +18,15 @@ import { useLogin } from "@/hooks/useAuth";
 import { loginSchema, type LoginFormValues } from "@/schemas";
 import logo from "../../assets/logo/Version 3- Multi transparent.png";
 import logoDark from "../../assets/logo/white-version.png";
+import { useLanguageStore } from "@/store/useLanguageStore";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectPath = searchParams.get("redirect");
+  const { t } = useLanguageStore();
+  const logoTitle = t("nav.logoTitle");
+  const logoSubTitle = t("nav.logoSubTitle");
 
   const { mutate: loginUser, isPending } = useLogin();
 
@@ -81,26 +85,26 @@ function LoginForm() {
               href="/"
               className="inline-flex items-center gap-3 group"
             >
-              <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#004F32] to-[#003824] shadow-lg shadow-[#004F32]/30 group-hover:shadow-[#004F32]/50 transition-shadow">
+              <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl">
                 <Image
                   src={logo}
                   alt="RUIL Logo"
                   priority
-                  className="h-9 w-9 object-contain dark:hidden"
+                  className="h-11 w-11 object-contain dark:hidden"
                 />
                 <Image
                   src={logoDark}
                   alt="RUIL Logo"
                   priority
-                  className="hidden h-9 w-9 object-contain dark:block"
+                  className="hidden h-11 w-11 object-contain dark:block"
                 />
               </div>
               <div className="text-left">
                 <span className="text-lg font-black tracking-tight text-[#004F32] dark:text-emerald-400 block leading-tight">
-                  রাবি ইসলামিক পাঠাগার
+                  {logoTitle}
                 </span>
                 <span className="text-[11px] font-bold text-[#C78700] dark:text-amber-400 tracking-widest uppercase block">
-                  Rajshahi University
+                  {logoSubTitle}
                 </span>
               </div>
             </Link>

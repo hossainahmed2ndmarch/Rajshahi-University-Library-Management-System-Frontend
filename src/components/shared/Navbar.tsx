@@ -48,6 +48,7 @@ export function Navbar() {
   const navLinks = [
     { label: t("nav.home"), href: "/" },
     { label: t("nav.books"), href: "/books" },
+    { label: t("nav.events"), href: "/events" },
     ...(!user ? [{ label: t("nav.trackOrder"), href: "/track-order" }] : []),
     { label: t("nav.about"), href: "/about" },
     { label: t("nav.contact"), href: "/contact" },

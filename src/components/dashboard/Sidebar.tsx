@@ -25,6 +25,8 @@ import {
   MoreHorizontal,
   X,
   Globe,
+  Layers,
+  CalendarDays,
 } from "lucide-react";
 import { useGetMe, useLogout } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
@@ -144,6 +146,30 @@ export const NAV_TRANSLATIONS: Record<string, NavItemConfig> = {
     href: "/dashboard/super-admin/publications",
     icon: Newspaper,
     label: { en: "Publications", bn: "প্রকাশনা", ar: "المنشورات" },
+  },
+  activities: {
+    key: "activities",
+    href: "/dashboard/admin/activities",
+    icon: Layers,
+    label: { en: "Activities", bn: "কার্যক্রম", ar: "الأنشطة" },
+  },
+  superActivities: {
+    key: "superActivities",
+    href: "/dashboard/super-admin/activities",
+    icon: Layers,
+    label: { en: "Activities", bn: "কার্যক্রম", ar: "الأنشطة" },
+  },
+  events: {
+    key: "events",
+    href: "/dashboard/admin/events",
+    icon: CalendarDays,
+    label: { en: "Events", bn: "ইভেন্টস", ar: "الفعاليات" },
+  },
+  superEvents: {
+    key: "superEvents",
+    href: "/dashboard/super-admin/events",
+    icon: CalendarDays,
+    label: { en: "Events", bn: "ইভেন্টস", ar: "الفعاليات" },
   },
   userRoles: {
     key: "userRoles",
@@ -285,6 +311,8 @@ const ROLE_NAV_KEYS: Record<UserRole, string[]> = {
     "donations",
     "members",
     "superPublications",
+    "superActivities",
+    "superEvents",
     "userRoles",
     "purchases",
     "superShiftLogs",
@@ -303,6 +331,8 @@ const ROLE_NAV_KEYS: Record<UserRole, string[]> = {
     "donations",
     "members",
     "publications",
+    "activities",
+    "events",
     "purchases",
     "shiftLogs",
     "shifterSchedules",

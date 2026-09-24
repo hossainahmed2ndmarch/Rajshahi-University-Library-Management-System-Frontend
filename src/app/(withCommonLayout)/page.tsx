@@ -11,6 +11,8 @@ import { Testimonials } from "@/components/home/Testimonials";
 import { LiveMapAndScheduleSection } from "@/components/home/LiveMapAndScheduleSection";
 import { ServicesGrid } from "@/components/home/ServicesGrid";
 import { DonationBanner } from "@/components/shared/DonationBanner";
+import { EventsSection } from "@/components/home/EventsSection";
+import { ActivitiesSection } from "@/components/home/ActivitiesSection";
 
 export default function HomePage() {
   return (
@@ -38,10 +40,16 @@ export default function HomePage() {
         {/* 7. Live Desk Operations, Duty Shifter Schedule & Campus Location */}
         <LiveMapAndScheduleSection />
 
-        {/* 8. Sadaqah Jariyah & Book Endowment Portal */}
+        {/* 8. Events & Seminars Showcase */}
+        <EventsSection />
+
+        {/* 9. Core Ongoing Activities & Study Circles */}
+        <ActivitiesSection />
+
+        {/* 10. Sadaqah Jariyah & Book Endowment Portal */}
         <DonationBanner />
 
-        {/* 9. Academic & Institutional Library Services */}
+        {/* 11. Academic & Institutional Library Services */}
         <ServicesGrid />
       </div>
     </div>

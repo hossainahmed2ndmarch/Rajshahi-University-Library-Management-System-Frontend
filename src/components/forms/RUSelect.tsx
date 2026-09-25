@@ -50,7 +50,7 @@ export function RUSelect({
             </label>
           )}
 
-          <div className="relative flex items-center">
+          <div className="relative flex items-center group">
             <select
               {...field}
               {...props}
@@ -59,8 +59,8 @@ export function RUSelect({
               onChange={(e) => field.onChange(e.target.value)}
               disabled={disabled}
               className={cn(
-                "flex h-10 w-full appearance-none rounded-md border border-input bg-background px-3 py-2 pr-8 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50 transition-colors",
-                error && "border-destructive focus-visible:ring-destructive",
+                "flex h-11 w-full appearance-none rounded-xl border border-border/80 bg-background/90 px-3.5 py-2.5 pr-10 text-xs sm:text-sm font-medium shadow-xs transition-all cursor-pointer placeholder:text-muted-foreground hover:border-emerald-600/50 hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600/30 focus-visible:border-emerald-600 dark:bg-card/60 dark:hover:bg-card dark:border-emerald-900/40 disabled:cursor-not-allowed disabled:opacity-50",
+                error && "border-destructive focus-visible:ring-destructive focus-visible:border-destructive",
                 className
               )}
             >
@@ -77,7 +77,7 @@ export function RUSelect({
               {children}
             </select>
 
-            <ChevronDown className="absolute right-3 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
+            <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70 pointer-events-none transition-colors group-hover:text-foreground" />
           </div>
 
           {description && !error && (

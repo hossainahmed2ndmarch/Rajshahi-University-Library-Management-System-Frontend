@@ -167,12 +167,12 @@ export function SearchableSelect({
         onClick={() => (open ? closeDropdown() : openDropdown())}
         onKeyDown={handleKeyDown}
         className={[
-          "flex w-full items-center gap-2 rounded-xl border border-input bg-background",
-          "px-3 py-2 text-xs text-left transition-colors",
-          "focus:outline-none focus:ring-2 focus:ring-primary",
-          open ? "ring-2 ring-primary" : "",
-          disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-accent/40",
-          icon ? "pl-9" : "pl-3",
+          "flex w-full items-center gap-2 rounded-xl border border-border/80 bg-background/90 shadow-xs",
+          "px-3.5 py-2.5 text-xs sm:text-sm text-left transition-all",
+          "hover:border-emerald-600/50 hover:bg-background focus:outline-none focus:ring-2 focus:ring-emerald-600/30 focus:border-emerald-600 dark:bg-card/60 dark:hover:bg-card dark:border-emerald-900/40",
+          open ? "ring-2 ring-emerald-600/30 border-emerald-600 shadow-sm" : "",
+          disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
+          icon ? "pl-9" : "pl-3.5",
         ]
           .filter(Boolean)
           .join(" ")}

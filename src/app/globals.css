@@ -111,6 +111,11 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    scrollbar-width: thin;
+    scrollbar-color: hsl(158 35% 70% / 0.5) transparent;
+  }
+  .dark * {
+    scrollbar-color: hsl(158 40% 28% / 0.6) transparent;
   }
   body {
     @apply bg-background text-foreground antialiased;
@@ -118,4 +123,61 @@
   html {
     @apply font-sans;
   }
+
+  /* Modern select styling */
+  select {
+    @apply rounded-xl transition-all duration-200;
+  }
+
+  select:not([class*='appearance-none']) {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23004F32' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+    padding-right: 2.25rem;
+    cursor: pointer;
+  }
+
+  .dark select:not([class*='appearance-none']) {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2334d399' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  }
+
+  select option {
+    background-color: var(--card);
+    color: var(--card-foreground);
+    padding: 8px 12px;
+  }
+}
+
+/* ─── Ultra-Modern Islamic Library Custom Webkit Scrollbar ────────────────── */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: hsl(158 30% 70% / 0.5);
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 0.2s ease-in-out;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(158 100% 15.5% / 0.7);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background-color: hsl(158 40% 28% / 0.6);
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(158 64% 52% / 0.75);
 }

@@ -27,8 +27,11 @@ import {
   Globe,
   Layers,
   CalendarDays,
+  Image as ImageIcon,
+  Palette,
 } from "lucide-react";
 import { useGetMe, useLogout } from "@/hooks/useAuth";
+import { useSiteAsset } from "@/hooks/useGallery";
 import { UserRole } from "@/types/auth";
 import logo from "@/assets/logo/white-version.png";
 
@@ -170,6 +173,30 @@ export const NAV_TRANSLATIONS: Record<string, NavItemConfig> = {
     href: "/dashboard/super-admin/events",
     icon: CalendarDays,
     label: { en: "Events", bn: "ইভেন্টস", ar: "الفعاليات" },
+  },
+  gallery: {
+    key: "gallery",
+    href: "/dashboard/admin/gallery",
+    icon: ImageIcon,
+    label: { en: "Gallery Archives", bn: "গ্যালারি আর্কাইভ", ar: "معرض الصور" },
+  },
+  superGallery: {
+    key: "superGallery",
+    href: "/dashboard/super-admin/gallery",
+    icon: ImageIcon,
+    label: { en: "Gallery Archives", bn: "গ্যালারি আর্কাইভ", ar: "معرض الصور" },
+  },
+  assets: {
+    key: "assets",
+    href: "/dashboard/admin/assets",
+    icon: Palette,
+    label: { en: "Site Assets", bn: "সাইট অ্যাসেটস", ar: "إدارة الوسائط" },
+  },
+  superAssets: {
+    key: "superAssets",
+    href: "/dashboard/super-admin/assets",
+    icon: Palette,
+    label: { en: "Site Assets", bn: "সাইট অ্যাসেটস", ar: "إدارة الوسائط" },
   },
   userRoles: {
     key: "userRoles",
@@ -313,6 +340,8 @@ const ROLE_NAV_KEYS: Record<UserRole, string[]> = {
     "superPublications",
     "superActivities",
     "superEvents",
+    "superGallery",
+    "superAssets",
     "userRoles",
     "purchases",
     "superShiftLogs",
@@ -333,6 +362,8 @@ const ROLE_NAV_KEYS: Record<UserRole, string[]> = {
     "publications",
     "activities",
     "events",
+    "gallery",
+    "assets",
     "purchases",
     "shiftLogs",
     "shifterSchedules",
@@ -375,6 +406,7 @@ export function Sidebar({
   const pathname = usePathname();
   const { data: user } = useGetMe();
   const { logout } = useLogout();
+  const { url: dynamicLogo } = useSiteAsset("ruil_logo_dark");
 
   const userRole: UserRole = user?.role || "MEMBER";
   const navKeys = ROLE_NAV_KEYS[userRole] || ROLE_NAV_KEYS.MEMBER;
@@ -392,12 +424,21 @@ export function Sidebar({
       <div className="flex h-16 items-center justify-between px-2 border-b border-emerald-900/60 shrink-0">
         <Link href="/" className="flex items-center space-x-2 shrink-0 group">
           <div className="flex h-11 w-11 items-center justify-center">
-            <Image
-              src={logo}
-              alt="RUIL Logo"
-              priority
-              className="h-10 w-10 object-contain"
-            />
+            {dynamicLogo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={dynamicLogo}
+                alt="RUIL Logo"
+                className="h-10 w-10 object-contain"
+              />
+            ) : (
+              <Image
+                src={logo}
+                alt="RUIL Logo"
+                priority
+                className="h-10 w-10 object-contain"
+              />
+            )}
           </div>
           {!collapsed && (
             <div className="truncate">

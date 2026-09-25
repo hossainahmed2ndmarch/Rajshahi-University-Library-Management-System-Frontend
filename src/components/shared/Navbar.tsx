@@ -23,6 +23,7 @@ import { useLanguageStore } from "@/store/useLanguageStore";
 import { useGetMe, useLogout } from "@/hooks/useAuth";
 import { useCartStore, useWishlistStore } from "@/store";
 import { getDefaultDashboardRoute } from "@/proxy";
+import { useSiteAsset } from "@/hooks/useGallery";
 import logo from "../../assets/logo/Version 3- Multi transparent.png";
 import logoDark from "../../assets/logo/white-version.png";
 
@@ -32,6 +33,9 @@ export function Navbar() {
   const { logout } = useLogout();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+
+  const { url: dynamicLogoLight } = useSiteAsset("ruil_logo");
+  const { url: dynamicLogoDark } = useSiteAsset("ruil_logo_dark");
 
   const cartItems = useCartStore((s) => s.items);
   const wishlistItems = useWishlistStore((s) => s.items);
@@ -70,19 +74,37 @@ export function Navbar() {
             >
               <div className="flex h-11 w-11 items-center justify-center">
                 {/* Light Mode Logo */}
-                <Image
-                  src={logo}
-                  alt="RUIL Logo"
-                  priority
-                  className="h-10 w-10 object-contain dark:hidden"
-                />
+                {dynamicLogoLight ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={dynamicLogoLight}
+                    alt="RUIL Logo"
+                    className="h-10 w-10 object-contain dark:hidden"
+                  />
+                ) : (
+                  <Image
+                    src={logo}
+                    alt="RUIL Logo"
+                    priority
+                    className="h-10 w-10 object-contain dark:hidden"
+                  />
+                )}
                 {/* Dark Mode Logo */}
-                <Image
-                  src={logoDark}
-                  alt="RUIL Logo"
-                  priority
-                  className="hidden h-10 w-10 object-contain dark:block"
-                />
+                {dynamicLogoDark || dynamicLogoLight ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={dynamicLogoDark || dynamicLogoLight}
+                    alt="RUIL Logo"
+                    className="hidden h-10 w-10 object-contain dark:block"
+                  />
+                ) : (
+                  <Image
+                    src={logoDark}
+                    alt="RUIL Logo"
+                    priority
+                    className="hidden h-10 w-10 object-contain dark:block"
+                  />
+                )}
               </div>
 
               <div className="hidden sm:block">

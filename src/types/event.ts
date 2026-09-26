@@ -48,6 +48,13 @@ export interface IEvent {
   startDate?: string | null;
   endDate?: string | null;
   currentChapter?: string | null;
+  books?: Array<{
+    id: number;
+    title: string;
+    author: string;
+    coverImage?: string | null;
+  }>;
+  bookIds?: number[];
   metadata?: Record<string, unknown> | null;
   isActive: boolean;
   sessions?: IEventSession[];
@@ -97,7 +104,7 @@ export interface IEventMemberRecord {
     sessionDate: string;
     chapter?: string | null;
   } | null;
-  userId: number;
+  userId?: number | null;
   user?: {
     id: number;
     name: string;
@@ -109,6 +116,7 @@ export interface IEventMemberRecord {
   sessionDate?: string | null;
   rating?: number | null;
   comment?: string | null;
+  submissionData?: Record<string, unknown> | null;
   isApproved: boolean;
   createdAt: string;
   updatedAt: string;

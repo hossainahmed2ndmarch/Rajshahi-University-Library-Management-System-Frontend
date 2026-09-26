@@ -10,10 +10,15 @@ import {
   Layers,
   MessageSquare,
   Check,
+  BookOpen,
+  Trash2,
 } from "lucide-react";
 import { IEvent, IActivity, EventStatus, Organization } from "@/types/event";
 import { EventService, ActivityService } from "@/services/event.service";
+import { BookService } from "@/services/book.service";
+import { IBook } from "@/types/book";
 import { CategoryCombobox } from "@/components/ui/CategoryCombobox";
+import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { FileUploadDropzone } from "@/components/ui/FileUploadDropzone";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -33,6 +38,13 @@ export function EventFormModal({
 }: EventFormModalProps) {
   const [activities, setActivities] = useState<IActivity[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
+  const [booksList, setBooksList] = useState<IBook[]>([]);
+  const [selectedBookIds, setSelectedBookIds] = useState<number[]>([]);
+  const [metadataState, setMetadataState] = useState({
+    campaignType: "NONE",
+    trainer: "",
+  });
+
   const [formData, setFormData] = useState({
     title: "",
     activityId: "" as string | number,
@@ -55,10 +67,12 @@ export function EventFormModal({
       Promise.all([
         ActivityService.getAllActivities({ limit: 100 }),
         EventService.getCategories(),
+        BookService.getAllBooks({ limit: 100 }),
       ])
-        .then(([actRes, cats]) => {
+        .then(([actRes, cats, booksRes]) => {
           setActivities(actRes.data);
           setCategories(cats);
+          setBooksList(booksRes.data || []);
         })
         .catch(() => {});
     }
@@ -67,6 +81,13 @@ export function EventFormModal({
   useEffect(() => {
     if (event) {
       const meta = (event.metadata as any) || {};
+      setSelectedBookIds(
+        event.books?.map((b) => b.id) || (event as any).bookIds || []
+      );
+      setMetadataState({
+        campaignType: meta.campaignType || "NONE",
+        trainer: meta.trainer || meta.speaker || "",
+      });
       setFormData({
         title: event.title || "",
         activityId: event.activityId || "",
@@ -85,6 +106,11 @@ export function EventFormModal({
         ),
       });
     } else {
+      setSelectedBookIds([]);
+      setMetadataState({
+        campaignType: "NONE",
+        trainer: "",
+      });
       setFormData({
         title: "",
         activityId: "",
@@ -125,11 +151,14 @@ export function EventFormModal({
         startDate: formData.startDate || null,
         endDate: formData.endDate || null,
         currentChapter: formData.currentChapter || undefined,
+        bookIds: selectedBookIds,
         isActive: formData.isActive,
         metadata: {
           ...existingMeta,
           allowOpenFeedback: formData.allowOpenFeedback,
           allowFeedbackWithoutAttendance: formData.allowOpenFeedback,
+          campaignType: metadataState.campaignType,
+          trainer: metadataState.trainer.trim() || undefined,
         },
       };
 
@@ -212,18 +241,34 @@ export function EventFormModal({
               <label className="block text-xs font-bold text-foreground mb-1">
                 কার্যক্রম নির্বাচন (Parent Activity)
               </label>
-              <select
-                value={formData.activityId}
-                onChange={(e) => setFormData({ ...formData, activityId: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-background border border-border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-xs"
-              >
-                <option value="">কোনো কার্যক্রমের আওতাধীন নয় (স্বাধীন ইভেন্ট)</option>
-                {activities.map((act) => (
-                  <option key={act.id} value={act.id}>
-                    {act.title} ({act.org})
-                  </option>
-                ))}
-              </select>
+              <SearchableSelect
+                value={
+                  formData.activityId
+                    ? (() => {
+                        const act = activities.find(
+                          (a) => String(a.id) === String(formData.activityId)
+                        );
+                        return act ? `${act.title} (${act.org})` : "";
+                      })()
+                    : ""
+                }
+                onChange={(val) => {
+                  if (!val) {
+                    setFormData({ ...formData, activityId: "" });
+                    return;
+                  }
+                  const found = activities.find(
+                    (a) => `${a.title} (${a.org})` === val
+                  );
+                  setFormData({
+                    ...formData,
+                    activityId: found ? found.id : "",
+                  });
+                }}
+                options={activities.map((a) => `${a.title} (${a.org})`)}
+                placeholder="কার্যক্রম নির্বাচন করুন (স্বাধীন হলে খালি রাখুন)"
+                listLabel="কার্যক্রমসমূহ"
+              />
             </div>
 
             {/* Org Segmented Pills */}
@@ -348,6 +393,87 @@ export function EventFormModal({
             </div>
           </div>
 
+          {/* Books Multi-Selector Section (Connected Books) */}
+          <div className="space-y-2 border border-border/80 rounded-2xl p-4 bg-muted/20">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <BookOpen className="h-4 w-4 text-emerald-600" />
+                <span>পাঠ্য বা সম্পর্কিত বইসমূহ (Connected Books)</span>
+              </label>
+              <span className="text-[11px] text-muted-foreground font-mono">
+                {selectedBookIds.length} টি বই নির্বাচিত
+              </span>
+            </div>
+
+            <p className="text-[11px] text-muted-foreground">
+              পাঠচক্র, পাঠ প্রতিযোগিতা বা বইমেলার জন্য সম্পর্কিত বইগুলো নির্বাচন করুন।
+            </p>
+
+            <SearchableSelect
+              value=""
+              onChange={(val) => {
+                if (!val) return;
+                const found = booksList.find((b) => `${b.title} — ${b.author}` === val);
+                if (found && !selectedBookIds.includes(Number(found.id))) {
+                  setSelectedBookIds([...selectedBookIds, Number(found.id)]);
+                }
+              }}
+              options={booksList
+                .filter((b) => !selectedBookIds.includes(Number(b.id)))
+                .map((b) => `${b.title} — ${b.author}`)}
+              placeholder="+ বই নির্বাচন করে তালিকায় যোগ করুন..."
+              listLabel="লাইব্রেরির বইসমূহ"
+            />
+
+            {/* Selected Books List */}
+            {selectedBookIds.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
+                {selectedBookIds.map((id) => {
+                  const book = booksList.find((b) => Number(b.id) === id);
+                  return (
+                    <div
+                      key={id}
+                      className="flex items-center justify-between p-2 rounded-xl bg-background border border-border text-xs gap-2 shadow-2xs"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        {book?.coverImage ? (
+                          <img
+                            src={book.coverImage}
+                            alt={book.title}
+                            className="h-8 w-6 rounded object-cover shrink-0"
+                          />
+                        ) : (
+                          <div className="h-8 w-6 rounded bg-emerald-600/10 text-emerald-600 flex items-center justify-center font-bold text-[9px] shrink-0">
+                            <BookOpen className="h-3 w-3" />
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <p className="font-bold text-foreground truncate">
+                            {book?.title || `বই #${id}`}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground truncate">
+                            {book?.author || "অজ্ঞাত লেখক"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedBookIds(selectedBookIds.filter((bId) => bId !== id))
+                        }
+                        className="p-1 rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-colors shrink-0 cursor-pointer"
+                        title="বই বাদ দিন"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           {/* Current Chapter or Book focus */}
           <div>
             <label className="block text-xs font-bold text-foreground mb-1">
@@ -360,6 +486,50 @@ export function EventFormModal({
               onChange={(e) => setFormData({ ...formData, currentChapter: e.target.value })}
               className="w-full px-3.5 py-2.5 bg-background border border-border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-xs"
             />
+          </div>
+
+          {/* Dynamic Metadata & Campaign Settings */}
+          <div className="space-y-3 border border-border/80 rounded-2xl p-4 bg-muted/20">
+            <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+              <Sparkles className="h-4 w-4 text-emerald-600" />
+              <span>ইভেন্ট মেটাডাটা ও ক্যাম্পেইন সেটিংস (Metadata Json)</span>
+            </label>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-bold text-muted-foreground mb-1">
+                  ক্যাম্পেইনের ধরণ (Campaign Type)
+                </label>
+                <select
+                  value={metadataState.campaignType}
+                  onChange={(e) =>
+                    setMetadataState({ ...metadataState, campaignType: e.target.value })
+                  }
+                  className="w-full px-3 py-2 bg-background border border-border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                  <option value="NONE">সাধারণ ইভেন্ট (No Campaign)</option>
+                  <option value="JUMMAH">জুমুআ ক্যাম্পেইন (Jummah Campaign)</option>
+                  <option value="ANTI_VALENTINE">অ্যান্টি-ভ্যালেন্টাইন ক্যাম্পেইন</option>
+                  <option value="READING">বইপাঠ ও পাঠ প্রতিক্রিয়া ক্যাম্পেইন</option>
+                  <option value="OTHER">অন্যান্য বিশেষ ক্যাম্পেইন</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-muted-foreground mb-1">
+                  প্রশিক্ষক / প্রধান আলোচক (Trainer / Speaker)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., শাইখ ড. মুহাম্মদ সাইফুল্লাহ"
+                  value={metadataState.trainer}
+                  onChange={(e) =>
+                    setMetadataState({ ...metadataState, trainer: e.target.value })
+                  }
+                  className="w-full px-3 py-2 bg-background border border-border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Direct Banner Image Upload */}

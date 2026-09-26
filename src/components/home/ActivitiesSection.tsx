@@ -13,10 +13,14 @@ export function ActivitiesSection() {
 
   useEffect(() => {
     let isMounted = true;
-    ActivityService.getAllActivities({ limit: 6 })
+    ActivityService.getAllActivities({ limit: 8 })
       .then((res) => {
         if (isMounted) {
-          setActivities(res.data);
+          // Only show RUIL and BOTH activities on the home page, not RUDC-only
+          const filtered = (res.data || [])
+            .filter((a) => a.org === 'RUIL' || a.org === 'BOTH')
+            .slice(0, 4);
+          setActivities(filtered);
         }
       })
       .catch(() => {})
@@ -70,7 +74,7 @@ export function ActivitiesSection() {
       {/* Grid */}
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
+          {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
               className="h-64 rounded-3xl bg-muted/50 border border-border animate-pulse p-6"

@@ -127,6 +127,7 @@ export const EventService = {
     startDate?: string | null;
     endDate?: string | null;
     currentChapter?: string;
+    bookIds?: number[];
     metadata?: Record<string, unknown>;
     isActive?: boolean;
   }): Promise<IEvent> => {
@@ -148,6 +149,7 @@ export const EventService = {
       startDate: string | null;
       endDate: string | null;
       currentChapter: string;
+      bookIds: number[];
       metadata: Record<string, unknown>;
       isActive: boolean;
     }>,
@@ -314,6 +316,37 @@ export const EventMemberRecordService = {
   getEventStats: async (eventId: number): Promise<IAttendanceStats> => {
     const res = await axiosInstance.get<ApiResponse<IAttendanceStats>>(
       `/event-member-records/stats/${eventId}`,
+    );
+    return res.data?.data;
+  },
+
+  submitCampaign: async (payload: {
+    eventId: number;
+    sessionId?: number | null;
+    sessionDate?: string | null;
+    rating?: number;
+    comment?: string;
+    submissionData: Record<string, any>;
+  }): Promise<IEventMemberRecord> => {
+    const res = await axiosInstance.post<ApiResponse<IEventMemberRecord>>(
+      '/event-member-records/campaign',
+      payload,
+    );
+    return res.data?.data;
+  },
+
+  publishRecordAsArticle: async (
+    recordId: number,
+    payload?: {
+      title?: string;
+      authorDesignation?: string;
+      category?: string;
+      coverImage?: string;
+    },
+  ): Promise<{ article: any; record: IEventMemberRecord }> => {
+    const res = await axiosInstance.post<ApiResponse<{ article: any; record: IEventMemberRecord }>>(
+      `/event-member-records/publish-article/${recordId}`,
+      payload || {},
     );
     return res.data?.data;
   },

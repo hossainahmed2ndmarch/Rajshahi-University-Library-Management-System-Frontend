@@ -21,6 +21,7 @@ import {
   Heart,
   ChevronRight,
 } from "lucide-react";
+import { toast } from "sonner";
 import {
   EventService,
   EventMemberRecordService,
@@ -33,10 +34,10 @@ import {
 } from "@/types/event";
 import { useGetMe } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
 import { AudioPlayerCard } from "@/components/events/AudioPlayerCard";
 import { LivePresenceCounter } from "@/components/events/LivePresenceCounter";
 import { SessionReaderModal } from "@/components/events/SessionReaderModal";
+import { CampaignSubmissionModal } from "@/components/events/CampaignSubmissionModal";
 
 interface EventDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -55,6 +56,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
 
   // Selected session for full reader modal
   const [readingSession, setReadingSession] = useState<IEventSession | null>(null);
+  const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false);
 
   // Feedback form state
   const [rating, setRating] = useState<number>(5);
@@ -358,6 +360,46 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
             {/* Live Presence Card */}
             <LivePresenceCounter eventId={event.id} variant="card" />
 
+            {/* Connected Books Section */}
+            {event.books && event.books.length > 0 && (
+              <div className="rounded-3xl border border-border bg-card p-5 sm:p-6 space-y-4 shadow-xs">
+                <div className="flex items-center gap-2 border-b border-border/60 pb-3">
+                  <BookOpen className="h-5 w-5 text-emerald-600" />
+                  <h3 className="text-base font-bold text-foreground">
+                    পাঠ্য বা সম্পর্কিত বইসমূহ ({event.books.length})
+                  </h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {event.books.map((b) => (
+                    <Link
+                      key={b.id}
+                      href={`/books/${b.id}`}
+                      className="flex items-center gap-3 p-3 rounded-2xl bg-muted/30 hover:bg-muted/70 border border-border transition-all group"
+                    >
+                      {b.coverImage ? (
+                        <img
+                          src={b.coverImage}
+                          alt={b.title}
+                          className="h-14 w-10 rounded-lg object-cover shadow-xs shrink-0"
+                        />
+                      ) : (
+                        <div className="h-14 w-10 rounded-lg bg-emerald-600/10 text-emerald-600 flex items-center justify-center font-bold text-xs shrink-0">
+                          <BookOpen className="h-4 w-4" />
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-foreground group-hover:text-emerald-600 transition-colors line-clamp-1">
+                          {b.title}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground truncate">{b.author}</p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-emerald-600 transition-colors shrink-0" />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Sessions Header */}
             <div className="border-b border-border pb-4 flex items-center justify-between">
               <div>
@@ -449,39 +491,77 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
                 </h3>
 
                 <div className="space-y-3">
-                  {event.memberRecords.map((rec) => (
-                    <div
-                      key={rec.id}
-                      className="p-4 rounded-2xl bg-card border border-border space-y-2 shadow-2xs"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2.5">
-                          <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold text-xs flex items-center justify-center border border-emerald-500/20">
-                            {rec.user?.name?.charAt(0).toUpperCase() || "U"}
+                  {event.memberRecords.map((rec) => {
+                    const subData = (rec.submissionData as Record<string, any>) || {};
+                    const displayName = rec.user?.name || subData.name || "সম্মানিত পাঠক / শুভাকাঙ্ক্ষী";
+                    const displayInstitution = subData.institution || (rec.user ? "RUIL সদস্য" : null);
+                    const displayTopic = subData.khutbaTopic;
+                    const displayMasjid = subData.masjidName;
+                    const displayLesson = subData.khutbaLesson;
+                    const displayComment = rec.comment || subData.story || displayLesson;
+
+                    return (
+                      <div
+                        key={rec.id}
+                        className="p-4 sm:p-5 rounded-2xl bg-card border border-border space-y-3 shadow-2xs hover:border-emerald-600/30 transition-colors"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="flex items-center gap-2.5">
+                            <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold text-xs flex items-center justify-center border border-emerald-500/20">
+                              {displayName.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-foreground">
+                                {displayName}
+                              </p>
+                              {displayInstitution && (
+                                <p className="text-[10px] text-muted-foreground">
+                                  {displayInstitution}
+                                </p>
+                              )}
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-xs font-bold text-foreground">
-                              {rec.user?.name || "সম্মানিত সদস্য"}
-                            </p>
+
+                          <div className="flex items-center gap-2">
+                            {rec.rating && (
+                              <div className="flex items-center text-amber-500 text-xs">
+                                {Array.from({ length: rec.rating }).map((_, i) => (
+                                  <Star key={i} className="h-3 w-3 fill-amber-500" />
+                                ))}
+                              </div>
+                            )}
                             <span className="text-[10px] text-muted-foreground font-mono">
                               {new Date(rec.createdAt).toLocaleDateString("bn-BD")}
                             </span>
                           </div>
                         </div>
 
-                        {rec.rating && (
-                          <div className="flex items-center text-amber-500 text-xs">
-                            {Array.from({ length: rec.rating }).map((_, i) => (
-                              <Star key={i} className="h-3 w-3 fill-amber-500" />
-                            ))}
+                        {/* If campaign topics exist */}
+                        {(displayTopic || displayMasjid) && (
+                          <div className="flex flex-wrap gap-1.5 pt-1">
+                            {displayMasjid && (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-muted text-[10px] font-medium text-foreground">
+                                <MapPin className="h-2.5 w-2.5 text-emerald-600" />
+                                {displayMasjid}
+                              </span>
+                            )}
+                            {displayTopic && (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 text-[10px] font-semibold border border-emerald-500/20">
+                                {displayTopic}
+                              </span>
+                            )}
                           </div>
                         )}
+
+                        {/* Content / Comment */}
+                        {displayComment && (
+                          <p className="text-xs text-muted-foreground leading-relaxed pl-1 sm:pl-2 border-l-2 border-emerald-500/30 italic">
+                            &quot;{displayComment}&quot;
+                          </p>
+                        )}
                       </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed pl-10">
-                        {rec.comment}
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -500,6 +580,25 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
                     ? "এই ইভেন্টে সরাসরি উন্মুক্ত ফিডব্যাক অনুমোদিত রয়েছে।"
                     : "অ্যাডমিন উপস্থিতি নিশ্চিত করার পর আপনি এই ইভেন্টে মতামত ও রেটিং প্রদান করতে পারবেন।"}
                 </p>
+              </div>
+
+              {/* Public Campaign Action Card (For Members & Non-members) */}
+              <div className="rounded-2xl border-2 border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent p-4 space-y-2.5 shadow-2xs">
+                <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300">
+                  <Sparkles className="h-4 w-4 text-emerald-600" />
+                  <span className="font-bold text-xs">বিশেষ ক্যাম্পেইন / খুতবার শিক্ষা</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  জুমুআর খুতবা, শিক্ষণীয় ঘটনা বা অনুভূতি লিখে পাঠান — যেকোনো ব্যক্তি (ইউজার বা নন-ইউজার) সরাসরি অংশ নিতে পারেন!
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setIsCampaignModalOpen(true)}
+                  className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Send className="h-3.5 w-3.5" />
+                  <span>ক্যাম্পেইনে লেখা পাঠান</span>
+                </button>
               </div>
 
               {!user ? (
@@ -668,6 +767,14 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
         isOpen={Boolean(readingSession)}
         onClose={() => setReadingSession(null)}
         eventTitle={event.title}
+      />
+
+      {/* Campaign / Non-member Submission Modal */}
+      <CampaignSubmissionModal
+        isOpen={isCampaignModalOpen}
+        onClose={() => setIsCampaignModalOpen(false)}
+        event={event}
+        onSuccess={fetchEventData}
       />
     </div>
   );

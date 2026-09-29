@@ -118,6 +118,12 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
     eventMetadata.allowOpenFeedback || eventMetadata.allowFeedbackWithoutAttendance
   );
 
+  // Check if campaign is enabled for this event
+  const isCampaignEnabled = Boolean(
+    eventMetadata.campaign?.enabled === true ||
+    (eventMetadata.campaignType && eventMetadata.campaignType !== 'NONE' && eventMetadata.campaignEnabled !== false)
+  );
+
   // User can give feedback if: admin gave attendance OR admin enabled open feedback
   const canProvideFeedback = Boolean(adminAttendanceRecord || allowOpenFeedback);
 
@@ -582,24 +588,29 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
                 </p>
               </div>
 
-              {/* Public Campaign Action Card (For Members & Non-members) */}
-              <div className="rounded-2xl border-2 border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent p-4 space-y-2.5 shadow-2xs">
-                <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300">
-                  <Sparkles className="h-4 w-4 text-emerald-600" />
-                  <span className="font-bold text-xs">বিশেষ ক্যাম্পেইন / খুতবার শিক্ষা</span>
+              {/* Public Campaign Action Card (Only if campaign is enabled for this event) */}
+              {isCampaignEnabled && (
+                <div className="rounded-2xl border-2 border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent p-4 space-y-2.5 shadow-2xs">
+                  <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300">
+                    <Sparkles className="h-4 w-4 text-emerald-600" />
+                    <span className="font-bold text-xs">
+                      {eventMetadata.campaign?.title || 'বিশেষ ক্যাম্পেইন / খুতবার শিক্ষা'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    {eventMetadata.campaign?.description ||
+                      'জুমুআর খুতবা, শিক্ষণীয় ঘটনা বা অনুভূতি লিখে পাঠান — যেকোনো ব্যক্তি (ইউজার বা নন-ইউজার) সরাসরি অংশ নিতে পারেন!'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setIsCampaignModalOpen(true)}
+                    className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                    <span>ক্যাম্পেইনে লেখা পাঠান</span>
+                  </button>
                 </div>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  জুমুআর খুতবা, শিক্ষণীয় ঘটনা বা অনুভূতি লিখে পাঠান — যেকোনো ব্যক্তি (ইউজার বা নন-ইউজার) সরাসরি অংশ নিতে পারেন!
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setIsCampaignModalOpen(true)}
-                  className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <Send className="h-3.5 w-3.5" />
-                  <span>ক্যাম্পেইনে লেখা পাঠান</span>
-                </button>
-              </div>
+              )}
 
               {!user ? (
                 /* User not logged in */

@@ -137,3 +137,42 @@ export interface IAttendanceStats {
   approvedFeedbackCount: number;
   pendingFeedbackCount: number;
 }
+
+export interface ICampaignFormField {
+  id: string;
+  label: string;
+  type: 'text' | 'textarea' | 'number' | 'select' | 'radio' | 'checkbox' | 'rating';
+  placeholder?: string;
+  required?: boolean;
+  options?: string[];
+  helperText?: string;
+}
+
+export interface ICampaignConfig {
+  enabled: boolean;
+  title: string;
+  description?: string;
+  rules?: string[];
+  prizes?: string[];
+  wordLimit?: number;
+  endDateText?: string;
+  fields: ICampaignFormField[];
+}
+
+export interface IEventSpeaker {
+  id: string;
+  name: string;
+  designation: string;
+  topic?: string;
+  imageUrl?: string;
+}
+
+export interface IEventMetadata {
+  allowOpenFeedback?: boolean;
+  allowComments?: boolean;
+  campaignType?: string;
+  trainer?: string;
+  campaign?: ICampaignConfig;
+  speakers?: IEventSpeaker[];
+  [key: string]: unknown;
+}

@@ -15,6 +15,7 @@ import {
   User,
   MapPin,
   BookOpen,
+  Trash2,
 } from "lucide-react";
 import { IEvent, IEventMemberRecord } from "@/types/event";
 import { EventMemberRecordService } from "@/services/event.service";
@@ -78,6 +79,23 @@ export function FeedbackManagementTable({
       onUpdate();
     } catch (err: any) {
       toast.error(err.response?.data?.message || "স্ট্যাটাস পরিবর্তন ব্যর্থ হয়েছে");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleDeleteRecord = async (recordId: number) => {
+    const confirmed = window.confirm("আপনি কি নিশ্চিতভাবে এই রেকর্ডটি স্থায়ীভাবে মুছে ফেলতে চান?");
+    if (!confirmed) return;
+
+    try {
+      setProcessingId(recordId);
+      await EventMemberRecordService.deleteRecord(recordId);
+      toast.success("রেকর্ডটি সফলভাবে মুছে ফেলা হয়েছে!");
+      fetchRecords();
+      onUpdate();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "রেকর্ড মুছতে ব্যর্থ হয়েছে");
     } finally {
       setProcessingId(null);
     }
@@ -276,20 +294,23 @@ export function FeedbackManagementTable({
                         </div>
                       )}
 
-                      <div className="flex flex-wrap items-center gap-3 text-[11px]">
-                        {subData.masjidName && (
-                          <span className="inline-flex items-center gap-1 text-muted-foreground">
-                            <MapPin className="h-3 w-3 text-emerald-600" />
-                            মসজিদ: <strong className="text-foreground">{subData.masjidName}</strong>
-                          </span>
-                        )}
-                        {subData.khutbaTopic && (
-                          <span className="inline-flex items-center gap-1 text-muted-foreground">
-                            <BookOpen className="h-3 w-3 text-emerald-600" />
-                            বিষয়: <strong className="text-foreground">{subData.khutbaTopic}</strong>
-                          </span>
-                        )}
-                      </div>
+                      {/* Legacy known pill fields */}
+                      {(subData.masjidName || subData.khutbaTopic) && (
+                        <div className="flex flex-wrap items-center gap-3 text-[11px]">
+                          {subData.masjidName && (
+                            <span className="inline-flex items-center gap-1 text-muted-foreground">
+                              <MapPin className="h-3 w-3 text-emerald-600" />
+                              মসজিদ: <strong className="text-foreground">{subData.masjidName}</strong>
+                            </span>
+                          )}
+                          {subData.khutbaTopic && (
+                            <span className="inline-flex items-center gap-1 text-muted-foreground">
+                              <BookOpen className="h-3 w-3 text-emerald-600" />
+                              বিষয়: <strong className="text-foreground">{subData.khutbaTopic}</strong>
+                            </span>
+                          )}
+                        </div>
+                      )}
 
                       {/* Contact & writing profile details */}
                       {(subData.contactMethod || subData.previousPlatform || subData.writingInterest) && (
@@ -315,10 +336,11 @@ export function FeedbackManagementTable({
                         </div>
                       )}
 
+                      {/* Long-text legacy fields */}
                       {subData.khutbaLesson && (
                         <div className="pt-1">
                           <span className="font-bold text-[11px] text-emerald-900 dark:text-emerald-300">
-                            শিক্ষণীয় বিষয়সমূহ:
+                            শিক্ষণীয় বিষয়সমূহ:
                           </span>
                           <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap mt-0.5">
                             {subData.khutbaLesson}
@@ -336,6 +358,56 @@ export function FeedbackManagementTable({
                           </p>
                         </div>
                       )}
+
+                      {/* Generic dynamic fields: render all remaining keys not already shown above */}
+                      {(() => {
+                        const knownKeys = new Set([
+                          'name', 'phone', 'email', 'institution', 'subject',
+                          'submittedAt', 'title', 'masjidName', 'khutbaTopic',
+                          'contactMethod', 'previousPlatform', 'writingInterest',
+                          'khutbaLesson', 'story',
+                        ]);
+                        const dynamicEntries = Object.entries(subData).filter(
+                          ([key, val]) =>
+                            !knownKeys.has(key) &&
+                            val !== null &&
+                            val !== undefined &&
+                            String(val).trim() !== ''
+                        );
+                        if (dynamicEntries.length === 0) return null;
+                        return (
+                          <div className="pt-1 space-y-2 border-t border-emerald-500/20">
+                            <span className="font-bold text-[11px] text-emerald-900 dark:text-emerald-300 block">
+                              ক্যাম্পেইন ফর্মের উত্তরসমূহ:
+                            </span>
+                            <div className="grid grid-cols-1 gap-2">
+                              {dynamicEntries.map(([key, val]) => {
+                                const displayVal = Array.isArray(val)
+                                  ? val.join(', ')
+                                  : String(val);
+                                const isLong = displayVal.length > 80;
+                                return (
+                                  <div
+                                    key={key}
+                                    className={`text-[11px] bg-background/60 p-2 rounded-lg border border-border/50 ${isLong ? '' : 'flex items-start gap-1.5'}`}
+                                  >
+                                    <span className="text-muted-foreground font-semibold shrink-0">
+                                      {key}:{' '}
+                                    </span>
+                                    {isLong ? (
+                                      <p className="text-foreground whitespace-pre-wrap mt-0.5 leading-relaxed">
+                                        {displayVal}
+                                      </p>
+                                    ) : (
+                                      <span className="text-foreground font-medium">{displayVal}</span>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
 
@@ -399,6 +471,16 @@ export function FeedbackManagementTable({
                           <span>অনুমোদন বাতিল করুন (Hide)</span>
                         </button>
                       )}
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteRecord(r.id)}
+                        disabled={processingId === r.id}
+                        className="p-2 rounded-xl border border-rose-500/30 text-rose-500 hover:bg-rose-500/10 hover:border-rose-500 transition-colors cursor-pointer disabled:opacity-50"
+                        title="এই রেকর্ডটি স্থায়ীভাবে মুছে ফেলুন (Delete)"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </div>
                   </div>
                 </div>

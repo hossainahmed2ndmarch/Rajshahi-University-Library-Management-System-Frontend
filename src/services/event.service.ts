@@ -350,4 +350,8 @@ export const EventMemberRecordService = {
     );
     return res.data?.data;
   },
+
+  deleteRecord: async (recordId: number): Promise<void> => {
+    await axiosInstance.delete(`/event-member-records/${recordId}`);
+  },
 };

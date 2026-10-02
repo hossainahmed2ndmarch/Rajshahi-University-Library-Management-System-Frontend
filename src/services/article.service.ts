@@ -67,4 +67,18 @@ export const ArticleService = {
     const response = await axiosInstance.get<ApiResponse<IArticleCategoryCount[]>>("/articles/categories");
     return response.data?.data ?? [];
   },
+
+  submitArticle: async (payload: {
+    org?: "RUIL" | "RUDC" | "BOTH";
+    title: string;
+    content: string;
+    category: string;
+    authorName: string;
+    authorDesignation?: string | null;
+    authorEmail?: string | null;
+    coverImage?: string | null;
+  }): Promise<IArticle> => {
+    const response = await axiosInstance.post<ApiResponse<IArticle>>("/articles/submit", payload);
+    return response.data?.data;
+  },
 };

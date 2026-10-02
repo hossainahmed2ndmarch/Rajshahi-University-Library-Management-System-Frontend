@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Banknote,
   CheckCircle2,
@@ -11,6 +11,7 @@ import {
   User,
   X,
   CreditCard,
+  Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -23,9 +24,13 @@ import { IRudcIyanot, IyanotPaymentMethod } from "@/types/rudc";
 
 export function RudcIyanotTable() {
   const { data: user } = useGetMe();
+  const currentMonthNum = new Date().getMonth() + 1;
+  const currentYearNum = new Date().getFullYear();
+
   const [searchTerm, setSearchTerm] = useState("");
-  const [monthFilter, setMonthFilter] = useState<string>(String(new Date().getMonth() + 1));
-  const [yearFilter, setYearFilter] = useState<string>(String(new Date().getFullYear()));
+  const [monthFilter, setMonthFilter] = useState<string>(String(currentMonthNum));
+  const [yearFilter, setYearFilter] = useState<string>(String(currentYearNum));
+  const [methodFilter, setMethodFilter] = useState<string>("ALL");
 
   const { data: iyanotRes, isLoading } = useRudcIyanot({
     searchTerm: searchTerm || undefined,
@@ -39,16 +44,41 @@ export function RudcIyanotTable() {
   const { mutateAsync: recordPayment, isPending: isRecording } = useRecordIyanotPayment();
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [memberSearchQuery, setMemberSearchQuery] = useState("");
   const [paymentForm, setPaymentForm] = useState({
     userId: 0,
-    month: new Date().getMonth() + 1,
-    year: new Date().getFullYear(),
+    month: currentMonthNum,
+    year: currentYearNum,
     amount: 50,
     paymentMethod: "CASH_OFFLINE" as IyanotPaymentMethod,
     remarks: "Received by supervisor/admin in cash",
   });
 
-  const iyanotList: IRudcIyanot[] = iyanotRes?.data || [];
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+  ];
+
+  const rawList: IRudcIyanot[] = iyanotRes?.data || [];
+
+  const filteredIyanotList = useMemo(() => {
+    if (methodFilter === "ALL") return rawList;
+    return rawList.filter((item) => item.paymentMethod === methodFilter);
+  }, [rawList, methodFilter]);
+
+  const filteredMembersForModal = useMemo(() => {
+    if (!memberSearchQuery.trim()) return allMembers;
+    const q = memberSearchQuery.toLowerCase();
+    return allMembers.filter(
+      (m) =>
+        m.name.toLowerCase().includes(q) ||
+        (m.phone && m.phone.includes(q)) ||
+        (m.studentOrVoterId && m.studentOrVoterId.toLowerCase().includes(q)) ||
+        (m.department && m.department.toLowerCase().includes(q))
+    );
+  }, [allMembers, memberSearchQuery]);
+
+  const selectedMember = allMembers.find((m) => m.id === paymentForm.userId);
 
   const handleRecord = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,15 +90,19 @@ export function RudcIyanotTable() {
     try {
       await recordPayment(paymentForm);
       setModalOpen(false);
+      setPaymentForm({
+        userId: 0,
+        month: currentMonthNum,
+        year: currentYearNum,
+        amount: 50,
+        paymentMethod: "CASH_OFFLINE",
+        remarks: "Received by supervisor/admin in cash",
+      });
+      setMemberSearchQuery("");
     } catch {
       // toast in hook
     }
   };
-
-  const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
-  ];
 
   return (
     <div className="space-y-6">
@@ -84,7 +118,10 @@ export function RudcIyanotTable() {
         </div>
 
         <button
-          onClick={() => setModalOpen(true)}
+          onClick={() => {
+            setModalOpen(true);
+            setMemberSearchQuery("");
+          }}
           className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#004F32] hover:bg-[#003e27] text-white font-bold text-xs shadow-xs transition-colors cursor-pointer"
         >
           <Banknote className="h-4 w-4 text-amber-300" />
@@ -92,45 +129,102 @@ export function RudcIyanotTable() {
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="relative">
-          <Search className="h-4 w-4 text-muted-foreground absolute left-3 top-3" />
-          <input
-            type="text"
-            placeholder="Search by volunteer name, phone, student ID..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-xl border border-border bg-card text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
-          />
-        </div>
+      {/* Modern Filter Pill Bar + Search */}
+      <div className="space-y-3">
+        {/* Row 1: Month Pills */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-bold text-muted-foreground mr-1">Period:</span>
+          <button
+            onClick={() => setMonthFilter("ALL")}
+            className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              monthFilter === "ALL"
+                ? "bg-[#004F32] text-white shadow-xs"
+                : "border border-border bg-card text-muted-foreground hover:bg-accent"
+            }`}
+          >
+            All Months
+          </button>
+          <button
+            onClick={() => setMonthFilter(String(currentMonthNum))}
+            className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              monthFilter === String(currentMonthNum)
+                ? "bg-[#004F32] text-white shadow-xs"
+                : "border border-border bg-card text-muted-foreground hover:bg-accent"
+            }`}
+          >
+            Current ({monthNames[currentMonthNum - 1]})
+          </button>
+          <button
+            onClick={() => {
+              const prev = currentMonthNum === 1 ? 12 : currentMonthNum - 1;
+              setMonthFilter(String(prev));
+            }}
+            className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              monthFilter === String(currentMonthNum === 1 ? 12 : currentMonthNum - 1)
+                ? "bg-[#004F32] text-white shadow-xs"
+                : "border border-border bg-card text-muted-foreground hover:bg-accent"
+            }`}
+          >
+            Previous Month
+          </button>
 
-        <div>
           <select
             value={monthFilter}
             onChange={(e) => setMonthFilter(e.target.value)}
-            className="w-full px-3 py-2 rounded-xl border border-border bg-card text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="px-2.5 py-1 rounded-xl border border-border bg-card text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
           >
-            <option value="ALL">All Months</option>
+            <option value="ALL">Specific Month...</option>
             {monthNames.map((m, idx) => (
               <option key={idx} value={idx + 1}>
                 {m}
               </option>
             ))}
           </select>
-        </div>
 
-        <div>
           <select
             value={yearFilter}
             onChange={(e) => setYearFilter(e.target.value)}
-            className="w-full px-3 py-2 rounded-xl border border-border bg-card text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="px-2.5 py-1 rounded-xl border border-border bg-card text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
           >
             <option value="ALL">All Years</option>
             <option value="2026">2026</option>
             <option value="2027">2027</option>
             <option value="2025">2025</option>
           </select>
+        </div>
+
+        {/* Row 2: Method Pills & Search */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-muted/60 border border-border/80">
+            {[
+              { val: "ALL", label: "All Payment Methods" },
+              { val: "CASH_OFFLINE", label: "Cash (Offline)" },
+              { val: "ONLINE", label: "Online Transfer" },
+            ].map(({ val, label }) => (
+              <button
+                key={val}
+                onClick={() => setMethodFilter(val)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  methodFilter === val
+                    ? "bg-card text-foreground shadow-xs border border-border"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div className="relative sm:w-72">
+            <Search className="h-4 w-4 text-muted-foreground absolute left-3 top-2.5" />
+            <input
+              type="text"
+              placeholder="Search by volunteer name, phone, ID..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-border bg-card text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            />
+          </div>
         </div>
       </div>
 
@@ -141,7 +235,7 @@ export function RudcIyanotTable() {
             <thead>
               <tr className="border-b border-border/80 bg-muted/40 text-muted-foreground font-semibold">
                 <th className="p-3">Volunteer / Member</th>
-                <th className="p-3">Month & Year</th>
+                <th className="p-3">Month &amp; Year</th>
                 <th className="p-3">Amount</th>
                 <th className="p-3">Method</th>
                 <th className="p-3">Received By (Offline Collector)</th>
@@ -156,14 +250,14 @@ export function RudcIyanotTable() {
                     Loading iyanot records...
                   </td>
                 </tr>
-              ) : iyanotList.length === 0 ? (
+              ) : filteredIyanotList.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="p-8 text-center text-muted-foreground">
-                    No iyanot records found for selected period.
+                    No iyanot records found for selected period and method.
                   </td>
                 </tr>
               ) : (
-                iyanotList.map((rec) => (
+                filteredIyanotList.map((rec) => (
                   <tr key={rec.id} className="hover:bg-muted/40 transition-colors">
                     <td className="p-3">
                       <p className="font-bold text-foreground">{rec.user?.name || `User #${rec.userId}`}</p>
@@ -222,7 +316,7 @@ export function RudcIyanotTable() {
                         }`}
                       >
                         <CheckCircle2 className="h-3 w-3" />
-                        <span>{rec.status}</span>
+                        {rec.status}
                       </span>
                     </td>
                   </tr>
@@ -233,43 +327,92 @@ export function RudcIyanotTable() {
         </div>
       </div>
 
-      {/* Record Modal */}
+      {/* Record Payment Modal with Modern Searchable Selection */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in-50">
-          <div className="bg-card border border-border rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-4">
+          <div className="bg-card border border-border rounded-3xl p-6 w-full max-w-lg shadow-2xl space-y-4 text-card-foreground max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-border pb-3">
-              <div className="flex items-center gap-2">
-                <Banknote className="h-5 w-5 text-emerald-600" />
-                <h3 className="text-base font-bold text-foreground">
-                  Record Offline Iyanot (Cash)
-                </h3>
+              <div>
+                <h3 className="text-base font-bold text-foreground">Record Offline Cash Iyanot</h3>
+                <p className="text-xs text-muted-foreground">
+                  Collector accountability: Logged by current user ({user?.name || "Admin"}).
+                </p>
               </div>
               <button
                 onClick={() => setModalOpen(false)}
-                className="p-1 text-muted-foreground hover:text-foreground rounded-lg"
+                className="p-1 text-muted-foreground hover:text-foreground rounded-lg cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            <form onSubmit={handleRecord} className="space-y-3.5 text-xs">
-              <div className="space-y-1">
-                <label className="font-semibold text-foreground">Select Member / Volunteer *</label>
-                <select
-                  required
-                  value={paymentForm.userId}
-                  onChange={(e) =>
-                    setPaymentForm({ ...paymentForm, userId: Number(e.target.value) })
-                  }
-                  className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground"
-                >
-                  <option value={0}>Choose a volunteer...</option>
-                  {allMembers.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name} ({m.department || "RU"} - {m.studentOrVoterId})
-                    </option>
-                  ))}
-                </select>
+            <form onSubmit={handleRecord} className="space-y-4 text-xs">
+              {/* Member Searchable Selector */}
+              <div className="space-y-1.5">
+                <label className="font-semibold text-foreground">
+                  Select Volunteer / Member *
+                </label>
+
+                {selectedMember ? (
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-emerald-500/50 bg-emerald-50/50 dark:bg-emerald-950/20">
+                    <div>
+                      <p className="font-bold text-foreground">{selectedMember.name}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {selectedMember.department || "RU"} • {selectedMember.studentOrVoterId || selectedMember.phone}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentForm({ ...paymentForm, userId: 0 })}
+                      className="px-2.5 py-1 rounded-lg border border-border bg-background text-[11px] font-semibold text-foreground hover:bg-muted cursor-pointer"
+                    >
+                      Change
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <Search className="h-3.5 w-3.5 text-muted-foreground absolute left-3 top-2.5" />
+                      <input
+                        type="text"
+                        placeholder="Search member by name, phone, or student ID..."
+                        value={memberSearchQuery}
+                        onChange={(e) => setMemberSearchQuery(e.target.value)}
+                        className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-border bg-background text-foreground text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="max-h-48 overflow-y-auto space-y-1 border border-border rounded-xl p-1.5 bg-background">
+                      {filteredMembersForModal.length === 0 ? (
+                        <p className="p-3 text-center text-muted-foreground text-xs">
+                          No volunteers or members found matching &quot;{memberSearchQuery}&quot;.
+                        </p>
+                      ) : (
+                        filteredMembersForModal.slice(0, 50).map((m) => (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => {
+                              setPaymentForm({ ...paymentForm, userId: m.id });
+                              setMemberSearchQuery("");
+                            }}
+                            className="w-full text-left p-2 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/40 flex items-center justify-between transition-colors cursor-pointer"
+                          >
+                            <div>
+                              <p className="font-semibold text-foreground">{m.name}</p>
+                              <p className="text-[10px] text-muted-foreground">
+                                {m.department || "RU"} • ID: {m.studentOrVoterId || m.phone}
+                              </p>
+                            </div>
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-muted text-muted-foreground">
+                              Select
+                            </span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -280,7 +423,7 @@ export function RudcIyanotTable() {
                     onChange={(e) =>
                       setPaymentForm({ ...paymentForm, month: Number(e.target.value) })
                     }
-                    className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground"
+                    className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground cursor-pointer focus:ring-1 focus:ring-emerald-500 focus:outline-none"
                   >
                     {monthNames.map((m, idx) => (
                       <option key={idx} value={idx + 1}>
@@ -298,7 +441,7 @@ export function RudcIyanotTable() {
                     onChange={(e) =>
                       setPaymentForm({ ...paymentForm, year: Number(e.target.value) })
                     }
-                    className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground"
+                    className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground focus:ring-1 focus:ring-emerald-500 focus:outline-none"
                   />
                 </div>
               </div>
@@ -312,7 +455,7 @@ export function RudcIyanotTable() {
                   onChange={(e) =>
                     setPaymentForm({ ...paymentForm, amount: Number(e.target.value) })
                   }
-                  className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground font-bold"
+                  className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground font-bold focus:ring-1 focus:ring-emerald-500 focus:outline-none"
                 />
               </div>
 
@@ -326,7 +469,7 @@ export function RudcIyanotTable() {
                       paymentMethod: e.target.value as IyanotPaymentMethod,
                     })
                   }
-                  className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground"
+                  className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground cursor-pointer focus:ring-1 focus:ring-emerald-500 focus:outline-none"
                 >
                   <option value="CASH_OFFLINE">Cash (Handed to Supervisor/Admin)</option>
                   <option value="ONLINE">Online Transfer / bKash</option>
@@ -339,7 +482,7 @@ export function RudcIyanotTable() {
                   type="text"
                   value={paymentForm.remarks}
                   onChange={(e) => setPaymentForm({ ...paymentForm, remarks: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground"
+                  className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground focus:ring-1 focus:ring-emerald-500 focus:outline-none"
                 />
               </div>
 
@@ -347,16 +490,16 @@ export function RudcIyanotTable() {
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-4 py-2 rounded-xl border border-border bg-card text-foreground"
+                  className="px-4 py-2 rounded-xl border border-border bg-card text-foreground cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isRecording}
-                  className="px-5 py-2 rounded-xl bg-[#004F32] hover:bg-[#003e27] text-white font-bold disabled:opacity-50"
+                  className="px-5 py-2 rounded-xl bg-[#004F32] hover:bg-[#003e27] text-white font-bold disabled:opacity-50 cursor-pointer"
                 >
-                  {isRecording ? "Recording..." : "Confirm & Generate Receipt"}
+                  {isRecording ? "Recording..." : "Record Iyanot"}
                 </button>
               </div>
             </form>

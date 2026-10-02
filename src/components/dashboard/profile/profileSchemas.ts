@@ -7,6 +7,13 @@ export const profileSchema = z.object({
   institution: z.string().optional(),
   department: z.string().optional(),
   session: z.string().optional(),
+  faculty: z.string().optional(),
+  whatsappNumber: z.string().optional(),
+  bloodGroup: z.string().optional(),
+  skills: z.array(z.string()).optional(),
+  accommodationType: z.string().optional(),
+  accommodationName: z.string().optional(),
+  permanentAddress: z.string().optional(),
 });
 
 export const credentialsSchema = z.object({

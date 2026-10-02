@@ -47,15 +47,25 @@ export const UserService = {
       phone?: string;
       email?: string;
       studentOrVoterId?: string;
-      institution?: string;
-      department?: string;
-      session?: string;
+      institution?: string | null;
+      department?: string | null;
+      session?: string | null;
+      faculty?: string | null;
+      whatsappNumber?: string | null;
+      bloodGroup?: string | null;
+      skills?: string[];
+      accommodationType?: string | null;
+      accommodationName?: string | null;
+      permanentAddress?: string | null;
       role?: UserRole;
       status?: UserStatus;
       isPaid?: boolean;
       membershipStartedAt?: string;
       membershipExpiresAt?: string;
       paymentMethod?: PaymentMethod;
+      isRudcMember?: boolean;
+      rudcMemberType?: string | null;
+      rudcStatus?: string | null;
     }
   ): Promise<IUser> => {
     const response = await axiosInstance.patch<ApiResponse<RawUser>>(`/users/${id}`, payload);
@@ -87,9 +97,16 @@ export const UserService = {
     phone: string;
     password: string;
     studentOrVoterId: string;
-    department?: string;
-    session?: string;
-    institution?: string;
+    department?: string | null;
+    session?: string | null;
+    institution?: string | null;
+    faculty?: string | null;
+    whatsappNumber?: string | null;
+    bloodGroup?: string | null;
+    skills?: string[];
+    accommodationType?: string | null;
+    accommodationName?: string | null;
+    permanentAddress?: string | null;
     paymentMethod?: string;
     status?: UserStatus;
     isPaid?: boolean;
@@ -107,16 +124,38 @@ export const UserService = {
     payload: {
       name?: string;
       avatarUrl?: string;
-      department?: string;
-      session?: string;
-      institution?: string;
+      department?: string | null;
+      session?: string | null;
+      institution?: string | null;
       phone?: string;
       email?: string;
       studentOrVoterId?: string;
+      faculty?: string | null;
+      whatsappNumber?: string | null;
+      bloodGroup?: string | null;
+      skills?: string[];
+      accommodationType?: string | null;
+      accommodationName?: string | null;
+      permanentAddress?: string | null;
     }
   ): Promise<IUser> => {
     const response = await axiosInstance.patch<ApiResponse<RawUser>>("/users/profile", payload);
     return normalizeUser(response.data?.data);
+  },
+
+  convertMembership: async (payload: {
+    userIds: number[];
+    targetRoleOrOrg: "MAKE_RUDC_MEMBER" | "MAKE_RUDC_VOLUNTEER" | "MAKE_RUIL_MEMBER";
+    confirmPayment?: boolean;
+    paymentMethod?: PaymentMethod;
+    months?: number;
+  }): Promise<IUser[]> => {
+    const response = await axiosInstance.post<ApiResponse<RawUser[]>>(
+      "/users/convert-membership",
+      payload
+    );
+    const list = response.data?.data || [];
+    return list.map(normalizeUser);
   },
 
   uploadAvatar: async (file: File): Promise<IUser> => {

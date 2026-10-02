@@ -87,6 +87,13 @@ export function UserProfileContent({
         institution: values.institution,
         department: values.department,
         session: values.session,
+        faculty: values.faculty,
+        whatsappNumber: values.whatsappNumber,
+        bloodGroup: values.bloodGroup,
+        skills: values.skills,
+        accommodationType: values.accommodationType,
+        accommodationName: values.accommodationName,
+        permanentAddress: values.permanentAddress,
       });
     },
     [updateProfile]

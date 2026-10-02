@@ -1,13 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Calendar, Clock, Eye, FileText, Sparkles, User } from "lucide-react";
+import { ArrowRight, BookOpen, Calendar, Clock, Eye, FileText, PenLine, User } from "lucide-react";
 import { useGetArticles } from "@/hooks/useArticles";
+import { SubmitArticleModal } from "@/components/articles/SubmitArticleModal";
 
 export default function RudcPublicationsPage() {
   const { data, isLoading } = useGetArticles({ org: "RUDC" });
   const dbArticles = data?.data || [];
+  const [submitOpen, setSubmitOpen] = useState(false);
 
   const defaultPublications = [
     {
@@ -45,6 +47,7 @@ export default function RudcPublicationsPage() {
   ];
 
   return (
+    <>
     <div className="py-12 lg:py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12">
         {/* Header */}
@@ -60,6 +63,15 @@ export default function RudcPublicationsPage() {
             Beneficial reminders, research papers, and youth guidance brochures published by the
             Rajshahi University Dawah Community.
           </p>
+          <div className="pt-2">
+            <button
+              onClick={() => setSubmitOpen(true)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#004F32] hover:bg-[#003e27] text-white text-xs font-black shadow-xs transition-colors cursor-pointer"
+            >
+              <PenLine className="h-3.5 w-3.5" />
+              <span>প্রবন্ধ জমা দিন — Submit Your Article</span>
+            </button>
+          </div>
         </div>
 
         {/* Publication Cards */}
@@ -182,5 +194,12 @@ export default function RudcPublicationsPage() {
         </div>
       </div>
     </div>
+
+    <SubmitArticleModal
+      isOpen={submitOpen}
+      onClose={() => setSubmitOpen(false)}
+      org="RUDC"
+    />
+    </>
   );
 }

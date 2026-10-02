@@ -195,14 +195,21 @@ export const useRegisterMemberByStaff = () => {
       phone: string;
       password: string;
       studentOrVoterId: string;
-      department?: string;
-      session?: string;
-      institution?: string;
+      department?: string | null;
+      session?: string | null;
+      institution?: string | null;
       paymentMethod?: string;
       status?: UserStatus;
       isPaid?: boolean;
       membershipStartedAt?: string;
       membershipExpiresAt?: string;
+      faculty?: string | null;
+      whatsappNumber?: string | null;
+      bloodGroup?: string | null;
+      skills?: string[];
+      accommodationType?: string | null;
+      accommodationName?: string | null;
+      permanentAddress?: string | null;
     }) => {
       try {
         return await UserService.registerMemberByStaff(payload);
@@ -226,9 +233,9 @@ export const useRegisterMemberByStaff = () => {
           role: "MEMBER",
           status: defaultStatus,
           studentOrVoterId: payload.studentOrVoterId,
-          department: payload.department,
-          session: payload.session,
-          institution: payload.institution,
+          department: payload.department || undefined,
+          session: payload.session || undefined,
+          institution: payload.institution || undefined,
           isPaid: isOfflinePaid,
           membershipStartedAt: payload.membershipStartedAt,
           membershipExpiresAt: payload.membershipExpiresAt,
@@ -269,20 +276,27 @@ export const useUpdateMemberDetails = () => {
         phone?: string;
         email?: string;
         studentOrVoterId?: string;
-        department?: string;
-        session?: string;
-        institution?: string;
+        department?: string | null;
+        session?: string | null;
+        institution?: string | null;
         status?: UserStatus;
         isPaid?: boolean;
         membershipStartedAt?: string;
         membershipExpiresAt?: string;
+        faculty?: string | null;
+        whatsappNumber?: string | null;
+        bloodGroup?: string | null;
+        skills?: string[];
+        accommodationType?: string | null;
+        accommodationName?: string | null;
+        permanentAddress?: string | null;
       };
     }) => {
       try {
         return await UserService.updateUser(userId, payload);
       } catch {
         LOCAL_USERS = LOCAL_USERS.map((u) =>
-          String(u.id) === String(userId) ? { ...u, ...payload, isActive: payload.status === "ACTIVE" || u.isActive } : u
+          String(u.id) === String(userId) ? ({ ...u, ...payload, isActive: payload.status === "ACTIVE" || u.isActive } as IUser) : u
         );
         return LOCAL_USERS.find((u) => String(u.id) === String(userId))!;
       }
@@ -304,12 +318,19 @@ export const useUpdateMyProfile = () => {
     mutationFn: async (payload: {
       name?: string;
       avatarUrl?: string;
-      department?: string;
-      session?: string;
-      institution?: string;
+      department?: string | null;
+      session?: string | null;
+      institution?: string | null;
       phone?: string;
       email?: string;
       studentOrVoterId?: string;
+      faculty?: string | null;
+      whatsappNumber?: string | null;
+      bloodGroup?: string | null;
+      skills?: string[];
+      accommodationType?: string | null;
+      accommodationName?: string | null;
+      permanentAddress?: string | null;
     }) => {
       return await UserService.updateProfile(payload);
     },
@@ -403,8 +424,39 @@ export const useDeleteUser = () => {
   });
 };
 
+export const useConvertMembership = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: {
+      userIds: number[];
+      targetRoleOrOrg: "MAKE_RUDC_MEMBER" | "MAKE_RUDC_VOLUNTEER" | "MAKE_RUIL_MEMBER";
+      confirmPayment?: boolean;
+      paymentMethod?: any;
+      months?: number;
+    }) => {
+      return await UserService.convertMembership(payload);
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["rudc-members"] });
+      queryClient.invalidateQueries({ queryKey: ["rudc-stats"] });
+      const targetLabel =
+        variables.targetRoleOrOrg === "MAKE_RUDC_MEMBER"
+          ? "RUDC Member"
+          : variables.targetRoleOrOrg === "MAKE_RUDC_VOLUNTEER"
+          ? "RUDC Volunteer"
+          : "RUIL Member";
+      toast.success(`Successfully converted ${variables.userIds.length} user(s) to ${targetLabel}!`);
+    },
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "Failed to convert membership."));
+    },
+  });
+};
+
 // ---------------------------------------------------------------------------
-// User Options (departments, sessions, institutions from DB)
+// User Options (departments, sessions, institutions, faculties, skills, etc.)
 // ---------------------------------------------------------------------------
 
 export const useGetUserOptions = () => {
@@ -417,23 +469,31 @@ export const useGetUserOptions = () => {
         const staticSessions = Array.from(ACADEMIC_SESSIONS) as string[];
 
         const mergedDepts = Array.from(
-          new Set([...options.departments, ...staticDepts])
+          new Set([...(options.departments || []), ...staticDepts])
         ).sort((a, b) => a.localeCompare(b));
 
         const mergedSessions = Array.from(
-          new Set([...options.sessions, ...staticSessions])
+          new Set([...(options.sessions || []), ...staticSessions])
         ).sort((a, b) => a.localeCompare(b));
 
         return {
           departments: mergedDepts,
           sessions: mergedSessions,
-          institutions: options.institutions,
+          institutions: options.institutions || [],
+          faculties: options.faculties || [],
+          accommodationNames: options.accommodationNames || [],
+          skills: options.skills || [],
+          villages: options.villages || [],
         };
       } catch {
         return {
           departments: Array.from(RU_DEPARTMENTS) as string[],
           sessions: Array.from(ACADEMIC_SESSIONS) as string[],
           institutions: [] as string[],
+          faculties: [] as string[],
+          accommodationNames: [] as string[],
+          skills: [] as string[],
+          villages: [] as string[],
         };
       }
     },

@@ -15,12 +15,16 @@ import {
   Shield,
   Check,
   User,
+  Heart,
+  Home,
+  Sparkles,
+  MessageCircle,
 } from "lucide-react";
 import { IUser, UserStatus } from "@/types/auth";
 import { useUpdateMemberDetails, useGetUserOptions } from "@/hooks/useUsers";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
-
-// ─── Shared sub-components ────────────────────────────────────────────────────
+import { PermanentAddressInput } from "@/components/ui/PermanentAddressInput";
+import { CreatableTagSelect } from "@/components/ui/CreatableTagSelect";
 
 interface FieldWrapProps {
   label: string;
@@ -46,13 +50,28 @@ function IconInput({ icon, className, ...props }: IconInputProps) {
       </span>
       <input
         {...props}
-        className={`w-full rounded-xl border border-input bg-background pl-9 pr-3 py-2 text-xs focus:ring-2 focus:ring-primary focus:outline-none ${className ?? ""}`}
+        className={`w-full rounded-xl border border-input bg-background pl-9 pr-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none ${className ?? ""}`}
       />
     </div>
   );
 }
 
-// ─── Props ────────────────────────────────────────────────────────────────────
+const BLOOD_GROUPS = [
+  { value: "A_POSITIVE", label: "A+ (A Positive)" },
+  { value: "A_NEGATIVE", label: "A- (A Negative)" },
+  { value: "B_POSITIVE", label: "B+ (B Positive)" },
+  { value: "B_NEGATIVE", label: "B- (B Negative)" },
+  { value: "AB_POSITIVE", label: "AB+ (AB Positive)" },
+  { value: "AB_NEGATIVE", label: "AB- (AB Negative)" },
+  { value: "O_POSITIVE", label: "O+ (O Positive)" },
+  { value: "O_NEGATIVE", label: "O- (O Negative)" },
+];
+
+const ACCOMMODATION_TYPES = [
+  { value: "HALL", label: "University Residential Hall" },
+  { value: "MESS", label: "Student Mess / Shared Flat" },
+  { value: "HOME", label: "Permanent Home / Family Residence" },
+];
 
 export interface EditMemberModalProps {
   user: IUser | null;
@@ -60,22 +79,25 @@ export interface EditMemberModalProps {
   onClose: () => void;
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
-
 export function EditMemberModal({ user, isOpen, onClose }: EditMemberModalProps) {
   const { mutate: updateMember, isPending } = useUpdateMemberDetails();
   const { data: userOptions } = useGetUserOptions();
-  const departmentOptions = userOptions?.departments ?? [];
-  const sessionOptions = userOptions?.sessions ?? [];
 
   const [form, setForm] = useState({
     name: "",
     phone: "",
+    whatsappNumber: "",
     email: "",
     studentOrVoterId: "",
+    bloodGroup: "",
     institution: "",
     department: "",
+    faculty: "",
     session: "",
+    accommodationType: "HALL",
+    accommodationName: "",
+    permanentAddress: "",
+    skills: [] as string[],
     membershipStartedAt: "",
     membershipExpiresAt: "",
     isBlocked: false,
@@ -86,11 +108,18 @@ export function EditMemberModal({ user, isOpen, onClose }: EditMemberModalProps)
       setForm({
         name: user.name ?? "",
         phone: (user.phone ?? user.phoneNumber) ?? "",
+        whatsappNumber: user.whatsappNumber ?? "",
         email: user.email ?? "",
         studentOrVoterId: user.studentOrVoterId ?? "",
+        bloodGroup: user.bloodGroup ?? "",
         institution: user.institution ?? "",
         department: user.department ?? "",
+        faculty: user.faculty ?? "",
         session: user.session ?? "",
+        accommodationType: user.accommodationType ?? "HALL",
+        accommodationName: user.accommodationName ?? "",
+        permanentAddress: user.permanentAddress ?? "",
+        skills: Array.isArray(user.skills) ? user.skills : [],
         membershipStartedAt: user.membershipStartedAt
           ? new Date(user.membershipStartedAt).toISOString().split("T")[0]
           : new Date().toISOString().split("T")[0],
@@ -130,7 +159,11 @@ export function EditMemberModal({ user, isOpen, onClose }: EditMemberModalProps)
       : null;
     const isExpiredNow = expiresAt && expiresAt < new Date();
 
-    const status: UserStatus | undefined = form.isBlocked ? "BLOCKED" : undefined;
+    const status: UserStatus | undefined = form.isBlocked
+      ? "BLOCKED"
+      : user.status === "BLOCKED"
+      ? "ACTIVE"
+      : undefined;
 
     updateMember(
       {
@@ -138,15 +171,22 @@ export function EditMemberModal({ user, isOpen, onClose }: EditMemberModalProps)
         payload: {
           name: form.name.trim() || undefined,
           phone: form.phone.trim() || undefined,
+          whatsappNumber: form.whatsappNumber.trim() || null,
           email:
             form.email.trim() !== user.email ? form.email.trim() : undefined,
           studentOrVoterId:
             form.studentOrVoterId.trim() !== user.studentOrVoterId
               ? form.studentOrVoterId.trim()
               : undefined,
-          institution: form.institution.trim() || undefined,
-          department: form.department.trim() || undefined,
-          session: form.session.trim() || undefined,
+          bloodGroup: form.bloodGroup || null,
+          institution: form.institution.trim() || null,
+          department: form.department.trim() || null,
+          faculty: form.faculty.trim() || null,
+          session: form.session.trim() || null,
+          accommodationType: form.accommodationType || null,
+          accommodationName: form.accommodationName.trim() || null,
+          permanentAddress: form.permanentAddress.trim() || null,
+          skills: form.skills,
           membershipStartedAt: form.membershipStartedAt
             ? new Date(form.membershipStartedAt).toISOString()
             : undefined,
@@ -157,14 +197,13 @@ export function EditMemberModal({ user, isOpen, onClose }: EditMemberModalProps)
           isPaid: !isExpiredNow,
         },
       },
-      { onSuccess: onClose },
+      { onSuccess: onClose }
     );
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto animate-in fade-in-50">
-      <div className="relative w-full max-w-xl rounded-3xl border border-border bg-card p-6 shadow-2xl my-8 space-y-4 max-h-[92vh] overflow-y-auto text-card-foreground">
-
+      <div className="relative w-full max-w-2xl rounded-3xl border border-border bg-card p-6 shadow-2xl my-8 space-y-4 max-h-[92vh] overflow-y-auto text-card-foreground">
         {/* Close */}
         <button
           onClick={onClose}
@@ -187,7 +226,6 @@ export function EditMemberModal({ user, isOpen, onClose }: EditMemberModalProps)
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-
           {/* Name + Phone */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <FieldWrap label="Full Name">
@@ -196,6 +234,7 @@ export function EditMemberModal({ user, isOpen, onClose }: EditMemberModalProps)
                 value={form.name}
                 onChange={(e) => set("name", e.target.value)}
                 placeholder="Full name"
+                required
               />
             </FieldWrap>
             <FieldWrap label="Phone Number">
@@ -204,11 +243,12 @@ export function EditMemberModal({ user, isOpen, onClose }: EditMemberModalProps)
                 value={form.phone}
                 onChange={(e) => set("phone", e.target.value)}
                 placeholder="017XXXXXXXX"
+                required
               />
             </FieldWrap>
           </div>
 
-          {/* Email + Student/Voter ID */}
+          {/* Email + WhatsApp */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <FieldWrap label="Registered Email">
               <IconInput
@@ -219,6 +259,18 @@ export function EditMemberModal({ user, isOpen, onClose }: EditMemberModalProps)
                 placeholder="member@ru.ac.bd"
               />
             </FieldWrap>
+            <FieldWrap label="WhatsApp Number">
+              <IconInput
+                icon={<MessageCircle className="h-4 w-4 text-emerald-600" />}
+                value={form.whatsappNumber}
+                onChange={(e) => set("whatsappNumber", e.target.value)}
+                placeholder="+8801XXXXXXXXX"
+              />
+            </FieldWrap>
+          </div>
+
+          {/* Student/Voter ID + Blood Group */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <FieldWrap label="Student / Voter ID">
               <IconInput
                 icon={<Hash className="h-4 w-4" />}
@@ -228,42 +280,125 @@ export function EditMemberModal({ user, isOpen, onClose }: EditMemberModalProps)
                 className="font-mono"
               />
             </FieldWrap>
+            <FieldWrap label="Blood Group">
+              <div className="relative">
+                <Heart className="absolute left-3 top-2.5 h-4 w-4 text-rose-500" />
+                <select
+                  value={form.bloodGroup}
+                  onChange={(e) => set("bloodGroup", e.target.value)}
+                  className="w-full rounded-xl border border-input bg-background pl-9 pr-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+                >
+                  <option value="">Select Blood Group</option>
+                  {BLOOD_GROUPS.map((bg) => (
+                    <option key={bg.value} value={bg.value}>
+                      {bg.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </FieldWrap>
           </div>
 
-          {/* Institution + Department + Session */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <FieldWrap label="Institution">
-              <IconInput
-                icon={<Building className="h-4 w-4" />}
-                value={form.institution}
-                onChange={(e) => set("institution", e.target.value)}
-                placeholder="University of Rajshahi"
-              />
-            </FieldWrap>
-
+          {/* Department + Faculty */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <FieldWrap label="Department">
               <SearchableSelect
                 id="edit-modal-department"
                 value={form.department}
                 onChange={(val) => set("department", val)}
-                options={departmentOptions}
-                placeholder="Select or type"
+                options={userOptions?.departments ?? []}
+                placeholder="Select or enter Department..."
                 icon={<GraduationCap className="h-4 w-4" />}
-                listLabel="RU Departments"
               />
             </FieldWrap>
 
+            <FieldWrap label="Faculty">
+              <SearchableSelect
+                id="edit-modal-faculty"
+                value={form.faculty}
+                onChange={(val) => set("faculty", val)}
+                options={userOptions?.faculties ?? []}
+                placeholder="Select or enter Faculty..."
+                icon={<Building className="h-4 w-4" />}
+              />
+            </FieldWrap>
+          </div>
+
+          {/* Session + Institution */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <FieldWrap label="Academic Session">
               <SearchableSelect
                 id="edit-modal-session"
                 value={form.session}
                 onChange={(val) => set("session", val)}
-                options={sessionOptions}
-                placeholder="e.g. 2024-2025"
+                options={userOptions?.sessions ?? []}
+                placeholder="Select or enter Session..."
                 icon={<Calendar className="h-4 w-4" />}
-                listLabel="Academic Sessions"
               />
             </FieldWrap>
+
+            <FieldWrap label="Institution">
+              <SearchableSelect
+                id="edit-modal-institution"
+                value={form.institution}
+                onChange={(val) => set("institution", val)}
+                options={userOptions?.institutions ?? ["University of Rajshahi"]}
+                placeholder="Select or enter Institution..."
+                icon={<Building className="h-4 w-4" />}
+              />
+            </FieldWrap>
+          </div>
+
+          {/* Accommodation Type + Hall / Mess / Residence Name */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <FieldWrap label="Accommodation Type">
+              <div className="relative">
+                <Home className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <select
+                  value={form.accommodationType}
+                  onChange={(e) => set("accommodationType", e.target.value)}
+                  className="w-full rounded-xl border border-input bg-background pl-9 pr-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+                >
+                  {ACCOMMODATION_TYPES.map((acc) => (
+                    <option key={acc.value} value={acc.value}>
+                      {acc.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </FieldWrap>
+
+            <FieldWrap label="Hall / Mess / Residence Name">
+              <SearchableSelect
+                id="edit-modal-residence"
+                value={form.accommodationName}
+                onChange={(val) => set("accommodationName", val)}
+                options={userOptions?.accommodationNames ?? []}
+                placeholder="Select or enter Hall/Residence..."
+                icon={<Home className="h-4 w-4" />}
+              />
+            </FieldWrap>
+          </div>
+
+          {/* Permanent Address */}
+          <PermanentAddressInput
+            value={form.permanentAddress}
+            onChange={(val) => set("permanentAddress", val)}
+            villageOptions={userOptions?.villages ?? []}
+          />
+
+          {/* Skills & Expertise */}
+          <div className="space-y-1">
+            <label className="font-semibold text-foreground text-xs flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+              <span>দক্ষতা ও অভিজ্ঞতা (Skills &amp; Expertise)</span>
+            </label>
+            <CreatableTagSelect
+              values={form.skills}
+              onChange={(val) => set("skills", val)}
+              options={userOptions?.skills ?? []}
+              placeholder="Type new skill and press Enter, or choose from suggestions..."
+            />
           </div>
 
           {/* Membership Validity */}
@@ -300,7 +435,7 @@ export function EditMemberModal({ user, isOpen, onClose }: EditMemberModalProps)
                   type="date"
                   value={form.membershipStartedAt}
                   onChange={(e) => set("membershipStartedAt", e.target.value)}
-                  className="w-full rounded-xl border border-input bg-background px-3 py-2 text-xs focus:ring-2 focus:ring-primary focus:outline-none"
+                  className="w-full rounded-xl border border-input bg-background px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none"
                 />
               </div>
               <div className="space-y-1">
@@ -311,7 +446,7 @@ export function EditMemberModal({ user, isOpen, onClose }: EditMemberModalProps)
                   type="date"
                   value={form.membershipExpiresAt}
                   onChange={(e) => set("membershipExpiresAt", e.target.value)}
-                  className="w-full rounded-xl border border-input bg-background px-3 py-2 text-xs focus:ring-2 focus:ring-primary focus:outline-none"
+                  className="w-full rounded-xl border border-input bg-background px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none"
                 />
               </div>
             </div>
@@ -327,17 +462,16 @@ export function EditMemberModal({ user, isOpen, onClose }: EditMemberModalProps)
             )}
           </div>
 
-          {/* Block toggle */}
+          {/* Block / Status toggle */}
           <div className="rounded-2xl border border-red-200 dark:border-red-900/40 bg-red-50/30 dark:bg-red-950/10 p-4 space-y-2">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <span className="font-bold text-xs text-foreground flex items-center gap-1.5">
                   <Ban className="h-4 w-4 text-red-500" />
-                  Account Status Control
+                  Account Status Control (Block / Unblock)
                 </span>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
-                  Admins can only manually set status to <strong>Blocked</strong>.
-                  Active/Inactive status is auto-managed by membership dates.
+                  Admins and Superadmins can block any member from accessing the system.
                 </p>
               </div>
               <button
@@ -368,7 +502,7 @@ export function EditMemberModal({ user, isOpen, onClose }: EditMemberModalProps)
           </div>
 
           {/* Actions */}
-          <div className="pt-2 flex justify-end gap-2">
+          <div className="pt-2 flex justify-end gap-2 border-t border-border">
             <button
               type="button"
               onClick={onClose}

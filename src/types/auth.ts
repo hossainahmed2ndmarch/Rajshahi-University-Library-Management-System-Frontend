@@ -11,8 +11,12 @@ export type PaymentMethod = "CASH" | "ONLINE";
 
 export interface IUserOptions {
   departments: string[];
+  faculties?: string[];
   sessions: string[];
   institutions: string[];
+  accommodationNames?: string[];
+  skills?: string[];
+  villages?: string[];
 }
 
 export interface IUser {
@@ -28,6 +32,17 @@ export interface IUser {
   institution?: string;
   department?: string;
   session?: string;
+  faculty?: string | null;
+  whatsappNumber?: string | null;
+  bloodGroup?: string | null;
+  skills?: string[];
+  accommodationType?: string | null;
+  accommodationName?: string | null;
+  permanentAddress?: string | null;
+  org?: "RUIL" | "RUDC" | "BOTH";
+  isRudcMember?: boolean;
+  rudcMemberType?: string | null;
+  rudcStatus?: string | null;
   paymentMethod?: PaymentMethod;
   isPaid?: boolean;
   membershipStartedAt?: string;

@@ -20,12 +20,16 @@ import {
   ShieldCheck,
   Ban,
   Trash2,
+  Sparkles,
+  CheckSquare,
 } from "lucide-react";
 import {
   useGetUsers,
   useApproveCashPayment,
   useApproveMembership,
   useUpdateUserRole,
+  useConvertMembership,
+  useToggleUserStatus,
 } from "@/hooks/useUsers";
 import { IUser, UserRole, UserStatus } from "@/types/auth";
 import { format } from "date-fns";
@@ -89,7 +93,10 @@ export default function AdminMembersPage() {
   const { mutate: approveMembership, isPending: isApprovingMembership } =
     useApproveMembership();
   const { mutate: updateRole, isPending: isUpdatingRole } = useUpdateUserRole();
+  const { mutateAsync: convertMembership, isPending: isConverting } = useConvertMembership();
+  const { mutate: toggleStatus, isPending: isTogglingStatus } = useToggleUserStatus();
 
+  const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [currentPage, setCurrentPage] = useState(1);
@@ -125,6 +132,49 @@ export default function AdminMembersPage() {
 
   const handleRoleChange = (userId: string | number, newRole: UserRole) =>
     updateRole({ userId, role: newRole });
+
+  const handleToggleBlock = (u: IUser) => {
+    const nextStatus: UserStatus = u.status === "BLOCKED" ? "ACTIVE" : "BLOCKED";
+    toggleStatus({ userId: u.id, status: nextStatus });
+  };
+
+  const handleMakeRudcVolunteer = async (userIds: number[]) => {
+    try {
+      await convertMembership({
+        userIds,
+        targetRoleOrOrg: "MAKE_RUDC_VOLUNTEER",
+      });
+      setSelectedUserIds([]);
+    } catch {}
+  };
+
+  const handleMakeRudcMember = async (userIds: number[]) => {
+    try {
+      await convertMembership({
+        userIds,
+        targetRoleOrOrg: "MAKE_RUDC_MEMBER",
+      });
+      setSelectedUserIds([]);
+    } catch {}
+  };
+
+  const toggleSelectAllPage = () => {
+    const pageIds = paginatedUsers.map((u) => Number(u.id));
+    const allSelected = pageIds.length > 0 && pageIds.every((id) => selectedUserIds.includes(id));
+    if (allSelected) {
+      setSelectedUserIds(selectedUserIds.filter((id) => !pageIds.includes(id)));
+    } else {
+      setSelectedUserIds(Array.from(new Set([...selectedUserIds, ...pageIds])));
+    }
+  };
+
+  const toggleSelectUser = (id: number) => {
+    if (selectedUserIds.includes(id)) {
+      setSelectedUserIds(selectedUserIds.filter((x) => x !== id));
+    } else {
+      setSelectedUserIds([...selectedUserIds, id]);
+    }
+  };
 
   // ── Filtering ────────────────────────────────────────────────────────────────
 
@@ -339,6 +389,42 @@ export default function AdminMembersPage() {
         </div>
       </div>
 
+      {/* Bulk Conversion Action Bar */}
+      {selectedUserIds.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-[#004F32]/10 border border-[#004F32]/30 text-xs animate-in fade-in-50">
+          <div className="flex items-center gap-2">
+            <CheckSquare className="h-4 w-4 text-[#004F32] dark:text-emerald-400" />
+            <span className="font-bold text-foreground">
+              {selectedUserIds.length} member{selectedUserIds.length > 1 ? "s" : ""} selected
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleMakeRudcVolunteer(selectedUserIds)}
+              disabled={isConverting}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold transition-all shadow-xs cursor-pointer disabled:opacity-50"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Make RUDC Volunteer ({selectedUserIds.length})</span>
+            </button>
+            <button
+              onClick={() => handleMakeRudcMember(selectedUserIds)}
+              disabled={isConverting}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#004F32] hover:bg-[#003e27] text-white font-bold transition-all shadow-xs cursor-pointer disabled:opacity-50"
+            >
+              <UserCheck className="h-3.5 w-3.5" />
+              <span>Make RUDC Member ({selectedUserIds.length})</span>
+            </button>
+            <button
+              onClick={() => setSelectedUserIds([])}
+              className="px-2.5 py-1.5 rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground font-semibold cursor-pointer"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Members Table */}
       <div className="rounded-2xl border border-border bg-card shadow-xs overflow-hidden">
         {isLoading ? (
@@ -356,6 +442,18 @@ export default function AdminMembersPage() {
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="border-b border-border bg-muted/40">
+                    <th className="w-10 px-3 py-3 text-center">
+                      <input
+                        type="checkbox"
+                        checked={
+                          paginatedUsers.length > 0 &&
+                          paginatedUsers.every((u) => selectedUserIds.includes(Number(u.id)))
+                        }
+                        onChange={toggleSelectAllPage}
+                        className="accent-emerald-600 h-3.5 w-3.5 rounded cursor-pointer"
+                        title="Select/Deselect All on Current Page"
+                      />
+                    </th>
                     <th className="px-4 py-3 font-semibold text-muted-foreground">Member &amp; ID</th>
                     <th className="px-4 py-3 font-semibold text-muted-foreground">Contact</th>
                     <th className="px-4 py-3 font-semibold text-muted-foreground">Role</th>
@@ -375,9 +473,24 @@ export default function AdminMembersPage() {
                       (isApprovingCash || isApprovingMembership) &&
                       processingId === String(u.id);
                     const expired = isUserExpired(u);
+                    const isSelected = selectedUserIds.includes(Number(u.id));
 
                     return (
-                      <tr key={String(u.id)} className="hover:bg-muted/30 transition-colors">
+                      <tr
+                        key={String(u.id)}
+                        className={`hover:bg-muted/30 transition-colors ${
+                          isSelected ? "bg-emerald-500/5" : ""
+                        }`}
+                      >
+                        {/* Checkbox */}
+                        <td className="w-10 px-3 py-3.5 text-center">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleSelectUser(Number(u.id))}
+                            className="accent-emerald-600 h-3.5 w-3.5 rounded cursor-pointer"
+                          />
+                        </td>
 
                         {/* Member info */}
                         <td className="px-4 py-3.5">
@@ -510,6 +623,17 @@ export default function AdminMembersPage() {
                               </button>
                             ) : null}
 
+                            {/* Make RUDC Volunteer / Member quick button */}
+                            <button
+                              onClick={() => handleMakeRudcVolunteer([Number(u.id)])}
+                              title="Make RUDC Volunteer"
+                              disabled={isConverting}
+                              className="inline-flex items-center gap-1 p-1.5 rounded-lg border border-input bg-card hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
+                            >
+                              <Sparkles className="h-3.5 w-3.5" />
+                              <span className="hidden xl:inline text-[11px]">RUDC</span>
+                            </button>
+
                             <button
                               onClick={() => setEditingUser(u)}
                               title="Edit Member Details"
@@ -518,6 +642,26 @@ export default function AdminMembersPage() {
                               <Edit2 className="h-3.5 w-3.5" />
                               <span className="hidden xl:inline text-[11px]">Edit</span>
                             </button>
+
+                            {/* Block / Unblock Toggle */}
+                            {u.role !== "SUPER_ADMIN" && (
+                              <button
+                                onClick={() => handleToggleBlock(u)}
+                                disabled={isTogglingStatus}
+                                title={u.status === "BLOCKED" ? "Unblock Member (Activate)" : "Block Member"}
+                                className={`p-1.5 rounded-lg border border-input bg-card transition-colors cursor-pointer disabled:opacity-50 ${
+                                  u.status === "BLOCKED"
+                                    ? "hover:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                    : "hover:bg-red-500/10 text-rose-600"
+                                }`}
+                              >
+                                {u.status === "BLOCKED" ? (
+                                  <Check className="h-3.5 w-3.5" />
+                                ) : (
+                                  <Ban className="h-3.5 w-3.5" />
+                                )}
+                              </button>
+                            )}
 
                             <button
                               onClick={() => setNoticeUser(u)}

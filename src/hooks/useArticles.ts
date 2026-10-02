@@ -112,3 +112,31 @@ export const useGetArticleCategories = () => {
     staleTime: 5 * 60 * 1000,
   });
 };
+
+export const useSubmitArticle = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: {
+      org?: "RUIL" | "RUDC" | "BOTH";
+      title: string;
+      content: string;
+      category: string;
+      authorName: string;
+      authorDesignation?: string | null;
+      authorEmail?: string | null;
+      coverImage?: string | null;
+    }): Promise<IArticle> => {
+      return ArticleService.submitArticle(payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["articles"] });
+      toast.success(
+        "Your article has been submitted successfully! It will be reviewed and published by an administrator."
+      );
+    },
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "Failed to submit article. Please try again."));
+    },
+  });
+};

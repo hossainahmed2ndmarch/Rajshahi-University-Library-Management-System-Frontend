@@ -20,6 +20,8 @@ import {
   Users,
   Heart,
   ChevronRight,
+  EyeOff,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -35,7 +37,6 @@ import {
 import { useGetMe } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { AudioPlayerCard } from "@/components/events/AudioPlayerCard";
-import { LivePresenceCounter } from "@/components/events/LivePresenceCounter";
 import { SessionReaderModal } from "@/components/events/SessionReaderModal";
 import { CampaignSubmissionModal } from "@/components/events/CampaignSubmissionModal";
 
@@ -64,6 +65,10 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
   const [selectedSessionId, setSelectedSessionId] = useState<string>("");
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [isRegisteringAttendance, setIsRegisteringAttendance] = useState(false);
+
+  // Admin comment moderation states
+  const [processingCommentId, setProcessingCommentId] = useState<number | null>(null);
+  const [isUpdatingCommentsVisibility, setIsUpdatingCommentsVisibility] = useState(false);
 
   const fetchEventData = async () => {
     try {
@@ -112,11 +117,19 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
   const isInterested = myRecords.some((r) => r.status === "INTERESTED");
   const existingFeedbackRecord = myRecords.find((r) => Boolean(r.comment));
 
-  // Check if admin enabled feedback without attendance
-  const eventMetadata = (event?.metadata as any) || {};
+  // Check if admin enabled feedback without attendance and comments
+  const eventMetadata = (event?.metadata as Record<string, any>) || {};
+  const allowComments =
+    eventMetadata.allowComments !== false &&
+    eventMetadata.showComments !== false &&
+    !eventMetadata.hideComments;
+
   const allowOpenFeedback = Boolean(
     eventMetadata.allowOpenFeedback || eventMetadata.allowFeedbackWithoutAttendance
   );
+
+  const isAdminOrSuperAdmin =
+    user?.role === "ADMIN" || user?.role === "SUPER_ADMIN";
 
   // Check if campaign is enabled for this event
   const isCampaignEnabled = Boolean(
@@ -124,8 +137,74 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
     (eventMetadata.campaignType && eventMetadata.campaignType !== 'NONE' && eventMetadata.campaignEnabled !== false)
   );
 
-  // User can give feedback if: admin gave attendance OR admin enabled open feedback
-  const canProvideFeedback = Boolean(adminAttendanceRecord || allowOpenFeedback);
+  // User can give feedback if:
+  // 1) Admin allows comments on this event (allowComments is true)
+  // 2) AND either admin marked attendance OR admin enabled open feedback
+  const canProvideFeedback =
+    allowComments && Boolean(adminAttendanceRecord || allowOpenFeedback);
+
+  // Filter public comments: Only show approved comments (isApproved !== false and approved)
+  // that have actual comment or story or khutbaLesson content
+  const approvedPublicRecords = (event?.memberRecords || []).filter((rec) => {
+    if (rec.isApproved === false) return false;
+    const subData = (rec.submissionData as Record<string, any>) || {};
+    const text = rec.comment || subData.story || subData.khutbaLesson;
+    return Boolean(text && String(text).trim().length > 0);
+  });
+
+  // Admin action: hide/unapprove a comment
+  const handleHideComment = async (recordId: number) => {
+    try {
+      setProcessingCommentId(recordId);
+      await EventMemberRecordService.approveFeedback(recordId, false);
+      toast.success("মন্তব্যটি অপ্রদর্শিত / লুকানো হয়েছে!");
+      fetchEventData();
+    } catch {
+      toast.error("মন্তব্য লুকাতে ব্যর্থ হয়েছে");
+    } finally {
+      setProcessingCommentId(null);
+    }
+  };
+
+  // Admin action: delete a comment
+  const handleDeleteComment = async (recordId: number) => {
+    if (!window.confirm("আপনি কি নিশ্চিতভাবে এই মন্তব্যটি স্থায়ীভাবে মুছে ফেলতে চান?")) return;
+    try {
+      setProcessingCommentId(recordId);
+      await EventMemberRecordService.deleteRecord(recordId);
+      toast.success("মন্তব্যটি সফলভাবে মুছে ফেলা হয়েছে!");
+      fetchEventData();
+    } catch {
+      toast.error("মন্তব্য মুছতে ব্যর্থ হয়েছে");
+    } finally {
+      setProcessingCommentId(null);
+    }
+  };
+
+  // Admin action: toggle comments visibility for the entire event
+  const handleToggleEventComments = async () => {
+    if (!event) return;
+    try {
+      setIsUpdatingCommentsVisibility(true);
+      const nextAllowComments = !allowComments;
+      await EventService.updateEvent(event.id, {
+        metadata: {
+          ...eventMetadata,
+          allowComments: nextAllowComments,
+        },
+      });
+      toast.success(
+        nextAllowComments
+          ? "মন্তব্য সেকশন সফলভাবে চালু করা হয়েছে!"
+          : "মন্তব্য সেকশন সবার জন্য বন্ধ করা হয়েছে!"
+      );
+      fetchEventData();
+    } catch {
+      toast.error("সেটিংস আপডেট করতে ব্যর্থ হয়েছে");
+    } finally {
+      setIsUpdatingCommentsVisibility(false);
+    }
+  };
 
   // Total attendees only count actually present/completed
   const attendeesCount =
@@ -265,11 +344,6 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
                 </span>
               )}
             </div>
-
-            {/* Live Presence Badge Over Cover */}
-            <div className="absolute bottom-4 right-4">
-              <LivePresenceCounter eventId={event.id} variant="badge" />
-            </div>
           </div>
 
           {/* Details Row under banner */}
@@ -363,9 +437,6 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column: Sessions & Audio Player & Reviews (2 cols) */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Live Presence Card */}
-            <LivePresenceCounter eventId={event.id} variant="card" />
-
             {/* Connected Books Section */}
             {event.books && event.books.length > 0 && (
               <div className="rounded-3xl border border-border bg-card p-5 sm:p-6 space-y-4 shadow-xs">
@@ -488,87 +559,165 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
               </div>
             )}
 
+            {/* Admin Notice if Comments are Disabled */}
+            {!allowComments && isAdminOrSuperAdmin && (
+              <div className="pt-6">
+                <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+                  <div className="flex items-center gap-2.5 text-amber-800 dark:text-amber-300">
+                    <AlertCircle className="h-5 w-5 shrink-0 text-amber-600" />
+                    <div>
+                      <p className="text-xs font-bold">মন্তব্য ও ফিডব্যাক সেকশন বন্ধ রাখা হয়েছে</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        অ্যাডমিন কর্তৃক মন্তব্য প্রদর্শন স্থগিত থাকায় সাধারণ ইউজাররা কোনো মন্তব্য দেখতে পাবেন না।
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={isUpdatingCommentsVisibility}
+                    onClick={handleToggleEventComments}
+                    className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-all shadow-xs shrink-0 cursor-pointer disabled:opacity-50"
+                  >
+                    {isUpdatingCommentsVisibility ? "আপডেট হচ্ছে..." : "মন্তব্য প্রদর্শন চালু করুন"}
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Approved Public Reviews / Feedbacks */}
-            {event.memberRecords && event.memberRecords.length > 0 && (
+            {allowComments && (approvedPublicRecords.length > 0 || isAdminOrSuperAdmin) && (
               <div className="pt-6 space-y-4">
-                <h3 className="text-lg font-bold text-foreground flex items-center gap-2 border-b border-border pb-3">
-                  <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
-                  <span>অনুমোদিত পর্যালোচনা ও মতামত ({event.memberRecords.length})</span>
-                </h3>
+                <div className="flex items-center justify-between border-b border-border pb-3">
+                  <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                    <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
+                    <span>অনুমোদিত পর্যালোচনা ও মতামত ({approvedPublicRecords.length})</span>
+                  </h3>
+                  {isAdminOrSuperAdmin && (
+                    <button
+                      type="button"
+                      disabled={isUpdatingCommentsVisibility}
+                      onClick={handleToggleEventComments}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-semibold transition-colors cursor-pointer border border-rose-500/20 disabled:opacity-50"
+                      title="এই ইভেন্টের মন্তব্য সেকশন সবার জন্য বন্ধ করুন"
+                    >
+                      <EyeOff className="h-3.5 w-3.5" />
+                      <span>{isUpdatingCommentsVisibility ? "আপডেট হচ্ছে..." : "মন্তব্য বন্ধ রাখুন"}</span>
+                    </button>
+                  )}
+                </div>
 
-                <div className="space-y-3">
-                  {event.memberRecords.map((rec) => {
-                    const subData = (rec.submissionData as Record<string, any>) || {};
-                    const displayName = rec.user?.name || subData.name || "সম্মানিত পাঠক / শুভাকাঙ্ক্ষী";
-                    const displayInstitution = subData.institution || (rec.user ? "RUIL সদস্য" : null);
-                    const displayTopic = subData.khutbaTopic;
-                    const displayMasjid = subData.masjidName;
-                    const displayLesson = subData.khutbaLesson;
-                    const displayComment = rec.comment || subData.story || displayLesson;
+                {approvedPublicRecords.length === 0 ? (
+                  <div className="text-center py-8 bg-card rounded-3xl border border-dashed border-border p-6">
+                    <p className="text-xs text-muted-foreground">
+                      এই ইভেন্টে এখনও কোনো অনুমোদিত পর্যালোচনা বা মতামত প্রকাশ করা হয়নি।
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {approvedPublicRecords.map((rec) => {
+                      const subData = (rec.submissionData as Record<string, any>) || {};
+                      const displayName = rec.user?.name || subData.name || "সম্মানিত পাঠক / শুভাকাঙ্ক্ষী";
+                      const displayInstitution = subData.institution || (rec.user ? "RUIL সদস্য" : null);
+                      const displayTopic = subData.khutbaTopic;
+                      const displayMasjid = subData.masjidName;
+                      const displayLesson = subData.khutbaLesson;
+                      const displayComment = rec.comment || subData.story || displayLesson;
 
-                    return (
-                      <div
-                        key={rec.id}
-                        className="p-4 sm:p-5 rounded-2xl bg-card border border-border space-y-3 shadow-2xs hover:border-emerald-600/30 transition-colors"
-                      >
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div className="flex items-center gap-2.5">
-                            <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold text-xs flex items-center justify-center border border-emerald-500/20">
-                              {displayName.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                              <p className="text-xs font-bold text-foreground">
-                                {displayName}
-                              </p>
-                              {displayInstitution && (
-                                <p className="text-[10px] text-muted-foreground">
-                                  {displayInstitution}
+                      return (
+                        <div
+                          key={rec.id}
+                          className="p-4 sm:p-5 rounded-2xl bg-card border border-border space-y-3 shadow-2xs hover:border-emerald-600/30 transition-colors"
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-2.5">
+                              <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold text-xs flex items-center justify-center border border-emerald-500/20">
+                                {displayName.charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <p className="text-xs font-bold text-foreground">
+                                  {displayName}
                                 </p>
+                                {displayInstitution && (
+                                  <p className="text-[10px] text-muted-foreground">
+                                    {displayInstitution}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              {rec.rating && (
+                                <div className="flex items-center text-amber-500 text-xs">
+                                  {Array.from({ length: rec.rating }).map((_, i) => (
+                                    <Star key={i} className="h-3 w-3 fill-amber-500" />
+                                  ))}
+                                </div>
+                              )}
+                              <span className="text-[10px] text-muted-foreground font-mono">
+                                {new Date(rec.createdAt).toLocaleDateString("bn-BD")}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* If campaign topics exist */}
+                          {(displayTopic || displayMasjid) && (
+                            <div className="flex flex-wrap gap-1.5 pt-1">
+                              {displayMasjid && (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-muted text-[10px] font-medium text-foreground">
+                                  <MapPin className="h-2.5 w-2.5 text-emerald-600" />
+                                  {displayMasjid}
+                                </span>
+                              )}
+                              {displayTopic && (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 text-[10px] font-semibold border border-emerald-500/20">
+                                  {displayTopic}
+                                </span>
                               )}
                             </div>
-                          </div>
+                          )}
 
-                          <div className="flex items-center gap-2">
-                            {rec.rating && (
-                              <div className="flex items-center text-amber-500 text-xs">
-                                {Array.from({ length: rec.rating }).map((_, i) => (
-                                  <Star key={i} className="h-3 w-3 fill-amber-500" />
-                                ))}
+                          {/* Content / Comment */}
+                          {displayComment && (
+                            <p className="text-xs text-muted-foreground leading-relaxed pl-1 sm:pl-2 border-l-2 border-emerald-500/30 italic">
+                              &quot;{displayComment}&quot;
+                            </p>
+                          )}
+
+                          {/* Admin moderation controls: Admin or Super Admin can hide/unapprove or delete this user's comment */}
+                          {isAdminOrSuperAdmin && (
+                            <div className="flex items-center justify-between border-t border-border/60 pt-2.5 mt-2">
+                              <span className="text-[10px] text-muted-foreground font-semibold">
+                                অ্যাডমিন নিয়ন্ত্রণ:
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleHideComment(rec.id)}
+                                  disabled={processingCommentId === rec.id}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-[11px] font-semibold transition-colors cursor-pointer border border-amber-500/20 disabled:opacity-50"
+                                  title="এই ব্যবহারকারীর মন্তব্য অপ্রদর্শিত / লুকান"
+                                >
+                                  <EyeOff className="h-3 w-3" />
+                                  <span>{processingCommentId === rec.id ? "লুকানো হচ্ছে..." : "লুকান"}</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteComment(rec.id)}
+                                  disabled={processingCommentId === rec.id}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-[11px] font-semibold transition-colors cursor-pointer border border-rose-500/20 disabled:opacity-50"
+                                  title="স্থায়ীভাবে মুছে ফেলুন"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                  <span>মুছুন</span>
+                                </button>
                               </div>
-                            )}
-                            <span className="text-[10px] text-muted-foreground font-mono">
-                              {new Date(rec.createdAt).toLocaleDateString("bn-BD")}
-                            </span>
-                          </div>
+                            </div>
+                          )}
                         </div>
-
-                        {/* If campaign topics exist */}
-                        {(displayTopic || displayMasjid) && (
-                          <div className="flex flex-wrap gap-1.5 pt-1">
-                            {displayMasjid && (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-muted text-[10px] font-medium text-foreground">
-                                <MapPin className="h-2.5 w-2.5 text-emerald-600" />
-                                {displayMasjid}
-                              </span>
-                            )}
-                            {displayTopic && (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 text-[10px] font-semibold border border-emerald-500/20">
-                                {displayTopic}
-                              </span>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Content / Comment */}
-                        {displayComment && (
-                          <p className="text-xs text-muted-foreground leading-relaxed pl-1 sm:pl-2 border-l-2 border-emerald-500/30 italic">
-                            &quot;{displayComment}&quot;
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -582,7 +731,9 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
                   <span>উপস্থিতি ও মতামত পোর্টাল</span>
                 </h3>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {allowOpenFeedback
+                  {!allowComments
+                    ? "এই ইভেন্টে মন্তব্য বা মতামত প্রদর্শন স্থগিত রয়েছে।"
+                    : allowOpenFeedback
                     ? "এই ইভেন্টে সরাসরি উন্মুক্ত ফিডব্যাক অনুমোদিত রয়েছে।"
                     : "অ্যাডমিন উপস্থিতি নিশ্চিত করার পর আপনি এই ইভেন্টে মতামত ও রেটিং প্রদান করতে পারবেন।"}
                 </p>
@@ -675,15 +826,24 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
                         <span>আপনার মতামত জমা রয়েছে</span>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        {existingFeedbackRecord.isApproved
+                        {!allowComments
+                          ? "অ্যাডমিন কর্তৃক এই ইভেন্টে মতামত প্রদর্শন বন্ধ থাকায় আপনার মতামত বর্তমানে অপ্রদর্শিত রয়েছে।"
+                          : existingFeedbackRecord.isApproved
                           ? "আপনার মতামতটি অনুমোদিত হয়েছে এবং সবার জন্য প্রদর্শিত হচ্ছে।"
-                          : "আপনার মতামতটি অ্যাডমিন পর্যালোচনার অপেক্ষায় রয়েছে।"}
+                          : "আপনার মতামতটি অ্যাডমিন পর্যালোচনার অপেক্ষায় রয়েছে বা অপ্রদর্শিত রাখা হয়েছে।"}
                       </p>
                       {existingFeedbackRecord.comment && (
                         <p className="text-xs italic text-foreground/80 bg-background/80 p-2.5 rounded-xl border border-border">
                           "{existingFeedbackRecord.comment}"
                         </p>
                       )}
+                    </div>
+                  ) : !allowComments ? (
+                    /* Feedback Disabled by Admin */
+                    <div className="rounded-2xl bg-muted/40 p-4 border border-border text-center space-y-2">
+                      <p className="text-xs text-muted-foreground">
+                        এই ইভেন্টে মন্তব্য বা মতামত প্রদানের সুবিধা অ্যাডমিন কর্তৃক স্থগিত রাখা হয়েছে।
+                      </p>
                     </div>
                   ) : canProvideFeedback ? (
                     /* Feedback Form: enabled because user is present OR open feedback enabled */

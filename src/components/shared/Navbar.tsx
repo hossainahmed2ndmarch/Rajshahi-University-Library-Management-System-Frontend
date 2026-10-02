@@ -15,6 +15,7 @@ import {
   Heart,
   ShoppingBag,
   BookOpen,
+  Users,
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -287,7 +288,16 @@ export function Navbar() {
               })}
             </nav>
 
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2.5">
+              <Link
+                href="/rudc"
+                className="flex items-center space-x-1.5 rounded-full border border-emerald-600/40 bg-emerald-50/90 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900 px-3 py-1 text-xs font-bold text-[#004F32] dark:text-emerald-300 shadow-xs transition-colors"
+                title="Navigate to Rajshahi University Dawah Community"
+              >
+                <Users className="h-3.5 w-3.5 text-[#C78700] dark:text-amber-400" />
+                <span>RUDC Community</span>
+              </Link>
+
               <Link
                 href="/books?type=BORROW_ONLY"
                 className="text-[11px] font-bold text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
@@ -313,9 +323,14 @@ export function Navbar() {
         {mobileMenuOpen && (
           <div className="lg:hidden border-t border-border/70 bg-card px-4 py-3 space-y-1 animate-in fade-in-50 text-foreground">
             <div className="pb-2 mb-2 border-b border-border/60 flex items-center justify-between">
-              <span className="text-xs font-bold text-muted-foreground">
-                নেভিগেশন মেন্যু
-              </span>
+              <Link
+                href="/rudc"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-600/30 text-xs font-bold text-[#004F32] dark:text-emerald-400"
+              >
+                <Users className="h-3.5 w-3.5 text-[#C78700]" />
+                <span>Go to RUDC</span>
+              </Link>
               <LanguageSwitcher />
             </div>
 

@@ -74,10 +74,12 @@ export const ReviewService = {
 
   /**
    * Fetch all service reviews with average rating.
+   * Pass org='RUDC' to get only reviews from RUDC members.
    */
-  getServiceReviews: async (): Promise<IServiceReviewsResponse> => {
+  getServiceReviews: async (org?: string): Promise<IServiceReviewsResponse> => {
     const response = await axiosInstance.get<ApiResponse<IServiceReviewsResponse>>(
-      "/reviews/service"
+      "/reviews/service",
+      { params: org ? { org } : undefined }
     );
     return (
       response.data?.data || {

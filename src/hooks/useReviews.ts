@@ -113,11 +113,11 @@ export const useDeleteReview = () => {
   });
 };
 
-export const useGetServiceReviews = () => {
+export const useGetServiceReviews = (org?: string) => {
   return useQuery<IServiceReviewsResponse>({
-    queryKey: ["serviceReviews"],
+    queryKey: ["serviceReviews", org],
     queryFn: async () => {
-      return await ReviewService.getServiceReviews();
+      return await ReviewService.getServiceReviews(org);
     },
     staleTime: 30 * 1000,
   });

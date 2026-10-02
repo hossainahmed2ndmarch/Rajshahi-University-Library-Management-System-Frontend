@@ -37,25 +37,6 @@ export function AudioPlayerCard({
   const [isMuted, setIsMuted] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
 
-  // Dynamic live listeners presence count for this specific session
-  const [listenersCount, setListenersCount] = useState(() => {
-    return 3 + (sessionId % 7);
-  });
-
-  useEffect(() => {
-    // If playing, bump the listener count slightly and periodically simulate subtle natural changes
-    const interval = setInterval(() => {
-      setListenersCount((prev) => {
-        const delta = Math.random() > 0.5 ? 1 : -1;
-        const base = isPlaying ? 5 + (sessionId % 6) : 3 + (sessionId % 5);
-        const next = prev + delta;
-        return Math.max(2, Math.min(next, base + 4));
-      });
-    }, 12000);
-
-    return () => clearInterval(interval);
-  }, [isPlaying, sessionId]);
-
   const togglePlay = () => {
     if (!audioRef.current) return;
     if (isPlaying) {
@@ -136,7 +117,7 @@ export function AudioPlayerCard({
         className="hidden"
       />
 
-      {/* Header Info & Live Listeners Badge */}
+      {/* Header Info */}
       <div className="flex items-center justify-between gap-3 mb-3">
         <div className="space-y-0.5">
           <div className="flex items-center gap-2">
@@ -153,15 +134,6 @@ export function AudioPlayerCard({
           <h4 className="text-sm sm:text-base font-bold text-white tracking-tight line-clamp-1">
             {chapter || title || "Session Audio Record"}
           </h4>
-        </div>
-
-        {/* Live listeners counter */}
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-900/60 border border-emerald-700/60 text-[11px] font-semibold text-emerald-200 shrink-0">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
-          </span>
-          <span>{listenersCount} listening now</span>
         </div>
       </div>
 

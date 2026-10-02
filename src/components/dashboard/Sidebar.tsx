@@ -253,6 +253,50 @@ export const NAV_TRANSLATIONS: Record<string, NavItemConfig> = {
     label: { en: "Reviews", bn: "রিভিউ মডারেশন", ar: "المراجعات" },
   },
 
+  // RUDC Community Management
+  rudcMembers: {
+    key: "rudcMembers",
+    href: "/dashboard/admin/rudc-members",
+    icon: Users,
+    label: { en: "RUDC Members", bn: "RUDC সদস্য ও ভলান্টিয়ার", ar: "أعضاء رودك" },
+  },
+  superRudcMembers: {
+    key: "superRudcMembers",
+    href: "/dashboard/super-admin/rudc-members",
+    icon: Users,
+    label: { en: "RUDC Members", bn: "RUDC সদস্য ও ভলান্টিয়ার", ar: "أعضاء رودك" },
+  },
+  rudcTeams: {
+    key: "rudcTeams",
+    href: "/dashboard/admin/rudc-teams",
+    icon: Layers,
+    label: { en: "RUDC Teams", bn: "RUDC টিমসমূহ", ar: "فرق رودك" },
+  },
+  superRudcTeams: {
+    key: "superRudcTeams",
+    href: "/dashboard/super-admin/rudc-teams",
+    icon: Layers,
+    label: { en: "RUDC Teams", bn: "RUDC টিমসমূহ", ar: "فرق رودك" },
+  },
+  rudcIyanot: {
+    key: "rudcIyanot",
+    href: "/dashboard/admin/rudc-iyanot",
+    icon: Receipt,
+    label: { en: "RUDC Iyanot", bn: "RUDC ইয়ানত (চাঁদা)", ar: "اشتراكات رودك" },
+  },
+  superRudcIyanot: {
+    key: "superRudcIyanot",
+    href: "/dashboard/super-admin/rudc-iyanot",
+    icon: Receipt,
+    label: { en: "RUDC Iyanot", bn: "RUDC ইয়ানত (চাঁদা)", ar: "اشتراكات رودك" },
+  },
+  myRudc: {
+    key: "myRudc",
+    href: "/dashboard/member/rudc",
+    icon: Users,
+    label: { en: "My RUDC", bn: "আমার RUDC", ar: "رودك الخاص بي" },
+  },
+
   // Personal Space
   profile: {
     key: "profile",
@@ -337,6 +381,9 @@ const ROLE_NAV_KEYS: Record<UserRole, string[]> = {
     "borrows",
     "donations",
     "members",
+    "superRudcMembers",
+    "superRudcTeams",
+    "superRudcIyanot",
     "superPublications",
     "superActivities",
     "superEvents",
@@ -359,6 +406,9 @@ const ROLE_NAV_KEYS: Record<UserRole, string[]> = {
     "borrows",
     "donations",
     "members",
+    "rudcMembers",
+    "rudcTeams",
+    "rudcIyanot",
     "publications",
     "activities",
     "events",
@@ -387,7 +437,7 @@ const ROLE_NAV_KEYS: Record<UserRole, string[]> = {
     "shifterMyPurchases",
     "shifterMyDonations",
   ],
-  MEMBER: ["memberOverview", "profile", "myBorrows", "myPurchases", "myDonations"],
+  MEMBER: ["memberOverview", "myRudc", "profile", "myBorrows", "myPurchases", "myDonations"],
 };
 
 const BOTTOM_NAV_VISIBLE = 4;

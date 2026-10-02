@@ -1,5 +1,6 @@
 export interface IArticle {
   id: number;
+  org?: string;
   title: string;
   slug: string;
   content: string;
@@ -30,6 +31,7 @@ export interface IArticle {
 }
 
 export interface ICreateArticlePayload {
+  org?: string;
   title: string;
   slug?: string;
   content: string;
@@ -48,6 +50,7 @@ export interface IUpdateArticlePayload extends Partial<ICreateArticlePayload> {
 }
 
 export interface IArticleQueryParams {
+  org?: string;
   searchTerm?: string;
   search?: string;
   category?: string;

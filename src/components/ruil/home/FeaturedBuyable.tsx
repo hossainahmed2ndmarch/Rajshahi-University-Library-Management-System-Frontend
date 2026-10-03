@@ -9,7 +9,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { useGetBooks } from "@/hooks/useBooks";
-import { BookCard } from "@/components/books/BookCard";
+import { BookCard } from "@/components/ruil/books/BookCard";
 import { BookCardSkeleton } from "@/components/ui/skeleton";
 import {
   Carousel,
@@ -18,7 +18,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { SectionHeader } from "@/components/shared/SectionHeader";
+import { SectionHeader } from "@/components/ruil/shared/SectionHeader";
 import { useLanguageStore } from "@/store/useLanguageStore";
 
 export function FeaturedBuyable() {

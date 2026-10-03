@@ -3,8 +3,8 @@
 import React from "react";
 import Link from "next/link";
 import { ShieldCheck, Sparkles, Building } from "lucide-react";
-import { ServicesGrid } from "@/components/home/ServicesGrid";
-import { DonationBanner } from "@/components/shared/DonationBanner";
+import { ServicesGrid } from "@/components/ruil/home/ServicesGrid";
+import { DonationBanner } from "@/components/ruil/shared/DonationBanner";
 
 export default function AboutPage() {
   return (

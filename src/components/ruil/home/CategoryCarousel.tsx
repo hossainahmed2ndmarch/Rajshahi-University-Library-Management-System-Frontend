@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/carousel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGetBookCategories, useGetBooks } from "@/hooks/useBooks";
-import { SectionHeader } from "@/components/shared/SectionHeader";
+import { SectionHeader } from "@/components/ruil/shared/SectionHeader";
 
 // ---------------------------------------------------------------------------
 // Types

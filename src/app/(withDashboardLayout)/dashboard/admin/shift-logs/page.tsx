@@ -29,13 +29,13 @@ import {
   useDeleteShiftLog,
   useVerifyShiftLog,
 } from "@/hooks/useShifts";
-import { StartShiftModal } from "@/components/shifter/StartShiftModal";
-import { ScheduleShiftModal } from "@/components/shifter/ScheduleShiftModal";
-import { EndShiftModal } from "@/components/shifter/EndShiftModal";
-import { CancelShiftModal } from "@/components/shifter/CancelShiftModal";
-import { RescheduleShiftModal } from "@/components/shifter/RescheduleShiftModal";
-import { CompleteOfflineShiftModal } from "@/components/shift/CompleteOfflineShiftModal";
-import { ShiftAuditModal } from "@/components/shift/ShiftAuditModal";
+import { StartShiftModal } from "@/components/ruil/shifter/StartShiftModal";
+import { ScheduleShiftModal } from "@/components/ruil/shifter/ScheduleShiftModal";
+import { EndShiftModal } from "@/components/ruil/shifter/EndShiftModal";
+import { CancelShiftModal } from "@/components/ruil/shifter/CancelShiftModal";
+import { RescheduleShiftModal } from "@/components/ruil/shifter/RescheduleShiftModal";
+import { CompleteOfflineShiftModal } from "@/components/ruil/shift/CompleteOfflineShiftModal";
+import { ShiftAuditModal } from "@/components/ruil/shift/ShiftAuditModal";
 import { IShift } from "@/types/shift";
 import { format } from "date-fns";
 

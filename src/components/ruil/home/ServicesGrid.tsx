@@ -10,10 +10,10 @@ import {
   ArrowRight,
   Sparkles,
 } from "lucide-react";
-import { SectionHeader } from "@/components/shared/SectionHeader";
+import { SectionHeader } from "@/components/ruil/shared/SectionHeader";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { cn } from "@/lib/utils";
-import { IslamicPattern } from "@/components/shared/IslamicPattern";
+import { IslamicPattern } from "@/components/ruil/shared/IslamicPattern";
 
 interface ServiceItem {
   id: string;

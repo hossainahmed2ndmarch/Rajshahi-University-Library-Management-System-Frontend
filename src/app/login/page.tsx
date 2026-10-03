@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import React, { Suspense } from "react";
+import React, { Suspense, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -16,17 +16,38 @@ import {
 import { RUForm, RUInput } from "@/components/forms";
 import { useLogin } from "@/hooks/useAuth";
 import { loginSchema, type LoginFormValues } from "@/schemas";
-import logo from "../../assets/logo/Version 3- Multi transparent.png";
-import logoDark from "../../assets/logo/white-version.png";
+import ruilLogo from "../../assets/logo/Version 3- Multi transparent.png";
+import ruilLogoDark from "../../assets/logo/white-version.png";
+import rudcLogo from "../../assets/logo/rudc_logo.jpg";
+import rudcLogoDark from "../../assets/logo/rudc_logo_dark.png";
 import { useLanguageStore } from "@/store/useLanguageStore";
+
+// Safe mounting check that avoids SSR hydration mismatch & cascading renders
+const emptySubscribe = () => () => {};
+const getSnapshot = () => true;
+const getServerSnapshot = () => false;
+
+function useIsMounted() {
+  return useSyncExternalStore(emptySubscribe, getSnapshot, getServerSnapshot);
+}
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectPath = searchParams.get("redirect");
   const { t } = useLanguageStore();
-  const logoTitle = t("nav.logoTitle");
-  const logoSubTitle = t("nav.logoSubTitle");
+
+  const isMounted = useIsMounted();
+
+  // Prevent hydration mismatch by using default server fallback until mounted
+  const logoTitle = isMounted ? t("nav.logoTitle") : "RU Islamic Library";
+  const logoSubTitle = isMounted
+    ? t("nav.logoSubTitle")
+    : "Rajshahi University";
+
+  // Detect if coming from RUDC pages
+  const isFromRudc =
+    redirectPath?.startsWith("/rudc") || searchParams.get("from") === "rudc";
 
   const { mutate: loginUser, isPending } = useLogin();
 
@@ -69,9 +90,26 @@ function LoginForm() {
           fill="currentColor"
           aria-hidden="true"
         >
-          <pattern id="geo" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
-            <polygon points="40,5 75,25 75,55 40,75 5,55 5,25" fill="none" stroke="currentColor" strokeWidth="1" />
-            <polygon points="40,20 60,30 60,50 40,60 20,50 20,30" fill="none" stroke="currentColor" strokeWidth="0.5" />
+          <pattern
+            id="geo"
+            x="0"
+            y="0"
+            width="80"
+            height="80"
+            patternUnits="userSpaceOnUse"
+          >
+            <polygon
+              points="40,5 75,25 75,55 40,75 5,55 5,25"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1"
+            />
+            <polygon
+              points="40,20 60,30 60,50 40,60 20,50 20,30"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="0.5"
+            />
           </pattern>
           <rect width="400" height="800" fill="url(#geo)" />
         </svg>
@@ -81,40 +119,71 @@ function LoginForm() {
         <div className="w-full max-w-md space-y-8">
           {/* Logo & Brand */}
           <div className="text-center space-y-4">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-3 group"
-            >
-              <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl">
-                <Image
-                  src={logo}
-                  alt="RUIL Logo"
-                  priority
-                  className="h-11 w-11 object-contain dark:hidden"
-                />
-                <Image
-                  src={logoDark}
-                  alt="RUIL Logo"
-                  priority
-                  className="hidden h-11 w-11 object-contain dark:block"
-                />
-              </div>
-              <div className="text-left">
-                <span className="text-lg font-black tracking-tight text-[#004F32] dark:text-emerald-400 block leading-tight">
-                  {logoTitle}
-                </span>
-                <span className="text-[11px] font-bold text-[#C78700] dark:text-amber-400 tracking-widest uppercase block">
-                  {logoSubTitle}
-                </span>
-              </div>
-            </Link>
+            {isFromRudc ? (
+              /* RUDC Branding */
+              <Link
+                href="/rudc"
+                className="flex flex-col items-center justify-center gap-2 mx-auto w-fit group"
+              >
+                <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl">
+                  <Image
+                    src={rudcLogo}
+                    alt="RUDC Logo"
+                    priority
+                    className="max-h-full max-w-full object-contain dark:hidden"
+                  />
+                  <Image
+                    src={rudcLogoDark}
+                    alt="RUIL Logo"
+                    priority
+                    className="hidden h-16 w-16 object-contain dark:block"
+                  />
+                </div>
+                <div className="text-center">
+                  <span className="text-base font-black tracking-tight text-[#004F32] dark:text-emerald-400 block leading-tight">
+                    Rajshahi University Dawah Community
+                  </span>
+                  <span className="text-[11px] font-bold text-[#C78700] dark:text-amber-400 tracking-widest uppercase block">
+                    Rajshahi University
+                  </span>
+                </div>
+              </Link>
+            ) : (
+              /* RUIL Branding */
+              <Link href="/" className="inline-flex items-center gap-3 group">
+                <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl">
+                  <Image
+                    src={ruilLogo}
+                    alt="RUIL Logo"
+                    priority
+                    className="h-11 w-11 object-contain dark:hidden"
+                  />
+                  <Image
+                    src={ruilLogoDark}
+                    alt="RUIL Logo"
+                    priority
+                    className="hidden h-11 w-11 object-contain dark:block"
+                  />
+                </div>
+                <div className="text-left">
+                  <span className="text-lg font-black tracking-tight text-[#004F32] dark:text-emerald-400 block leading-tight">
+                    {logoTitle}
+                  </span>
+                  <span className="text-[11px] font-bold text-[#C78700] dark:text-amber-400 tracking-widest uppercase block">
+                    {logoSubTitle}
+                  </span>
+                </div>
+              </Link>
+            )}
 
             <div className="space-y-1.5">
               <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
                 Welcome back
               </h1>
               <p className="text-sm text-muted-foreground">
-                Sign in to access your library portal
+                {isFromRudc
+                  ? "Sign in to access your RUDC member portal"
+                  : "Sign in to access your library portal"}
               </p>
             </div>
           </div>
@@ -147,7 +216,9 @@ function LoginForm() {
                     label="Password"
                     type="password"
                     placeholder="Enter your password"
-                    prependIcon={<Lock className="h-4 w-4 text-[#C78700] dark:text-amber-400" />}
+                    prependIcon={
+                      <Lock className="h-4 w-4 text-[#C78700] dark:text-amber-400" />
+                    }
                     required
                   />
 
@@ -160,7 +231,9 @@ function LoginForm() {
                           className="peer sr-only"
                         />
                         <div className="h-4 w-4 rounded border border-input bg-background peer-checked:bg-[#004F32] peer-checked:border-[#004F32] transition-colors flex items-center justify-center">
-                          <span className="hidden peer-checked:block text-white text-[10px] font-bold leading-none">✓</span>
+                          <span className="hidden peer-checked:block text-white text-[10px] font-bold leading-none">
+                            ✓
+                          </span>
                         </div>
                       </div>
                       <span className="text-muted-foreground font-medium group-hover:text-foreground transition-colors">
@@ -181,7 +254,9 @@ function LoginForm() {
                     className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-[#004F32] to-[#005a3a] hover:from-[#003d27] hover:to-[#004F32] py-3 px-4 text-sm font-bold text-white shadow-lg shadow-[#004F32]/30 hover:shadow-[#004F32]/50 focus:ring-2 focus:ring-[#004F32]/50 focus:ring-offset-2 disabled:opacity-50 transition-all duration-200 cursor-pointer active:scale-[0.98]"
                   >
                     <LogIn className="h-4 w-4 text-amber-300 shrink-0" />
-                    <span>{isPending ? "Signing In..." : "Sign In to Portal"}</span>
+                    <span>
+                      {isPending ? "Signing In..." : "Sign In to Portal"}
+                    </span>
                     <ArrowRight className="h-4 w-4 ml-auto shrink-0" />
                   </button>
                 </div>

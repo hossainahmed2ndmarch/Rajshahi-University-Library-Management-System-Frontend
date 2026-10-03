@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { BookService } from "@/services/book.service";
 import { UserService } from "@/services/user.service";
 import { DonationService } from "@/services/donation.service";
-import { IslamicPattern } from "@/components/shared/IslamicPattern";
+import { IslamicPattern } from "@/components/ruil/shared/IslamicPattern";
 
 export function StatsCounter() {
   // Use limit=1 queries and read meta.total for accurate counts —

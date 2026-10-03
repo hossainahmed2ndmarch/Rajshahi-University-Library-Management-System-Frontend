@@ -1,11 +1,14 @@
 import React from "react";
-import { Navbar } from "@/components/shared/Navbar";
-import { Footer } from "@/components/shared/Footer";
-import { IslamicPattern } from "@/components/shared/IslamicPattern";
+import { Navbar } from "@/components/ruil/shared/Navbar";
+import { Footer } from "@/components/ruil/shared/Footer";
+import { IslamicPattern } from "@/components/ruil/shared/IslamicPattern";
+import { PortalTracker } from "@/components/shared/PortalTracker";
 
 export default function CommonLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative flex min-h-screen flex-col bg-background text-foreground transition-colors overflow-x-hidden">
+      {/* Persist "ruil" as active portal so Dashboard shows RUIL logo */}
+      <PortalTracker portal="ruil" />
       {/* Global Background Pattern for all CommonLayout pages */}
       <IslamicPattern
         variant="light"

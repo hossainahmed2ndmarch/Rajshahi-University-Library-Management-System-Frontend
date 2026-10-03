@@ -13,7 +13,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useGetBooks, useGetBookOptions } from "@/hooks/useBooks";
-import { BookCard } from "@/components/books/BookCard";
+import { BookCard } from "@/components/ruil/books/BookCard";
 import { BookCardSkeleton } from "@/components/ui/skeleton";
 import { BookType } from "@/types/book";
 

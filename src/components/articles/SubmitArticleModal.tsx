@@ -130,8 +130,8 @@ export function SubmitArticleModal({ isOpen, onClose, org = "RUIL" }: SubmitArti
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm overflow-y-auto py-6 px-4">
-      <div className="relative w-full max-w-2xl bg-card rounded-3xl shadow-2xl border border-border/80 my-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="relative w-full max-w-2xl bg-card rounded-3xl shadow-2xl border border-border/80 flex flex-col max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border/60">
           <div className="flex items-center gap-2.5">
@@ -153,6 +153,8 @@ export function SubmitArticleModal({ isOpen, onClose, org = "RUIL" }: SubmitArti
           </button>
         </div>
 
+        {/* Scrollable content area */}
+        <div className="overflow-y-auto flex-1">
         {/* Notice */}
         <div className="mx-6 mt-4 flex items-start gap-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-3 text-amber-700 dark:text-amber-300">
           <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
@@ -328,6 +330,7 @@ export function SubmitArticleModal({ isOpen, onClose, org = "RUIL" }: SubmitArti
             </button>
           </div>
         </form>
+        </div>{/* end scrollable */}
       </div>
     </div>
   );

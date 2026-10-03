@@ -14,10 +14,12 @@ import {
   Search,
   BookOpen,
   Sparkles,
+  PenLine,
 } from "lucide-react";
 import { useGetArticles, useGetArticleCategories } from "@/hooks/useArticles";
 import { IArticle } from "@/types/article";
 import { format } from "date-fns";
+import { SubmitArticleModal } from "@/components/articles/SubmitArticleModal";
 
 const DEFAULT_COVER_IMAGE =
   "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=1000&auto=format&fit=crop";
@@ -25,6 +27,7 @@ const DEFAULT_COVER_IMAGE =
 export default function PublicationsPage() {
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [submitOpen, setSubmitOpen] = useState(false);
 
   const { data: articlesData, isLoading } = useGetArticles({
     isPublished: "true",
@@ -94,6 +97,15 @@ export default function PublicationsPage() {
               Explore Rajshahi University Central Islamic Library research articles, monthly gazettes,
               manuscript restoration updates, academic bulletin notes, and student literary submissions.
             </p>
+            <div className="pt-2">
+              <button
+                onClick={() => setSubmitOpen(true)}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#C78700] hover:bg-[#a86f00] text-white text-xs font-black shadow-xs transition-colors cursor-pointer"
+              >
+                <PenLine className="h-3.5 w-3.5" />
+                <span>Submit Your Article</span>
+              </button>
+            </div>
           </div>
           <div className="absolute right-0 bottom-0 translate-x-12 translate-y-12 opacity-10 pointer-events-none">
             <BookOpen className="w-96 h-96 text-white" />
@@ -119,16 +131,26 @@ export default function PublicationsPage() {
             ))}
           </div>
 
-          {/* Search Input */}
-          <div className="relative min-w-[260px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search publications by title, author..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-input bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-[#004F32] shadow-xs"
-            />
+          {/* Search Input & Quick Submit Button */}
+          <div className="flex items-center gap-2.5">
+            <div className="relative min-w-[240px] flex-1">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search publications by title, author..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-input bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-[#004F32] shadow-xs"
+              />
+            </div>
+            <button
+              onClick={() => setSubmitOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#004F32] hover:bg-[#003824] text-white text-xs font-bold shadow-xs transition-colors shrink-0 cursor-pointer"
+              title="Submit Article for Publication"
+            >
+              <PenLine className="h-3.5 w-3.5 text-amber-300" />
+              <span className="hidden sm:inline">Submit Article</span>
+            </button>
           </div>
         </div>
 
@@ -266,6 +288,12 @@ export default function PublicationsPage() {
           </div>
         )}
       </div>
+
+      <SubmitArticleModal
+        isOpen={submitOpen}
+        onClose={() => setSubmitOpen(false)}
+        org="RUIL"
+      />
     </div>
   );
 }

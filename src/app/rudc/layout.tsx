@@ -1,17 +1,27 @@
 import React from "react";
-import { RudcNavbar } from "@/components/rudc/RudcNavbar";
-import { RudcFooter } from "@/components/rudc/RudcFooter";
-import { IslamicPattern } from "@/components/shared/IslamicPattern";
+import type { Metadata } from "next"; // Imported Metadata type
+import { RudcNavbar } from "@/components/rudc/shared/RudcNavbar";
+import { RudcFooter } from "@/components/rudc/shared/RudcFooter";
+import { IslamicPattern } from "@/components/ruil/shared/IslamicPattern";
+import { PortalTracker } from "@/components/shared/PortalTracker";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Rajshahi University Dawah Community (RUDC)",
   description:
     "A social, non-political, and service-oriented campus-based Dawah organization at Rajshahi University.",
+  icons: {
+    icon: "/rudc-favicon.ico", // 👈 Overrides root favicon for all RUDC routes
+    // You can also add shortcut or apple icons if needed:
+    // shortcut: "/rudc-favicon.ico",
+    // apple: "/rudc-apple-icon.png",
+  },
 };
 
 export default function RudcLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative flex min-h-screen flex-col bg-background text-foreground transition-colors overflow-x-hidden">
+      {/* Persist "rudc" as active portal so Dashboard shows RUDC logo */}
+      <PortalTracker portal="rudc" />
       {/* Global Background Pattern */}
       <IslamicPattern
         variant="light"

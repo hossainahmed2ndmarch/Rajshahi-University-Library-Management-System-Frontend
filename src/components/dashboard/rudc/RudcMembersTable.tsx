@@ -52,6 +52,10 @@ export function RudcMembersTable() {
   const [typeFilter, setTypeFilter] = useState<string>("ALL");
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 10;
+
   // Modals state
   const [interviewModalOpen, setInterviewModalOpen] = useState(false);
   const [preExistedModalOpen, setPreExistedModalOpen] = useState(false);
@@ -70,6 +74,8 @@ export function RudcMembersTable() {
     searchTerm: searchTerm || undefined,
     rudcStatus: statusFilter !== "ALL" ? statusFilter : undefined,
     rudcMemberType: typeFilter !== "ALL" ? typeFilter : undefined,
+    page: currentPage,
+    limit: PAGE_SIZE,
   });
 
   const { data: userOptions } = useGetUserOptions();
@@ -81,6 +87,9 @@ export function RudcMembersTable() {
     useCreatePreExistedRudcMember();
 
   const members: IRudcMember[] = membersRes?.data || [];
+  const meta = membersRes?.meta;
+  const totalPages = meta?.totalPage || Math.ceil((meta?.total || members.length) / PAGE_SIZE) || 1;
+  const totalCount = meta?.total || members.length;
 
   // Interview email form state
   const [interviewForm, setInterviewForm] = useState({
@@ -102,6 +111,7 @@ export function RudcMembersTable() {
   const [preExistedForm, setPreExistedForm] = useState({
     name: "",
     email: "",
+    password: "",
     phone: "",
     studentOrVoterId: "",
     department: "",
@@ -127,6 +137,11 @@ export function RudcMembersTable() {
     } else {
       setSelectedUserIds(members.map((m) => m.id));
     }
+  };
+
+  const handleFilterChange = (setter: (v: any) => void, value: any) => {
+    setter(value);
+    setCurrentPage(1);
   };
 
   const toggleSelectUser = (id: number) => {
@@ -219,6 +234,7 @@ export function RudcMembersTable() {
       setPreExistedForm({
         name: "",
         email: "",
+        password: "",
         phone: "",
         studentOrVoterId: "",
         department: "",
@@ -315,7 +331,7 @@ export function RudcMembersTable() {
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setStatusFilter(tab.id)}
+                onClick={() => handleFilterChange(setStatusFilter, tab.id)}
                 className={`px-3 py-1.5 rounded-xl font-bold transition-all shrink-0 cursor-pointer ${
                   active
                     ? "bg-[#004F32] text-white shadow-xs"
@@ -345,7 +361,7 @@ export function RudcMembersTable() {
                 <button
                   key={tab.id}
                   type="button"
-                  onClick={() => setTypeFilter(tab.id)}
+                  onClick={() => handleFilterChange(setTypeFilter, tab.id)}
                   className={`px-3 py-1.5 rounded-xl font-bold transition-all shrink-0 cursor-pointer ${
                     active
                       ? "bg-amber-600 text-white shadow-xs"
@@ -364,7 +380,7 @@ export function RudcMembersTable() {
               type="text"
               placeholder="Search by name, phone, dept..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => handleFilterChange(setSearchTerm, e.target.value)}
               className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-border bg-card text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
             />
           </div>
@@ -550,6 +566,78 @@ export function RudcMembersTable() {
           </table>
         </div>
       </div>
+
+      {/* ─── Pagination ────────────────────────── */}
+      {!isLoading && totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-1 text-xs">
+          <p className="text-muted-foreground">
+            Showing <span className="font-bold text-foreground">{members.length}</span> of{" "}
+            <span className="font-bold text-foreground">{totalCount}</span> members — Page{" "}
+            <span className="font-bold text-foreground">{currentPage}</span> of{" "}
+            <span className="font-bold text-foreground">{totalPages}</span>
+          </p>
+          <div className="flex items-center gap-1.5">
+            <button
+              disabled={currentPage <= 1}
+              onClick={() => setCurrentPage(1)}
+              className="px-2.5 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-bold cursor-pointer"
+              title="First page"
+            >
+              «
+            </button>
+            <button
+              disabled={currentPage <= 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              className="px-3 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-bold cursor-pointer"
+            >
+              ‹ Prev
+            </button>
+
+            {/* Page number pills */}
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let page: number;
+              if (totalPages <= 5) {
+                page = i + 1;
+              } else if (currentPage <= 3) {
+                page = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                page = totalPages - 4 + i;
+              } else {
+                page = currentPage - 2 + i;
+              }
+              return (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-1.5 rounded-lg border font-bold transition-colors cursor-pointer ${
+                    page === currentPage
+                      ? "bg-[#004F32] border-[#004F32] text-white shadow-xs"
+                      : "border-border bg-card text-foreground hover:bg-muted"
+                  }`}
+                >
+                  {page}
+                </button>
+              );
+            })}
+
+            <button
+              disabled={currentPage >= totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              className="px-3 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-bold cursor-pointer"
+            >
+              Next ›
+            </button>
+            <button
+              disabled={currentPage >= totalPages}
+              onClick={() => setCurrentPage(totalPages)}
+              className="px-2.5 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-bold cursor-pointer"
+              title="Last page"
+            >
+              »
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ─── Modal 1: Send Interview Email ────────────────────────── */}
       {interviewModalOpen && (
@@ -909,6 +997,18 @@ export function RudcMembersTable() {
                       value={preExistedForm.email}
                       onChange={(e) => setPreExistedForm({ ...preExistedForm, email: e.target.value })}
                       placeholder="example@mail.com"
+                      className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="font-semibold text-foreground">
+                      Password <span className="text-amber-600 text-[10px] font-normal">(optional — for portal access)</span>
+                    </label>
+                    <input
+                      type="password"
+                      value={preExistedForm.password}
+                      onChange={(e) => setPreExistedForm({ ...preExistedForm, password: e.target.value })}
+                      placeholder="Set login password (min 8 chars)"
                       className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground"
                     />
                   </div>

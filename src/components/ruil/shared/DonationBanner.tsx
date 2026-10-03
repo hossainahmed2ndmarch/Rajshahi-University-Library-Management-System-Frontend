@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { cn } from "@/lib/utils";
-import { IslamicPattern } from "@/components/shared/IslamicPattern";
+import { IslamicPattern } from "@/components/ruil/shared/IslamicPattern";
 
 interface DonationBannerProps {
   className?: string;

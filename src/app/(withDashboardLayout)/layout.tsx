@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Sidebar, MobileBottomNav } from "@/components/dashboard/Sidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { IslamicPattern } from "@/components/shared/IslamicPattern";
+import { IslamicPattern } from "@/components/ruil/shared/IslamicPattern";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);

@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { Toaster } from "sonner";
 import { useLanguageStore } from "@/store/useLanguageStore";
-import { GlobalShiftStartTrigger } from "@/components/shift/GlobalShiftStartTrigger";
+import { GlobalShiftStartTrigger } from "@/components/ruil/shift/GlobalShiftStartTrigger";
 
 export interface ProvidersProps {
   children: React.ReactNode;

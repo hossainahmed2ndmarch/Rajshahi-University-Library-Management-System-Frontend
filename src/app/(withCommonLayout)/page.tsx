@@ -1,18 +1,18 @@
 "use client";
 
 import React from "react";
-import { IslamicPattern } from "@/components/shared/IslamicPattern";
-import { HeroCarousel } from "@/components/home/HeroCarousel";
-import { StatsCounter } from "@/components/home/StatsCounter";
-import { CategoryCarousel } from "@/components/home/CategoryCarousel";
-import { TrendingBooks } from "@/components/home/TrendingBooks";
-import { FeaturedBuyable } from "@/components/home/FeaturedBuyable";
-import { Testimonials } from "@/components/home/Testimonials";
-import { LiveMapAndScheduleSection } from "@/components/home/LiveMapAndScheduleSection";
-import { ServicesGrid } from "@/components/home/ServicesGrid";
-import { DonationBanner } from "@/components/shared/DonationBanner";
-import { EventsSection } from "@/components/home/EventsSection";
-import { ActivitiesSection } from "@/components/home/ActivitiesSection";
+import { IslamicPattern } from "@/components/ruil/shared/IslamicPattern";
+import { HeroCarousel } from "@/components/ruil/home/HeroCarousel";
+import { StatsCounter } from "@/components/ruil/home/StatsCounter";
+import { CategoryCarousel } from "@/components/ruil/home/CategoryCarousel";
+import { TrendingBooks } from "@/components/ruil/home/TrendingBooks";
+import { FeaturedBuyable } from "@/components/ruil/home/FeaturedBuyable";
+import { Testimonials } from "@/components/ruil/home/Testimonials";
+import { LiveMapAndScheduleSection } from "@/components/ruil/home/LiveMapAndScheduleSection";
+import { ServicesGrid } from "@/components/ruil/home/ServicesGrid";
+import { DonationBanner } from "@/components/ruil/shared/DonationBanner";
+import { EventsSection } from "@/components/ruil/home/EventsSection";
+import { ActivitiesSection } from "@/components/ruil/home/ActivitiesSection";
 
 export default function HomePage() {
   return (

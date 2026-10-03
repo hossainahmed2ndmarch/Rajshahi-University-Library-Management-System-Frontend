@@ -59,6 +59,7 @@ export interface IArticleQueryParams {
   limit?: number;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
+  authorUserId?: number;
 }
 
 export interface IArticleCategoryCount {

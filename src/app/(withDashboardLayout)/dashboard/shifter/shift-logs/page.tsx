@@ -21,11 +21,11 @@ import {
   CalendarClock,
 } from "lucide-react";
 import { useActiveShift, useGetAllShiftLogs } from "@/hooks/useShifts";
-import { ScheduleShiftModal } from "@/components/shifter/ScheduleShiftModal";
-import { CancelShiftModal } from "@/components/shifter/CancelShiftModal";
-import { RescheduleShiftModal } from "@/components/shifter/RescheduleShiftModal";
-import { CompleteOfflineShiftModal } from "@/components/shift/CompleteOfflineShiftModal";
-import { ShiftAuditModal } from "@/components/shift/ShiftAuditModal";
+import { ScheduleShiftModal } from "@/components/ruil/shifter/ScheduleShiftModal";
+import { CancelShiftModal } from "@/components/ruil/shifter/CancelShiftModal";
+import { RescheduleShiftModal } from "@/components/ruil/shifter/RescheduleShiftModal";
+import { CompleteOfflineShiftModal } from "@/components/ruil/shift/CompleteOfflineShiftModal";
+import { ShiftAuditModal } from "@/components/ruil/shift/ShiftAuditModal";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { IShift } from "@/types/shift";
 import { format } from "date-fns";

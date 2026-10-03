@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { usePublicActiveShift, useWeeklyRoster } from "@/hooks/useShifts";
 import { useLanguageStore } from "@/store/useLanguageStore";
-import { SectionHeader } from "@/components/shared/SectionHeader";
+import { SectionHeader } from "@/components/ruil/shared/SectionHeader";
 import { LIBRARY_CONTACT } from "@/lib/shifterContacts";
 import {
   Dialog,

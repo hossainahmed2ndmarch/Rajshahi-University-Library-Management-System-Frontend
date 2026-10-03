@@ -25,8 +25,8 @@ import { useGetMe, useLogout } from "@/hooks/useAuth";
 import { useCartStore, useWishlistStore } from "@/store";
 import { getDefaultDashboardRoute } from "@/proxy";
 import { useSiteAsset } from "@/hooks/useGallery";
-import logo from "../../assets/logo/Version 3- Multi transparent.png";
-import logoDark from "../../assets/logo/white-version.png";
+import logo from "../../../assets/logo/Version 3- Multi transparent.png";
+import logoDark from "../../../assets/logo/white-version.png";
 
 export function Navbar() {
   const pathname = usePathname();

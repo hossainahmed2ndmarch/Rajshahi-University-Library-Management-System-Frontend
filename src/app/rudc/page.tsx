@@ -19,13 +19,13 @@ import {
   UserPlus,
   Users,
 } from "lucide-react";
-import { RudcHeroBanner } from "@/components/rudc/RudcHeroBanner";
-import { RudcMarquee } from "@/components/rudc/RudcMarquee";
-import { RudcActivitiesSection } from "@/components/rudc/RudcActivitiesSection";
-import { RudcEventsSection } from "@/components/rudc/RudcEventsSection";
-import { RudcArticlesSection } from "@/components/rudc/RudcArticlesSection";
-import { RudcGallerySection } from "@/components/rudc/RudcGallerySection";
-import { RudcReviewsSection } from "@/components/rudc/RudcReviewsSection";
+import { RudcHeroBanner } from "@/components/rudc//home/RudcHeroBanner";
+import { RudcMarquee } from "@/components/rudc/home/RudcMarquee";
+import { RudcActivitiesSection } from "@/components/rudc/home/RudcActivitiesSection";
+import { RudcEventsSection } from "@/components/rudc/home/RudcEventsSection";
+import { RudcArticlesSection } from "@/components/rudc/home/RudcArticlesSection";
+import { RudcGallerySection } from "@/components/rudc/home/RudcGallerySection";
+import { RudcReviewsSection } from "@/components/rudc/home/RudcReviewsSection";
 
 export default function RudcLandingPage() {
   const corePrinciples = [
@@ -115,8 +115,8 @@ export default function RudcLandingPage() {
               Core Principles & Conditions of RUDC
             </h3>
             <p className="text-xs sm:text-sm text-muted-foreground mt-2">
-              All members and volunteers commit to high ethical standards, Quranic virtues, and
-              unwavering devotion to Sunnah.
+              All members and volunteers commit to high ethical standards,
+              Quranic virtues, and unwavering devotion to Sunnah.
             </p>
           </div>
 
@@ -131,8 +131,12 @@ export default function RudcLandingPage() {
                   <div className="h-10 w-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 flex items-center justify-center text-[#004F32] dark:text-emerald-400 mb-4 group-hover:scale-105 transition-transform">
                     <Icon className="h-5 w-5" />
                   </div>
-                  <h4 className="text-base font-bold text-foreground mb-1.5">{item.title}</h4>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                  <h4 className="text-base font-bold text-foreground mb-1.5">
+                    {item.title}
+                  </h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {item.desc}
+                  </p>
                 </div>
               );
             })}
@@ -181,8 +185,12 @@ export default function RudcLandingPage() {
                   <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-[#C78700] dark:text-amber-400 mb-3">
                     {team.tag}
                   </span>
-                  <h4 className="text-sm font-bold text-foreground mb-1">{team.name}</h4>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{team.desc}</p>
+                  <h4 className="text-sm font-bold text-foreground mb-1">
+                    {team.name}
+                  </h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {team.desc}
+                  </p>
                 </div>
               </div>
             ))}
@@ -208,32 +216,43 @@ export default function RudcLandingPage() {
                   Supervised Mentorship: From Volunteer to Permanent Member
                 </h3>
                 <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed">
-                  Every applicant begins as a <strong>Volunteer</strong> and is assigned to a
-                  dedicated Supervisor/Team Leader. After active participation, spiritual progress,
-                  and consistent adherence to Islamic guidelines, they are promoted to{" "}
-                  <strong>Permanent Member</strong>, <strong>Executive Committee</strong>, or{" "}
+                  Every applicant begins as a <strong>Volunteer</strong> and is
+                  assigned to a dedicated Supervisor/Team Leader. After active
+                  participation, spiritual progress, and consistent adherence to
+                  Islamic guidelines, they are promoted to{" "}
+                  <strong>Permanent Member</strong>,{" "}
+                  <strong>Executive Committee</strong>, or{" "}
                   <strong>Shura</strong>.
                 </p>
                 <div className="space-y-2 pt-2">
                   <div className="flex items-center gap-2 text-xs text-emerald-100">
                     <CheckCircle2 className="h-4 w-4 text-amber-300 shrink-0" />
-                    <span>Interview & orientation after application review</span>
+                    <span>
+                      Interview & orientation after application review
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-emerald-100">
                     <CheckCircle2 className="h-4 w-4 text-amber-300 shrink-0" />
-                    <span>Monthly 50 BDT Iyanot (fee) to support campus dawah</span>
+                    <span>
+                      Monthly 50 BDT Iyanot (fee) to support campus dawah
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-emerald-100">
                     <CheckCircle2 className="h-4 w-4 text-amber-300 shrink-0" />
-                    <span>Weekly halqahs, personal counseling, and community service</span>
+                    <span>
+                      Weekly halqahs, personal counseling, and community service
+                    </span>
                   </div>
                 </div>
               </div>
 
               <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 p-6 space-y-4 text-center">
-                <h4 className="text-lg font-bold text-amber-300">Ready to Serve the Deen?</h4>
+                <h4 className="text-lg font-bold text-amber-300">
+                  Ready to Serve the Deen?
+                </h4>
                 <p className="text-xs text-slate-200">
-                  Applications are currently open for all students of Rajshahi University.
+                  Applications are currently open for all students of Rajshahi
+                  University.
                 </p>
                 <div className="flex flex-col gap-2.5 pt-2">
                   <Link

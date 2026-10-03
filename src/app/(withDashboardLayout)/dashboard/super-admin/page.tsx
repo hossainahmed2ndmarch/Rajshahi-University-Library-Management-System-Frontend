@@ -38,9 +38,9 @@ import { useGetAllPurchases, useGetMyPurchases } from "@/hooks/usePurchases";
 import { useGetDonations } from "@/hooks/useDonations";
 import { useActiveShift, useGetAllShiftLogs } from "@/hooks/useShifts";
 import { useGetAllReviews } from "@/hooks/useReviews";
-import { StartShiftModal } from "@/components/shifter/StartShiftModal";
-import { ScheduleShiftModal } from "@/components/shifter/ScheduleShiftModal";
-import { EndShiftModal } from "@/components/shifter/EndShiftModal";
+import { StartShiftModal } from "@/components/ruil/shifter/StartShiftModal";
+import { ScheduleShiftModal } from "@/components/ruil/shifter/ScheduleShiftModal";
+import { EndShiftModal } from "@/components/ruil/shifter/EndShiftModal";
 import { LeaderboardsSection } from "@/components/dashboard/analytics/LeaderboardsSection";
 import { StatisticalDiagramsSection } from "@/components/dashboard/analytics/StatisticalDiagramsSection";
 

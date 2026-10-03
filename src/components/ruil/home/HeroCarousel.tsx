@@ -19,7 +19,7 @@ import {
   CarouselPrevious,
   CarouselDots,
 } from "@/components/ui/carousel";
-import { IslamicPattern } from "@/components/shared/IslamicPattern";
+import { IslamicPattern } from "@/components/ruil/shared/IslamicPattern";
 
 const SLIDES = [
   {

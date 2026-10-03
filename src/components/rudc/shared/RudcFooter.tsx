@@ -2,7 +2,7 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { BookOpen, Heart, Mail, MapPin, Phone, ShieldCheck, Users } from "lucide-react";
-import rudcLogo from "@/assets/logo/rudc_logo.webp";
+import rudcLogo from "@/assets/logo/rudc_logo.jpg";
 
 export function RudcFooter() {
   return (

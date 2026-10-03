@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { useGetMe } from "@/hooks/useAuth";
 import { getDefaultDashboardRoute } from "@/proxy";
 import { useLanguageStore } from "@/store/useLanguageStore";
-import logo from "../../assets/logo/white-version.png";
+import logo from "../../../assets/logo/white-version.png";
 
 interface FooterLink {
   label: string;

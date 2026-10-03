@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useState, useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -33,10 +33,8 @@ import {
 import { useGetMe, useLogout } from "@/hooks/useAuth";
 import { useSiteAsset } from "@/hooks/useGallery";
 import { UserRole } from "@/types/auth";
-import logo from "@/assets/logo/white-version.png";
-
-// Optional: Language store import (Replace with your actual store if available)
-// import { useLanguageStore } from "@/store/useLanguageStore";
+import logo from "../../assets/logo/white-version.png";
+import rudcLogo from "../../assets/logo/sidebar_rudc_dark_logo.png";
 
 // ─── Multilingual Nav Labels Config ──────────────────────────────────────────
 
@@ -55,9 +53,7 @@ export interface NavItemConfig {
   label: NavTranslation;
 }
 
-// Relatable & Concise Multilingual Mapping
 export const NAV_TRANSLATIONS: Record<string, NavItemConfig> = {
-  // Overviews
   superAdminOverview: {
     key: "superAdminOverview",
     href: "/dashboard/super-admin",
@@ -82,8 +78,6 @@ export const NAV_TRANSLATIONS: Record<string, NavItemConfig> = {
     icon: LayoutDashboard,
     label: { en: "Overview", bn: "ওভারভিউ", ar: "نظرة عامة" },
   },
-
-  // Management & Desks
   posDesk: {
     key: "posDesk",
     href: "/dashboard/shifter",
@@ -94,13 +88,13 @@ export const NAV_TRANSLATIONS: Record<string, NavItemConfig> = {
     key: "books",
     href: "/dashboard/admin/books",
     icon: Package,
-    label: { en: "Book Catalog", bn: "বইয়ের ক্যাটালগ", ar: "كتالوج الكتب" },
+    label: { en: "Book Catalog", bn: "বইয়ের ক্যাটালগ", ar: "كتالوج الكتب" },
   },
   shifterBooks: {
     key: "shifterBooks",
     href: "/dashboard/shifter/books",
     icon: Package,
-    label: { en: "Book Directory", bn: "বইয়ের ডিরেক্টরি", ar: "دليل الكتب" },
+    label: { en: "Book Directory", bn: "বইয়ের ডিরেক্টরি", ar: "دليل الكتب" },
   },
   borrows: {
     key: "borrows",
@@ -208,13 +202,13 @@ export const NAV_TRANSLATIONS: Record<string, NavItemConfig> = {
     key: "purchases",
     href: "/dashboard/admin/purchases",
     icon: Receipt,
-    label: { en: "Purchases", bn: "ক্রয়সমূহ", ar: "المشتريات" },
+    label: { en: "Purchases", bn: "ক্রয়সমূহ", ar: "المشتريات" },
   },
   shifterPurchases: {
     key: "shifterPurchases",
     href: "/dashboard/shifter/purchases",
     icon: Receipt,
-    label: { en: "Purchases List", bn: "সকল ক্রয়", ar: "قائمة المشتريات" },
+    label: { en: "Purchases List", bn: "সকল ক্রয়", ar: "قائمة المشتريات" },
   },
   shiftLogs: {
     key: "shiftLogs",
@@ -250,21 +244,19 @@ export const NAV_TRANSLATIONS: Record<string, NavItemConfig> = {
     key: "reviews",
     href: "/dashboard/admin/reviews",
     icon: Sparkles,
-    label: { en: "Reviews", bn: "রিভিউ মডারেশন", ar: "المراجعات" },
+    label: { en: "Reviews", bn: "রিভিউ মডারেশন", ar: "المراجع" },
   },
-
-  // RUDC Community Management
   rudcMembers: {
     key: "rudcMembers",
     href: "/dashboard/admin/rudc-members",
     icon: Users,
-    label: { en: "RUDC Members", bn: "RUDC সদস্য ও ভলান্টিয়ার", ar: "أعضاء رودك" },
+    label: { en: "RUDC Members", bn: "RUDC সদস্য ও ভলান্টিয়ার", ar: "أعضاء رودك" },
   },
   superRudcMembers: {
     key: "superRudcMembers",
     href: "/dashboard/super-admin/rudc-members",
     icon: Users,
-    label: { en: "RUDC Members", bn: "RUDC সদস্য ও ভলান্টিয়ার", ar: "أعضاء رودك" },
+    label: { en: "RUDC Members", bn: "RUDC সদস্য ও ভলান্টিয়ার", ar: "أعضاء رودك" },
   },
   rudcTeams: {
     key: "rudcTeams",
@@ -282,13 +274,13 @@ export const NAV_TRANSLATIONS: Record<string, NavItemConfig> = {
     key: "rudcIyanot",
     href: "/dashboard/admin/rudc-iyanot",
     icon: Receipt,
-    label: { en: "RUDC Iyanot", bn: "RUDC ইয়ানত (চাঁদা)", ar: "اشتراكات رودك" },
+    label: { en: "RUDC Iyanot", bn: "RUDC ইয়ানত (চাঁদা)", ar: "اشتراكات رودك" },
   },
   superRudcIyanot: {
     key: "superRudcIyanot",
     href: "/dashboard/super-admin/rudc-iyanot",
     icon: Receipt,
-    label: { en: "RUDC Iyanot", bn: "RUDC ইয়ানত (চাঁদা)", ar: "اشتراكات رودك" },
+    label: { en: "RUDC Iyanot", bn: "RUDC ইয়ানত (চাঁদা)", ar: "اشتراكات رودك" },
   },
   myRudc: {
     key: "myRudc",
@@ -296,8 +288,6 @@ export const NAV_TRANSLATIONS: Record<string, NavItemConfig> = {
     icon: Users,
     label: { en: "My RUDC", bn: "আমার RUDC", ar: "رودك الخاص بي" },
   },
-
-  // Personal Space
   profile: {
     key: "profile",
     href: "/dashboard/member/profile",
@@ -338,19 +328,19 @@ export const NAV_TRANSLATIONS: Record<string, NavItemConfig> = {
     key: "myPurchases",
     href: "/dashboard/member/purchases",
     icon: Receipt,
-    label: { en: "My Purchases", bn: "আমার ক্রয়", ar: "مشترياتي" },
+    label: { en: "My Purchases", bn: "আমার ক্রয়", ar: "مشترياتي" },
   },
   adminMyPurchases: {
     key: "adminMyPurchases",
     href: "/dashboard/admin/my-purchases",
     icon: Receipt,
-    label: { en: "My Purchases", bn: "আমার ক্রয়", ar: "مشترياتي" },
+    label: { en: "My Purchases", bn: "আমার ক্রয়", ar: "مشترياتي" },
   },
   shifterMyPurchases: {
     key: "shifterMyPurchases",
     href: "/dashboard/shifter/my-purchases",
     icon: Receipt,
-    label: { en: "My Purchases", bn: "আমার ক্রয়", ar: "مشترياتي" },
+    label: { en: "My Purchases", bn: "আমার ক্রয়", ar: "مشترياتي" },
   },
   myDonations: {
     key: "myDonations",
@@ -372,7 +362,6 @@ export const NAV_TRANSLATIONS: Record<string, NavItemConfig> = {
   },
 };
 
-// Role-to-Nav-Keys Mapping
 const ROLE_NAV_KEYS: Record<UserRole, string[]> = {
   SUPER_ADMIN: [
     "superAdminOverview",
@@ -456,11 +445,43 @@ export function Sidebar({
   const pathname = usePathname();
   const { data: user } = useGetMe();
   const { logout } = useLogout();
-  const { url: dynamicLogo } = useSiteAsset("ruil_logo_dark");
+
+  const { url: dynamicRuilLogo } = useSiteAsset("ruil_logo_dark");
+  const { url: dynamicRudcLogo } = useSiteAsset("rudc_logo_dark");
+
+  // 1. Direct route path check (SSR safe)
+  const isRudcPath = pathname.includes("rudc");
+
+  // 2. Client-side external store snapshot (reads localStorage/referrer/params safely)
+  const isStoredRudc = useSyncExternalStore(
+    (callback) => {
+      window.addEventListener("storage", callback);
+      return () => window.removeEventListener("storage", callback);
+    },
+    () => {
+      if (typeof window === "undefined") return false;
+      const params = new URLSearchParams(window.location.search);
+      const portalParam = params.get("portal") || params.get("from") || params.get("origin");
+      const referrer = document.referrer || "";
+      const stored = localStorage.getItem("active_portal") || sessionStorage.getItem("active_portal");
+      return portalParam === "rudc" || referrer.includes("/rudc") || stored === "rudc";
+    },
+    () => false // SSR fallback snapshot
+  );
+
+  // 3. Derived active state (No setState called during render or effect)
+  const isRudc = isRudcPath || isStoredRudc;
+
+  // 4. Side-effect to persist active portal strictly in external storage
+  useEffect(() => {
+    if (isRudcPath) {
+      localStorage.setItem("active_portal", "rudc");
+      sessionStorage.setItem("active_portal", "rudc");
+    }
+  }, [isRudcPath]);
 
   const userRole: UserRole = user?.role || "MEMBER";
   const navKeys = ROLE_NAV_KEYS[userRole] || ROLE_NAV_KEYS.MEMBER;
-
   const isRtl = lang === "ar";
 
   return (
@@ -470,14 +491,33 @@ export function Sidebar({
       }`}
       dir={isRtl ? "rtl" : "ltr"}
     >
-      {/* 1. Header & Brand Logo */}
+      {/* 1. Header & Dynamic Brand Logo (RUDC vs RUIL) */}
       <div className="flex h-16 items-center justify-between px-2 border-b border-emerald-900/60 shrink-0">
-        <Link href="/" className="flex items-center space-x-2 shrink-0 group">
+        <Link
+          href={isRudc ? "/rudc" : "/"}
+          className="flex items-center space-x-2 shrink-0 group"
+        >
           <div className="flex h-11 w-11 items-center justify-center">
-            {dynamicLogo ? (
+            {isRudc ? (
+              dynamicRudcLogo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={dynamicRudcLogo}
+                  alt="RUDC Logo"
+                  className="h-10 w-10 object-contain"
+                />
+              ) : (
+                <Image
+                  src={rudcLogo}
+                  alt="RUDC Logo"
+                  priority
+                  className="h-10 w-10 object-contain"
+                />
+              )
+            ) : dynamicRuilLogo ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={dynamicLogo}
+                src={dynamicRuilLogo}
                 alt="RUIL Logo"
                 className="h-10 w-10 object-contain"
               />
@@ -492,11 +532,11 @@ export function Sidebar({
           </div>
           {!collapsed && (
             <div className="truncate">
-              <span className="font-bold text-sm tracking-tight text-white block">
-                RU Islamic Lib
+              <span className="font-bold text-sm tracking-tight text-white block truncate">
+                {isRudc ? "RU Dawah Comm." : "RU Islamic Lib"}
               </span>
               <span className="text-[10px] text-amber-300 font-mono block uppercase">
-                Portal
+                {isRudc ? "RUDC Portal" : "Portal"}
               </span>
             </div>
           )}
@@ -532,7 +572,7 @@ export function Sidebar({
         </div>
       )}
 
-      {/* 3. Navigation List (Scrollable Container with Custom Styling) */}
+      {/* 3. Navigation List */}
       <div
         className="flex-1 space-y-1 p-3 overflow-y-auto overflow-x-hidden 
         [scrollbar-width:thin] [scrollbar-color:#065f46_transparent]
@@ -561,7 +601,6 @@ export function Sidebar({
                     : "text-emerald-100/80 hover:bg-emerald-900/60 hover:text-white"
                 }`}
               >
-                {/* Active Indicator Bar */}
                 {isActive && (
                   <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-md bg-amber-200" />
                 )}
@@ -573,7 +612,6 @@ export function Sidebar({
                 )}
               </Link>
 
-              {/* Responsive Floating Tooltip for Desktop Collapsed State */}
               {collapsed && (
                 <div
                   className={`absolute top-1/2 -translate-y-1/2 z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 rounded-md bg-emerald-950 text-amber-300 px-2.5 py-1.5 text-xs font-medium shadow-xl whitespace-nowrap border border-emerald-800/80 ${
@@ -590,7 +628,6 @@ export function Sidebar({
 
       {/* 4. Sidebar Footer Links */}
       <div className="p-3 border-t border-emerald-900/60 space-y-1 shrink-0 bg-emerald-950/20">
-        {/* Public Catalog Link */}
         <div className="relative group">
           <Link
             href="/books"
@@ -614,10 +651,13 @@ export function Sidebar({
           )}
         </div>
 
-        {/* Sign Out Button */}
         <div className="relative group">
           <button
-            onClick={logout}
+            onClick={() => {
+              localStorage.removeItem("active_portal");
+              sessionStorage.removeItem("active_portal");
+              logout();
+            }}
             className="w-full flex items-center gap-3 rounded-lg px-3 py-2 text-xs font-medium text-red-300 hover:bg-red-950/40 transition-colors cursor-pointer"
           >
             <LogOut className="h-4 w-4 shrink-0" />
@@ -667,7 +707,6 @@ export function MobileBottomNav({ lang = "en" }: { lang?: SupportedLang }) {
 
   return (
     <>
-      {/* Fixed Bottom Navigation Bar */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex items-stretch bg-[#003824] border-t border-emerald-900/60 safe-area-pb">
         {pinnedKeys.map((key) => {
           const item = NAV_TRANSLATIONS[key];
@@ -718,7 +757,6 @@ export function MobileBottomNav({ lang = "en" }: { lang?: SupportedLang }) {
         )}
       </nav>
 
-      {/* Overflow Bottom Sheet for Mobile */}
       {moreOpen && (
         <>
           <div
@@ -788,6 +826,8 @@ export function MobileBottomNav({ lang = "en" }: { lang?: SupportedLang }) {
                 <button
                   onClick={() => {
                     setMoreOpen(false);
+                    localStorage.removeItem("active_portal");
+                    sessionStorage.removeItem("active_portal");
                     logout();
                   }}
                   className="flex items-center gap-2.5 rounded-xl px-3 py-3 text-xs font-semibold bg-red-950/30 text-red-300 hover:bg-red-950/50 transition-colors cursor-pointer"

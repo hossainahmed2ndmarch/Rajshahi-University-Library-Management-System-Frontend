@@ -24,7 +24,7 @@ import Autoplay from "embla-carousel-autoplay";
 import { useGetMe } from "@/hooks/useAuth";
 import { useGetServiceReviews, useCreateServiceReview } from "@/hooks/useReviews";
 import { IServiceReview } from "@/types/review";
-import { SectionHeader } from "@/components/shared/SectionHeader";
+import { SectionHeader } from "@/components/ruil/shared/SectionHeader";
 
 // Hardcoded fallback testimonials shown when no real reviews exist
 const FALLBACK_TESTIMONIALS = [

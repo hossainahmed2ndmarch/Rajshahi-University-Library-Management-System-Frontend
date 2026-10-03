@@ -29,7 +29,7 @@ import { useCartStore } from "@/store/useCartStore";
 import { useWishlistStore } from "@/store/useWishlistStore";
 import { useCreateBorrow } from "@/hooks/useBorrows";
 import { useGetMe } from "@/hooks/useAuth";
-import { BookReviewsSection } from "@/components/books/BookReviewsSection";
+import { BookReviewsSection } from "@/components/ruil/books/BookReviewsSection";
 import { getDiscountedPrice } from "@/lib/utils";
 import { toast } from "sonner";
 

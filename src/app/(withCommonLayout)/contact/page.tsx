@@ -13,9 +13,9 @@ import {
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { ShiftScheduleSection } from "@/components/shared/ShiftScheduleSection";
-import { DonationBanner } from "@/components/shared/DonationBanner";
-import { SectionHeader } from "@/components/shared/SectionHeader";
+import { ShiftScheduleSection } from "@/components/ruil/shared/ShiftScheduleSection";
+import { DonationBanner } from "@/components/ruil/shared/DonationBanner";
+import { SectionHeader } from "@/components/ruil/shared/SectionHeader";
 
 /* ------------------------------------------------------------------ */
 /* Types                                                                */

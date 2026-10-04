@@ -23,6 +23,7 @@ export const useRecordIyanotPayment = () => {
       amount?: number;
       paymentMethod: string;
       transactionId?: string;
+      collectedById?: number;
       remarks?: string;
     }) => {
       return RudcIyanotService.recordIyanotPayment(payload);

@@ -115,7 +115,11 @@ export interface IRudcTeam {
       name: string;
       email: string;
       phone: string;
+      whatsappNumber?: string | null;
       avatarUrl?: string | null;
+      department?: string | null;
+      session?: string | null;
+      skills?: string[];
       rudcMemberType?: RudcMemberType;
       rudcStatus?: RudcApplicationStatus;
     };

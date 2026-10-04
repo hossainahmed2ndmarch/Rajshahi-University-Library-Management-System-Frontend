@@ -78,6 +78,10 @@ export function RudcMembersTable() {
     limit: PAGE_SIZE,
   });
 
+  // Load ALL members (no pagination) for supervisor selects — separate from the paginated table
+  const { data: allMembersRes } = useRudcMembers({ limit: 1000 });
+  const allMembersForSelect: IRudcMember[] = allMembersRes?.data || [];
+
   const { data: userOptions } = useGetUserOptions();
   const { mutateAsync: convertMembership, isPending: isConvertingMembership } = useConvertMembership();
   const { data: teams = [] } = useRudcTeams();
@@ -732,112 +736,228 @@ export function RudcMembersTable() {
         </div>
       )}
 
-      {/* ─── Modal 2: View Application Details ────────────────────── */}
       {viewMember && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in-50">
-          <div className="bg-card border border-border rounded-3xl p-6 w-full max-w-xl shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-border pb-3">
-              <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-[#004F32] dark:text-emerald-400" />
-                <h3 className="text-base font-bold text-foreground">
-                  Applicant Details: {viewMember.name}
-                </h3>
+          <div className="bg-card border border-border rounded-3xl w-full max-w-2xl shadow-2xl max-h-[92vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-border p-5 sticky top-0 bg-card z-10 rounded-t-3xl">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center font-black text-[#004F32] dark:text-emerald-400 text-sm shrink-0">
+                  {viewMember.avatarUrl ? (
+                    <img src={viewMember.avatarUrl} alt={viewMember.name} className="h-full w-full rounded-full object-cover" />
+                  ) : viewMember.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-foreground">{viewMember.name}</h3>
+                  <p className="text-[11px] text-muted-foreground">{viewMember.email}</p>
+                </div>
               </div>
-              <button
-                onClick={() => setViewMember(null)}
-                className="p-1 text-muted-foreground hover:text-foreground rounded-lg"
-              >
-                <X className="h-4 w-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                  viewMember.rudcStatus === "APPROVED" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                  : viewMember.rudcStatus === "INTERVIEW_CALLED" ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300"
+                  : viewMember.rudcStatus === "REJECTED" ? "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
+                  : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+                }`}>
+                  {viewMember.rudcStatus?.replace(/_/g, " ") || "PENDING"}
+                </span>
+                <button
+                  onClick={() => setViewMember(null)}
+                  className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
-            <div className="space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-muted/40">
-                <div>
-                  <span className="text-muted-foreground block">Email</span>
-                  <span className="font-semibold text-foreground">{viewMember.email}</span>
+            <div className="p-5 space-y-5 text-xs">
+              {/* Role & Membership Type */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="p-3 rounded-2xl bg-muted/40 border border-border/60 space-y-1">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Role / Type</p>
+                  <p className="font-bold text-foreground">
+                    {viewMember.rudcMemberType === "EXECUTIVE_COMMITTEE" ? "Executive Committee"
+                      : viewMember.rudcMemberType === "SHURA_MEMBER" ? "Shura Member"
+                      : viewMember.rudcMemberType === "VOLUNTEER" ? "Volunteer"
+                      : viewMember.rudcMemberType === "MEMBER" ? "Permanent Member"
+                      : viewMember.rudcMemberType === "ALUMNI" ? "Alumni"
+                      : "Volunteer"}
+                  </p>
                 </div>
-                <div>
-                  <span className="text-muted-foreground block">Mobile / WhatsApp</span>
-                  <span className="font-semibold text-foreground">
-                    {viewMember.phone} / {viewMember.whatsappNumber || "N/A"}
-                  </span>
+                <div className="p-3 rounded-2xl bg-muted/40 border border-border/60 space-y-1">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Blood Group</p>
+                  <p className="font-bold text-rose-600 dark:text-rose-400">
+                    {viewMember.bloodGroup
+                      ? viewMember.bloodGroup.replace("_POSITIVE", "+").replace("_NEGATIVE", "−")
+                      : "N/A"}
+                  </p>
                 </div>
-                <div>
-                  <span className="text-muted-foreground block">Department & Faculty</span>
-                  <span className="font-semibold text-foreground">
-                    {viewMember.department || "N/A"} ({viewMember.faculty || "N/A"})
-                  </span>
+                <div className="p-3 rounded-2xl bg-muted/40 border border-border/60 space-y-1">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Joined RUDC</p>
+                  <p className="font-semibold text-foreground">
+                    {viewMember.rudcJoinedAt
+                      ? new Date(viewMember.rudcJoinedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+                      : "N/A"}
+                  </p>
                 </div>
-                <div>
-                  <span className="text-muted-foreground block">Student / Voter ID</span>
-                  <span className="font-semibold text-foreground">
-                    {viewMember.studentOrVoterId}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground block">Blood Group</span>
-                  <span className="font-bold text-rose-600">
-                    {viewMember.bloodGroup?.replace("_POSITIVE", "+").replace("_NEGATIVE", "-") || "N/A"}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground block">Accommodation</span>
-                  <span className="font-semibold text-foreground">
-                    {viewMember.accommodationType} - {viewMember.accommodationName || "N/A"}
-                  </span>
+                <div className="p-3 rounded-2xl bg-muted/40 border border-border/60 space-y-1">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Student ID</p>
+                  <p className="font-mono font-bold text-foreground">{viewMember.studentOrVoterId || "N/A"}</p>
                 </div>
               </div>
 
+              {/* Contact Info */}
               <div>
-                <span className="text-muted-foreground block font-semibold mb-1">
-                  Permanent Address
-                </span>
-                <p className="p-3 rounded-xl bg-muted/30 border border-border/60 text-foreground">
-                  {viewMember.permanentAddress || "Not specified"}
-                </p>
-              </div>
-
-              <div>
-                <span className="text-muted-foreground block font-semibold mb-1">
-                  Skills & Expertise
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {viewMember.skills?.map((sk, idx) => (
-                    <span
-                      key={idx}
-                      className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950 text-[#004F32] dark:text-emerald-300 font-medium"
-                    >
-                      {sk}
-                    </span>
-                  ))}
+                <h4 className="text-[11px] font-black uppercase text-[#004F32] dark:text-emerald-400 tracking-wider mb-2.5 flex items-center gap-1.5">
+                  <Phone className="h-3.5 w-3.5" /> Contact Information
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 rounded-2xl bg-muted/30 border border-border/60 space-y-0.5">
+                    <p className="text-[10px] text-muted-foreground font-semibold">Mobile (Primary)</p>
+                    <p className="font-mono font-bold text-foreground">{viewMember.phone}</p>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-muted/30 border border-border/60 space-y-0.5">
+                    <p className="text-[10px] text-muted-foreground font-semibold">WhatsApp</p>
+                    <p className="font-mono font-bold text-foreground">{viewMember.whatsappNumber || "—"}</p>
+                  </div>
+                  <div className="col-span-2 p-3 rounded-2xl bg-muted/30 border border-border/60 space-y-0.5">
+                    <p className="text-[10px] text-muted-foreground font-semibold">Email Address</p>
+                    <p className="font-semibold text-foreground break-all">{viewMember.email}</p>
+                  </div>
                 </div>
               </div>
 
+              {/* Academic Info */}
               <div>
-                <span className="text-muted-foreground block font-semibold mb-1">
-                  Other Organization Affiliation
-                </span>
-                <p className="text-foreground">
+                <h4 className="text-[11px] font-black uppercase text-[#004F32] dark:text-emerald-400 tracking-wider mb-2.5">
+                  Academic Information
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 rounded-2xl bg-muted/30 border border-border/60 space-y-0.5">
+                    <p className="text-[10px] text-muted-foreground font-semibold">Department</p>
+                    <p className="font-semibold text-foreground">{viewMember.department || "—"}</p>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-muted/30 border border-border/60 space-y-0.5">
+                    <p className="text-[10px] text-muted-foreground font-semibold">Faculty</p>
+                    <p className="font-semibold text-foreground">{viewMember.faculty || "—"}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Accommodation */}
+              <div>
+                <h4 className="text-[11px] font-black uppercase text-[#004F32] dark:text-emerald-400 tracking-wider mb-2.5 flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5" /> Accommodation & Address
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 rounded-2xl bg-muted/30 border border-border/60 space-y-0.5">
+                    <p className="text-[10px] text-muted-foreground font-semibold">Accommodation Type</p>
+                    <p className="font-semibold text-foreground">
+                      {viewMember.accommodationType === "HALL" ? "Residential Hall"
+                        : viewMember.accommodationType === "MESS" ? "Campus Mess / Hostel"
+                        : viewMember.accommodationType === "HOME" ? "Home / Family Residence"
+                        : "—"}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-muted/30 border border-border/60 space-y-0.5">
+                    <p className="text-[10px] text-muted-foreground font-semibold">Hall / Mess Name</p>
+                    <p className="font-semibold text-foreground">{viewMember.accommodationName || "—"}</p>
+                  </div>
+                  <div className="col-span-2 p-3 rounded-2xl bg-muted/30 border border-border/60 space-y-0.5">
+                    <p className="text-[10px] text-muted-foreground font-semibold">Permanent Address</p>
+                    <p className="font-semibold text-foreground">
+                      {viewMember.permanentAddress
+                        ? (() => {
+                            try {
+                              const parsed = JSON.parse(viewMember.permanentAddress);
+                              return [parsed.village, parsed.union, parsed.upazila, parsed.district].filter(Boolean).join(", ");
+                            } catch {
+                              return viewMember.permanentAddress;
+                            }
+                          })()
+                        : "Not specified"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Skills */}
+              {viewMember.skills && viewMember.skills.length > 0 && (
+                <div>
+                  <h4 className="text-[11px] font-black uppercase text-[#004F32] dark:text-emerald-400 tracking-wider mb-2.5 flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5" /> Skills & Expertise
+                  </h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {viewMember.skills.map((sk, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950 text-[#004F32] dark:text-emerald-300 font-medium border border-emerald-500/20"
+                      >
+                        {sk}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Organization Affiliation */}
+              <div className="p-3.5 rounded-2xl border border-border bg-muted/30 space-y-1">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Organization Affiliation</p>
+                <p className="font-semibold text-foreground">
                   {viewMember.isAffiliatedWithOther
-                    ? `Yes, affiliated with: ${viewMember.otherOrgName}`
-                    : "No other political or external affiliations"}
+                    ? `⚠️ Affiliated with: ${viewMember.otherOrgName || "Other Organization"}`
+                    : "✅ No external political or organizational affiliations"}
                 </p>
               </div>
 
+              {/* Supervisor */}
+              {viewMember.supervisor && (
+                <div className="p-3.5 rounded-2xl border border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-950/20 space-y-1.5">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Assigned Supervisor</p>
+                  <div className="flex items-center gap-2">
+                    <div className="h-7 w-7 rounded-full bg-emerald-200 dark:bg-emerald-900 flex items-center justify-center text-xs font-black text-[#004F32] dark:text-emerald-400 shrink-0">
+                      {viewMember.supervisor.name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-bold text-foreground">{viewMember.supervisor.name}</p>
+                      <p className="text-[11px] text-muted-foreground">{viewMember.supervisor.phone} • {viewMember.supervisor.rudcMemberType?.replace(/_/g, " ")}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Interview Info */}
               {viewMember.interviewDate && (
-                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 space-y-1">
-                  <p className="font-bold">Interview Scheduled:</p>
-                  <p>Date: {new Date(viewMember.interviewDate).toLocaleDateString()}</p>
-                  {viewMember.interviewNotes && <p>Notes: {viewMember.interviewNotes}</p>}
+                <div className="p-3.5 rounded-2xl border border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20 space-y-1.5">
+                  <p className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">Interview Schedule</p>
+                  <p className="font-semibold text-foreground">
+                    {new Date(viewMember.interviewDate).toLocaleDateString("en-GB", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}
+                  </p>
+                  {viewMember.interviewNotes && (
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">{viewMember.interviewNotes}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Teams */}
+              {viewMember.rudcTeams && viewMember.rudcTeams.length > 0 && (
+                <div>
+                  <h4 className="text-[11px] font-black uppercase text-[#004F32] dark:text-emerald-400 tracking-wider mb-2">Assigned Teams</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {viewMember.rudcTeams.map((t) => (
+                      <span key={t.id} className="px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-500/20 font-semibold">
+                        {t.team.name} <span className="text-[10px] text-muted-foreground">({t.role || "MEMBER"})</span>
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
 
-            <div className="pt-2 border-t border-border flex justify-end">
+            <div className="px-5 pb-5">
               <button
                 onClick={() => setViewMember(null)}
-                className="px-4 py-2 rounded-xl bg-muted text-foreground text-xs font-semibold"
+                className="w-full py-2.5 rounded-xl bg-muted text-foreground text-xs font-semibold hover:bg-muted/80 transition-colors"
               >
                 Close
               </button>
@@ -916,11 +1036,11 @@ export function RudcMembersTable() {
                   className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground"
                 >
                   <option value="">No Supervisor (Unassigned)</option>
-                  {members
+                  {allMembersForSelect
                     .filter((m) => m.id !== promoteMember.id)
                     .map((m) => (
                       <option key={m.id} value={m.id}>
-                        {m.name} ({m.rudcMemberType})
+                        {m.name} ({m.rudcMemberType || "VOLUNTEER"}) — {m.phone}
                       </option>
                     ))}
                 </select>

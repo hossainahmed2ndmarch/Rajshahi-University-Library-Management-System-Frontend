@@ -20,6 +20,7 @@ export const RudcIyanotService = {
     amount?: number;
     paymentMethod: string;
     transactionId?: string;
+    collectedById?: number;
     remarks?: string;
   }) => {
     const response = await axiosInstance.post<ApiResponse<IRudcIyanot>>(

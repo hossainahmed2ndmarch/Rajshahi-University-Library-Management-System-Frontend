@@ -39,7 +39,7 @@ import { PublicationFormModal } from "@/components/dashboard/publications/Public
 import { PublicationDeleteModal } from "@/components/dashboard/publications/PublicationDeleteModal";
 import { SubmitArticleModal } from "@/components/articles/SubmitArticleModal";
 import { IArticle, ICreateArticlePayload } from "@/types/article";
-import { RudcApplicationStatus, RudcMemberType } from "@/types/rudc";
+import { RudcApplicationStatus, RudcMemberType, IRudcTeam } from "@/types/rudc";
 
 // ── Helpers & Constants ────────────────────────────────────────────────────────
 
@@ -152,19 +152,42 @@ export function MyRudcView() {
   const [submitOpen, setSubmitOpen] = useState(false);
   const [payYear, setPayYear] = useState(new Date().getFullYear());
 
-  const handleSelfPay = async (m: number, y: number) => {
-    if (!effectiveProfile) return;
+  // Iyanot payment modal state
+  const [iyanotModalMonth, setIyanotModalMonth] = useState<{ month: number; year: number } | null>(null);
+  const [iyanotPayMethod, setIyanotPayMethod] = useState<"ONLINE" | "CASH_OFFLINE">("ONLINE");
+  const [iyanotCollectorId, setIyanotCollectorId] = useState<number | "">("");
+
+  // Team detail modal state
+  const [selectedTeamDetail, setSelectedTeamDetail] = useState<IRudcTeam | null>(null);
+
+  const handleIyanotModalSubmit = async () => {
+    if (!effectiveProfile || !iyanotModalMonth) return;
+    const { month, year } = iyanotModalMonth;
     try {
       await recordIyanot({
         userId: Number(effectiveProfile.id),
-        month: m,
-        year: y,
+        month,
+        year,
         amount: 50,
-        paymentMethod: "ONLINE",
-        transactionId: `TXN-ONLINE-${Date.now().toString().slice(-6)}`,
-        remarks: "Online self-payment via Member Dashboard",
+        paymentMethod: iyanotPayMethod,
+        transactionId:
+          iyanotPayMethod === "ONLINE"
+            ? `TXN-ONLINE-${Date.now().toString().slice(-6)}`
+            : undefined,
+        collectedById: iyanotPayMethod === "CASH_OFFLINE" && iyanotCollectorId ? Number(iyanotCollectorId) : undefined,
+        remarks:
+          iyanotPayMethod === "ONLINE"
+            ? "Online self-payment via Member Dashboard"
+            : "Offline cash payment — pending admin confirmation",
       });
-      toast.success(`Iyanot for ${monthNames[m - 1]} ${y} submitted successfully!`);
+      toast.success(
+        iyanotPayMethod === "ONLINE"
+          ? `Iyanot for ${monthNames[month - 1]} ${year} paid successfully!`
+          : `Offline iyanot for ${monthNames[month - 1]} ${year} submitted — pending approval.`
+      );
+      setIyanotModalMonth(null);
+      setIyanotPayMethod("ONLINE");
+      setIyanotCollectorId("");
     } catch {
       // toast handled in hook
     }
@@ -463,22 +486,27 @@ export function MyRudcView() {
           {effectiveProfile.rudcTeams && effectiveProfile.rudcTeams.length > 0 ? (
             <div className="space-y-3">
               {effectiveProfile.rudcTeams.map((t) => (
-                <div
+                <button
                   key={t.id}
-                  className="p-4 rounded-2xl border border-border bg-muted/20 hover:bg-muted/40 transition-colors flex items-start justify-between gap-3"
+                  type="button"
+                  onClick={() => setSelectedTeamDetail(t.team)}
+                  className="w-full text-left p-4 rounded-2xl border border-border bg-muted/20 hover:bg-muted/50 hover:border-amber-500/40 transition-all flex items-start justify-between gap-3 cursor-pointer group"
                 >
-                  <div className="space-y-1">
-                    <p className="text-sm font-bold text-foreground">{t.team.name}</p>
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <p className="text-sm font-bold text-foreground group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">{t.team.name}</p>
                     {t.team.description && (
                       <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
                         {t.team.description}
                       </p>
                     )}
+                    <p className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+                      সদস্য তালিকা দেখুন →
+                    </p>
                   </div>
                   <span className="px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950 text-[#004F32] dark:text-emerald-400 border border-emerald-600/20 shrink-0">
                     {t.role || "MEMBER"}
                   </span>
-                </div>
+                </button>
               ))}
             </div>
           ) : (
@@ -605,11 +633,11 @@ export function MyRudcView() {
                       </span>
                     ) : (
                       <button
-                        onClick={() => handleSelfPay(monthNum, payYear)}
+                        onClick={() => setIyanotModalMonth({ month: monthNum, year: payYear })}
                         disabled={isPaying}
                         className="w-full px-2 py-1.5 rounded-xl bg-[#004F32] hover:bg-[#003824] text-white text-[10px] font-bold shadow-xs cursor-pointer disabled:opacity-50 transition-colors"
                       >
-                        {isPaying ? "জমা হচ্ছে..." : "Pay 50৳"}
+                        Pay 50৳
                       </button>
                     )}
                   </div>
@@ -841,7 +869,259 @@ export function MyRudcView() {
         )}
       </div>
 
-      {/* ── Modals ── */}
+      {/* ── Iyanot Payment Modal ── */}
+      {iyanotModalMonth && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in-50">
+          <div className="bg-card border border-border rounded-3xl p-6 w-full max-w-sm shadow-2xl space-y-5">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-border pb-4">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-emerald-500/10 text-[#004F32] dark:text-emerald-400">
+                  <Receipt className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-foreground">ইয়ানত প্রদান করুন</h3>
+                  <p className="text-[11px] text-muted-foreground">
+                    {monthBanglaNames[iyanotModalMonth.month - 1]} {iyanotModalMonth.year} — ৫০ টাকা
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => { setIyanotModalMonth(null); setIyanotPayMethod("ONLINE"); setIyanotCollectorId(""); }}
+                className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                <XCircle className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Payment Method Toggle */}
+            <div className="space-y-2">
+              <p className="text-xs font-bold text-foreground">প্রদানের পদ্ধতি বেছে নিন:</p>
+              <div className="grid grid-cols-2 gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIyanotPayMethod("ONLINE")}
+                  className={`p-3.5 rounded-2xl border text-xs font-bold flex flex-col items-center gap-2 transition-all ${
+                    iyanotPayMethod === "ONLINE"
+                      ? "border-[#004F32] bg-emerald-50 dark:bg-emerald-950/50 text-[#004F32] dark:text-emerald-400 shadow-sm"
+                      : "border-border bg-muted/20 text-muted-foreground hover:border-emerald-400"
+                  }`}
+                >
+                  <CreditCard className="h-5 w-5" />
+                  <span>অনলাইন পেমেন্ট</span>
+                  <span className="text-[10px] font-normal opacity-75">তাৎক্ষণিক অনুমোদিত</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIyanotPayMethod("CASH_OFFLINE")}
+                  className={`p-3.5 rounded-2xl border text-xs font-bold flex flex-col items-center gap-2 transition-all ${
+                    iyanotPayMethod === "CASH_OFFLINE"
+                      ? "border-amber-500 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 shadow-sm"
+                      : "border-border bg-muted/20 text-muted-foreground hover:border-amber-400"
+                  }`}
+                >
+                  <Banknote className="h-5 w-5" />
+                  <span>অফলাইন নগদ</span>
+                  <span className="text-[10px] font-normal opacity-75">পেন্ডিং → অনুমোদন</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Offline: Collector Selection */}
+            {iyanotPayMethod === "CASH_OFFLINE" && (
+              <div className="space-y-2 p-3.5 rounded-2xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-500/30">
+                <p className="text-[11px] font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                  <HeartHandshake className="h-3.5 w-3.5" />
+                  কার কাছে টাকা দিচ্ছেন? (ঐচ্ছিক)
+                </p>
+                <select
+                  value={iyanotCollectorId}
+                  onChange={(e) => setIyanotCollectorId(e.target.value === "" ? "" : Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-xl border border-amber-400/50 bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                >
+                  <option value="">— নির্বাচন করুন (বাধ্যতামূলক নয়) —</option>
+                  {effectiveProfile?.supervisor && (
+                    <option value={effectiveProfile.supervisor.id}>
+                      {effectiveProfile.supervisor.name} (সুপারভাইজার)
+                    </option>
+                  )}
+                </select>
+                <p className="text-[10px] text-amber-700/80 dark:text-amber-400/70 leading-relaxed">
+                  অফলাইনে প্রদানের পরে আপনার স্ট্যাটাস &quot;PENDING&quot; থাকবে। অ্যাডমিন বা সুপারভাইজার কনফার্ম করলে &quot;PAID&quot; হবে।
+                </p>
+              </div>
+            )}
+
+            {/* Online info */}
+            {iyanotPayMethod === "ONLINE" && (
+              <div className="p-3 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-500/20 text-[11px] text-emerald-800 dark:text-emerald-300 leading-relaxed">
+                <CheckCircle2 className="h-3.5 w-3.5 inline-block mr-1.5 -mt-0.5" />
+                অনলাইনে প্রদান করলে তাৎক্ষণিকভাবে &quot;PAID&quot; স্ট্যাটাস যুক্ত হবে।
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => { setIyanotModalMonth(null); setIyanotPayMethod("ONLINE"); setIyanotCollectorId(""); }}
+                className="flex-1 py-2.5 rounded-xl border border-border bg-muted/30 text-foreground text-xs font-bold hover:bg-muted transition-colors"
+              >
+                বাতিল
+              </button>
+              <button
+                type="button"
+                onClick={handleIyanotModalSubmit}
+                disabled={isPaying}
+                className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-colors disabled:opacity-50 ${
+                  iyanotPayMethod === "ONLINE"
+                    ? "bg-[#004F32] hover:bg-[#003824] text-white"
+                    : "bg-amber-500 hover:bg-amber-600 text-white"
+                }`}
+              >
+                {isPaying ? "জমা হচ্ছে..." : iyanotPayMethod === "ONLINE" ? "অনলাইনে পরিশোধ করুন" : "অফলাইন জমা দিন"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Team Detail Modal ── */}
+      {selectedTeamDetail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in-50">
+          <div className="bg-card border border-border rounded-3xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto flex flex-col">
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-card/95 backdrop-blur-sm px-6 pt-6 pb-4 border-b border-border z-10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                    <Layers className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black text-foreground">{selectedTeamDetail.name}</h3>
+                    {selectedTeamDetail.description && (
+                      <p className="text-xs text-muted-foreground leading-relaxed max-w-sm">{selectedTeamDetail.description}</p>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedTeamDetail(null)}
+                  className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
+                >
+                  <XCircle className="h-5 w-5" />
+                </button>
+              </div>
+              <div className="mt-3 flex items-center gap-2">
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                  {selectedTeamDetail.members?.length || selectedTeamDetail._count?.members || 0} জন সদস্য
+                </span>
+              </div>
+            </div>
+
+            {/* Member List */}
+            <div className="p-5 space-y-3 flex-1">
+              {selectedTeamDetail.members && selectedTeamDetail.members.length > 0 ? (
+                selectedTeamDetail.members.map((m) => (
+                  <div
+                    key={m.id}
+                    className="p-4 rounded-2xl border border-border bg-muted/20 space-y-3"
+                  >
+                    {/* Name + Role */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        {m.user.avatarUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={m.user.avatarUrl} alt={m.user.name} className="h-10 w-10 rounded-xl object-cover shrink-0 border border-border" />
+                        ) : (
+                          <div className="h-10 w-10 rounded-xl bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center font-black text-[#004F32] dark:text-emerald-400 text-sm shrink-0">
+                            {m.user.name.charAt(0)}
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-foreground truncate">{m.user.name}</p>
+                          {m.user.department && (
+                            <p className="text-[11px] text-muted-foreground truncate">{m.user.department}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 dark:bg-emerald-950 text-[#004F32] dark:text-emerald-400 border border-emerald-600/20">
+                          {m.role || "MEMBER"}
+                        </span>
+                        {m.user.rudcMemberType && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+                            {MEMBER_TYPE_LABELS[m.user.rudcMemberType]?.label || m.user.rudcMemberType}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Contact & Meta */}
+                    <div className="grid grid-cols-2 gap-2 text-[11px]">
+                      {m.user.phone && (
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <Phone className="h-3 w-3 shrink-0 text-emerald-600" />
+                          <span className="font-mono">{m.user.phone}</span>
+                        </div>
+                      )}
+                      {m.user.whatsappNumber && (
+                        <a
+                          href={`https://wa.me/${m.user.whatsappNumber.replace(/\D/g, "")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 hover:underline"
+                        >
+                          <svg className="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                          </svg>
+                          <span className="font-mono">{m.user.whatsappNumber}</span>
+                        </a>
+                      )}
+                      {m.user.session && (
+                        <div className="flex items-center gap-1.5 text-muted-foreground col-span-2">
+                          <CalendarCheck className="h-3 w-3 shrink-0 text-amber-500" />
+                          <span>Session: <span className="font-semibold text-foreground">{m.user.session}</span></span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Skills */}
+                    {m.user.skills && m.user.skills.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {m.user.skills.map((sk, i) => (
+                          <span
+                            key={i}
+                            className="px-2 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-950 text-[#004F32] dark:text-emerald-300 text-[10px] font-medium border border-emerald-500/20"
+                          >
+                            {sk}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="py-10 text-center text-xs text-muted-foreground space-y-2">
+                  <Users className="h-8 w-8 mx-auto text-muted-foreground/40" />
+                  <p className="font-bold text-foreground">এই টিমে এখনো কোনো সদস্য নেই</p>
+                </div>
+              )}
+            </div>
+
+            {/* Close Footer */}
+            <div className="sticky bottom-0 bg-card/95 backdrop-blur-sm px-6 pb-5 pt-3 border-t border-border">
+              <button
+                onClick={() => setSelectedTeamDetail(null)}
+                className="w-full py-2.5 rounded-xl bg-muted text-foreground text-xs font-bold hover:bg-muted/80 transition-colors"
+              >
+                বন্ধ করুন
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Article Modals ── */}
       <SubmitArticleModal
         isOpen={submitOpen}
         onClose={() => setSubmitOpen(false)}

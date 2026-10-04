@@ -365,6 +365,7 @@ export const NAV_TRANSLATIONS: Record<string, NavItemConfig> = {
 const ROLE_NAV_KEYS: Record<UserRole, string[]> = {
   SUPER_ADMIN: [
     "superAdminOverview",
+    "myRudc",
     "posDesk",
     "books",
     "borrows",
@@ -390,6 +391,7 @@ const ROLE_NAV_KEYS: Record<UserRole, string[]> = {
   ],
   ADMIN: [
     "adminOverview",
+    "myRudc",
     "posDesk",
     "books",
     "borrows",
@@ -414,6 +416,7 @@ const ROLE_NAV_KEYS: Record<UserRole, string[]> = {
   ],
   SHIFTER: [
     "shifterOverview",
+    "myRudc",
     "posDesk",
     "shifterBooks",
     "shifterBorrows",

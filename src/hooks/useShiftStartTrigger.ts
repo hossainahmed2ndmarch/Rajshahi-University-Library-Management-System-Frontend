@@ -3,13 +3,22 @@
 import { useEffect, useState } from "react";
 import { useMySchedule, useGetAllShiftLogs, useActiveShift } from "./useShifts";
 import { IShifterSchedule } from "@/types/shift";
+import { getStoredToken } from "@/lib/axios";
 
 const MODAL_SHOWN_KEY = "ruil_shift_modal_shown";
 
 export const useShiftStartTrigger = () => {
-  const { data: schedules = [] } = useMySchedule();
-  const { data: shiftLogs = [] } = useGetAllShiftLogs({ limit: 30 });
-  const { data: activeShift } = useActiveShift();
+  // Only fire authenticated shift queries when the user actually has a token.
+  // Without this guard, every unauthenticated page load fires 401 requests.
+  const isAuthenticated =
+    typeof window !== "undefined" ? !!getStoredToken() : false;
+
+  const { data: schedules = [] } = useMySchedule(isAuthenticated);
+  const { data: shiftLogs = [] } = useGetAllShiftLogs(
+    { limit: 30 },
+    isAuthenticated
+  );
+  const { data: activeShift } = useActiveShift(isAuthenticated);
 
   const [triggerSchedule, setTriggerSchedule] = useState<IShifterSchedule | null>(null);
   const [linkedShiftId, setLinkedShiftId] = useState<number | string | null>(null);

@@ -33,7 +33,7 @@ const setLocalActiveShift = (shift: IShift | null) => {
   }
 };
 
-export const useActiveShift = () => {
+export const useActiveShift = (enabled = true) => {
   return useQuery<IShift | null>({
     queryKey: ["activeShift"],
     queryFn: async (): Promise<IShift | null> => {
@@ -50,6 +50,7 @@ export const useActiveShift = () => {
       }
     },
     staleTime: 15 * 1000,
+    enabled,
   });
 };
 
@@ -190,7 +191,7 @@ export const useCancelShift = () => {
   });
 };
 
-export const useGetAllShiftLogs = (params?: Record<string, unknown>) => {
+export const useGetAllShiftLogs = (params?: Record<string, unknown>, enabled = true) => {
   return useQuery<IShift[]>({
     queryKey: ["shiftLogs", params],
     queryFn: async (): Promise<IShift[]> => {
@@ -202,6 +203,7 @@ export const useGetAllShiftLogs = (params?: Record<string, unknown>) => {
       }
     },
     staleTime: 30 * 1000,
+    enabled,
   });
 };
 
@@ -272,7 +274,7 @@ export const useTodayRoster = () => {
 };
 
 // Current logged in shifter's schedule
-export const useMySchedule = () => {
+export const useMySchedule = (enabled = true) => {
   return useQuery<IShifterSchedule[]>({
     queryKey: ["mySchedule"],
     queryFn: async (): Promise<IShifterSchedule[]> => {
@@ -283,6 +285,7 @@ export const useMySchedule = () => {
       }
     },
     staleTime: 30 * 1000,
+    enabled,
   });
 };
 

@@ -9,9 +9,29 @@ import { getErrorMessage } from "@/lib/errorUtils";
 import { AuthService } from "@/services/auth.service";
 import { UserService } from "@/services/user.service";
 import { IAuthResponse, ILoginPayload, IRegisterPayload, IUser } from "@/types/auth";
+import { authClient } from "@/lib/auth-client";
 
 export const fetchUserProfile = async (): Promise<IUser | null> => {
-  const token = getStoredToken();
+  let token = getStoredToken();
+
+  // If no bearer token in localStorage/cookie, check Better Auth session
+  if (!token) {
+    try {
+      const sessionResult = await authClient.getSession();
+      if (sessionResult?.data?.session?.token) {
+        token = sessionResult.data.session.token;
+        Cookies.set("accessToken", token, { expires: 7, path: "/" });
+        localStorage.setItem("accessToken", token);
+        if (sessionResult.data.user) {
+          localStorage.setItem("user", JSON.stringify(sessionResult.data.user));
+          return sessionResult.data.user as unknown as IUser;
+        }
+      }
+    } catch {
+      // Better-auth session not present
+    }
+  }
+
   if (!token) return null;
 
   try {
@@ -43,7 +63,7 @@ export const useGetMe = () => {
     queryFn: fetchUserProfile,
     staleTime: 5 * 60 * 1000,
     retry: false,
-    enabled: typeof window !== "undefined" && Boolean(getStoredToken()),
+    enabled: typeof window !== "undefined",
   });
 };
 
@@ -97,7 +117,12 @@ export const useLogout = () => {
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await authClient.signOut();
+    } catch {
+      // Ignore if session was already invalidated
+    }
     clearAuthState();
     queryClient.clear();
     toast.info("Logged out successfully.");
@@ -105,6 +130,90 @@ export const useLogout = () => {
   };
 
   return { logout };
+};
+
+// The frontend origin — after Google/Facebook OAuth, Better Auth redirects here
+const getFrontendOrigin = (): string => {
+  if (typeof window !== "undefined") return window.location.origin;
+  return process.env.NEXT_PUBLIC_APP_URL || "https://www.rudclibrary.com";
+};
+
+export const useGoogleLogin = () => {
+  return useMutation({
+    mutationFn: async (callbackURL?: string) => {
+      return await authClient.signIn.social({
+        provider: "google",
+        callbackURL: callbackURL || getFrontendOrigin(),
+      });
+    },
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "Failed to initiate Google sign in."));
+    },
+  });
+};
+
+export const useGithubLogin = () => {
+  return useMutation({
+    mutationFn: async (callbackURL?: string) => {
+      return await authClient.signIn.social({
+        provider: "github",
+        callbackURL: callbackURL || getFrontendOrigin(),
+      });
+    },
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "Failed to initiate GitHub sign in."));
+    },
+  });
+};
+
+export const useFacebookLogin = () => {
+  return useMutation({
+    mutationFn: async (callbackURL?: string) => {
+      return await authClient.signIn.social({
+        provider: "facebook",
+        callbackURL: callbackURL || getFrontendOrigin(),
+      });
+    },
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "Failed to initiate Facebook sign in."));
+    },
+  });
+};
+
+export const useSendPhoneOtp = () => {
+  return useMutation({
+    mutationFn: async (phoneNumber: string) => {
+      return await authClient.phoneNumber.sendOtp({
+        phoneNumber,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Verification code sent to your phone!");
+    },
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "Failed to send verification code."));
+    },
+  });
+};
+
+export const useVerifyPhoneOtp = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ phoneNumber, code }: { phoneNumber: string; code: string }) => {
+      return await authClient.phoneNumber.verify({
+        phoneNumber,
+        code,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+      toast.success("Phone verified successfully!");
+    },
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "Invalid or expired verification code."));
+    },
+  });
 };
 
 export const useChangePassword = () => {
